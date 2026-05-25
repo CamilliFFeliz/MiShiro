@@ -37,12 +37,14 @@ body {
 
 button,
 input,
+select,
 textarea {
   font: inherit;
 }
 
 button,
 input,
+select,
 textarea {
   -webkit-tap-highlight-color: transparent;
 }
@@ -52,6 +54,7 @@ button {
 }
 
 input,
+select,
 textarea {
   width: 100%;
   min-width: 0;
@@ -69,6 +72,11 @@ input {
   padding: 0 14px;
 }
 
+select {
+  min-height: 50px;
+  padding: 0 38px 0 14px;
+}
+
 textarea {
   min-height: 94px;
   padding: 13px 14px;
@@ -81,6 +89,7 @@ textarea::placeholder {
 }
 
 input:focus,
+select:focus,
 textarea:focus {
   border-color: var(--color-purple);
   box-shadow: 0 0 0 3px var(--color-purple-light);
@@ -234,6 +243,20 @@ textarea:focus {
   gap: 14px;
   margin-bottom: 18px;
   padding: 16px;
+}
+
+.price-table-panel {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 18px;
+  padding: 16px;
+  background: var(--color-purple-light);
+}
+
+.price-table-panel select {
+  border-color: var(--color-purple);
+  color: var(--color-purple-dark);
+  font-weight: 900;
 }
 
 .form-grid {
@@ -405,6 +428,7 @@ textarea:focus {
 
 .card-actions {
   display: grid;
+  gap: 10px;
   margin-top: 14px;
 }
 
@@ -568,6 +592,7 @@ textarea:focus {
 @media (min-width: 480px) {
   .form-grid,
   .editable-grid,
+  .card-actions,
   .budget-item-control {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }

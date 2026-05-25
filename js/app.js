@@ -1,15 +1,32 @@
-const STORAGE_KEY = "CALCULADORA_TATTOO_WEB_V1";
+const STORAGE_KEY = "CALCULADORA_TATTOO_WEB_V2";
 
-const DEFAULT_SUPPLIES = [
-  { id: "agulha-round-liner", name: "Agulha Round Liner", packageQuantity: 20, unitLabel: "un", packagePrice: 64.9 },
-  { id: "agulha-magnum", name: "Agulha Magnum", packageQuantity: 20, unitLabel: "un", packagePrice: 72 },
-  { id: "batoque", name: "Batoque descartavel", packageQuantity: 50, unitLabel: "un", packagePrice: 30 },
-  { id: "luvas-nitrilicas", name: "Luvas nitrilicas", packageQuantity: 100, unitLabel: "un", packagePrice: 39.9 },
-  { id: "tinta-preta", name: "Tinta preta", packageQuantity: 30, unitLabel: "ml", packagePrice: 58 },
-  { id: "gel-transfer", name: "Gel transfer", packageQuantity: 60, unitLabel: "ml", packagePrice: 35 },
-  { id: "papel-toalha", name: "Papel toalha", packageQuantity: 200, unitLabel: "folhas", packagePrice: 18 },
-  { id: "filme-plastico", name: "Filme plastico", packageQuantity: 70, unitLabel: "m", packagePrice: 16 }
+const PRICE_TABLES = [
+  {
+    id: "base",
+    name: "Base da planilha",
+    supplies: [
+      { name: "Sabonete liquido", packageQuantity: 400, unitLabel: "ml", packagePrice: 37 },
+      { name: "Bandagem", packageQuantity: 4.5, unitLabel: "metros", packagePrice: 10 },
+      { name: "Lamina", packageQuantity: 7, unitLabel: "un", packagePrice: 7 },
+      { name: "Batoque", packageQuantity: 50, unitLabel: "un", packagePrice: 30 },
+      { name: "Agulhas", packageQuantity: 1, unitLabel: "un", packagePrice: 15 },
+      { name: "Vaselina", packageQuantity: 150, unitLabel: "gramas", packagePrice: 30 },
+      { name: "Transfer", packageQuantity: 30, unitLabel: "ml", packagePrice: 28 },
+      { name: "Folha stencil", packageQuantity: 1, unitLabel: "folha", packagePrice: 4.5 },
+      { name: "Papel toalha", packageQuantity: 200, unitLabel: "folhas", packagePrice: 12 },
+      { name: "Mascara", packageQuantity: 100, unitLabel: "un", packagePrice: 25 },
+      { name: "Plastico filme", packageQuantity: 70, unitLabel: "metros", packagePrice: 15 },
+      { name: "Palito descartavel", packageQuantity: 100, unitLabel: "un", packagePrice: 6 },
+      { name: "Luvas", packageQuantity: 100, unitLabel: "un", packagePrice: 30 },
+      { name: "Tinta preto linha", packageQuantity: 20, unitLabel: "ml", packagePrice: 50 },
+      { name: "Tinta preto tribal", packageQuantity: 20, unitLabel: "ml", packagePrice: 50 },
+      { name: "Tinta Raven Clow", packageQuantity: 20, unitLabel: "ml", packagePrice: 79 },
+      { name: "Tinta color", packageQuantity: 20, unitLabel: "ml", packagePrice: 50 }
+    ]
+  }
 ];
+
+const DEFAULT_PRICE_TABLE_ID = "base";
 
 const CURRENCY_FORMATTER = new Intl.NumberFormat("pt-BR", {
   style: "currency",
@@ -37,6 +54,8 @@ const DOM = {
   navigationButtons: document.querySelectorAll("[data-screen-target]"),
   packagePriceInput: document.querySelector("#packagePriceInput"),
   packageQuantityInput: document.querySelector("#packageQuantityInput"),
+  applyPriceTableButton: document.querySelector("#applyPriceTableButton"),
+  priceTableSelect: document.querySelector("#priceTableSelect"),
   resetApplicationButton: document.querySelector("#resetApplicationButton"),
   sessionNameInput: document.querySelector("#sessionNameInput"),
   sessionNotesInput: document.querySelector("#sessionNotesInput"),
@@ -59,10 +78,11 @@ function createId(prefix) {
 }
 
 function createInitialState() {
-  const supplies = DEFAULT_SUPPLIES.map((supply) => ({ ...supply }));
+  const supplies = createSuppliesFromPriceTable(DEFAULT_PRICE_TABLE_ID);
 
   return {
     activeScreen: "budget",
+    activePriceTableId: DEFAULT_PRICE_TABLE_ID,
     supplies,
     budget: {
       sessionName: "",
@@ -71,6 +91,22 @@ function createInitialState() {
       quantities: createEmptyQuantities(supplies)
     }
   };
+}
+
+function createSuppliesFromPriceTable(priceTableId) {
+  const priceTable = getPriceTableById(priceTableId);
+
+  return priceTable.supplies.map((supply, supplyIndex) => ({
+    id: `${priceTable.id}-${supplyIndex + 1}`,
+    name: supply.name,
+    packageQuantity: supply.packageQuantity,
+    unitLabel: supply.unitLabel,
+    packagePrice: supply.packagePrice
+  }));
+}
+
+function getPriceTableById(priceTableId) {
+  return PRICE_TABLES.find((priceTable) => priceTable.id === priceTableId) || PRICE_TABLES[0];
 }
 
 function createEmptyQuantities(supplies) {
@@ -117,6 +153,7 @@ function normalizeApplicationState(state) {
 
   return {
     activeScreen: state.activeScreen === "inventory" ? "inventory" : "budget",
+    activePriceTableId: state.activePriceTableId || DEFAULT_PRICE_TABLE_ID,
     supplies,
     budget: {
       sessionName: String(state.budget.sessionName || ""),
@@ -227,11 +264,19 @@ function renderActiveScreen() {
 
 function renderApplication() {
   renderActiveScreen();
+  renderPriceTableOptions();
   renderBudgetForm();
   renderInventorySummary();
   renderSupplyList();
   renderBudgetSummary();
   renderBudgetItemList();
+}
+
+function renderPriceTableOptions() {
+  DOM.priceTableSelect.innerHTML = PRICE_TABLES.map((priceTable) => {
+    const selectedAttribute = priceTable.id === appState.activePriceTableId ? "selected" : "";
+    return `<option value="${escapeHtml(priceTable.id)}" ${selectedAttribute}>${escapeHtml(priceTable.name)}</option>`;
+  }).join("");
 }
 
 function renderBudgetForm() {
@@ -289,7 +334,7 @@ function getFilteredSupplies(searchTerm) {
 
 function createSupplyCardHtml(supply) {
   return `
-    <article class="data-card" data-supply-id="${escapeHtml(supply.id)}">
+    <article class="data-card price-card" data-supply-id="${escapeHtml(supply.id)}">
       <div class="card-header">
         <div class="card-title-group">
           <h2>${escapeHtml(supply.name)}</h2>
@@ -318,6 +363,7 @@ function createSupplyCardHtml(supply) {
       </div>
 
       <div class="card-actions">
+        <button class="button button-primary" type="button" data-use-supply>Usar na ficha</button>
         <button class="button button-danger" type="button" data-remove-supply>Excluir</button>
       </div>
     </article>
@@ -466,6 +512,32 @@ function removeSupply(supplyId) {
   renderBudgetItemList();
 }
 
+function addSupplyToBudget(supplyId) {
+  const currentQuantity = normalizeNumber(appState.budget.quantities[supplyId]);
+  appState.budget.quantities[supplyId] = currentQuantity > 0 ? currentQuantity : 1;
+  appState.activeScreen = "budget";
+  saveApplicationState();
+  renderApplication();
+}
+
+function applyPriceTable() {
+  const selectedPriceTableId = DOM.priceTableSelect.value;
+  const selectedPriceTable = getPriceTableById(selectedPriceTableId);
+  const shouldApply = window.confirm(`Usar a tabela "${selectedPriceTable.name}" e substituir os insumos atuais?`);
+
+  if (!shouldApply) {
+    DOM.priceTableSelect.value = appState.activePriceTableId;
+    return;
+  }
+
+  const supplies = createSuppliesFromPriceTable(selectedPriceTableId);
+  appState.activePriceTableId = selectedPriceTableId;
+  appState.supplies = supplies;
+  appState.budget.quantities = createEmptyQuantities(supplies);
+  saveApplicationState();
+  renderApplication();
+}
+
 function updateBudgetQuantity(supplyId, rawValue) {
   appState.budget.quantities[supplyId] = normalizeNumber(rawValue);
   saveApplicationState();
@@ -565,13 +637,20 @@ DOM.supplyList.addEventListener("change", (event) => {
 });
 
 DOM.supplyList.addEventListener("click", (event) => {
+  const useSupplyButton = event.target.closest("[data-use-supply]");
+  const supplyCard = event.target.closest("[data-supply-id]");
+
+  if (useSupplyButton && supplyCard) {
+    addSupplyToBudget(supplyCard.dataset.supplyId);
+    return;
+  }
+
   const removeButton = event.target.closest("[data-remove-supply]");
 
   if (!removeButton) {
     return;
   }
 
-  const supplyCard = removeButton.closest("[data-supply-id]");
   removeSupply(supplyCard.dataset.supplyId);
 });
 
@@ -610,6 +689,7 @@ DOM.budgetSearchInput.addEventListener("input", (event) => {
 });
 
 DOM.clearBudgetButton.addEventListener("click", clearBudget);
+DOM.applyPriceTableButton.addEventListener("click", applyPriceTable);
 DOM.resetApplicationButton.addEventListener("click", resetApplication);
 
 saveApplicationState();
