@@ -11,7 +11,8 @@
   --bottom-navigation-height: 84px;
   --border-subtle: 1px solid var(--color-purple);
   --border-strong: 1px solid var(--color-purple-light);
-  --shadow-panel: 0 8px 0 var(--color-purple-dark);
+  --shadow-panel: 0 18px 34px var(--color-black), 0 0 0 1px var(--color-purple-dark);
+  --shadow-touch: 0 10px 18px var(--color-black);
 }
 
 * {
@@ -92,6 +93,15 @@ select:focus,
 textarea:focus {
   border-color: var(--color-purple-light);
   box-shadow: 0 0 0 3px var(--color-purple);
+}
+
+button,
+.data-card,
+.filter-chip,
+.metric-card,
+.result-card,
+.sheet-item {
+  transition: background 180ms ease, border-color 180ms ease, box-shadow 180ms ease, color 180ms ease, transform 180ms ease;
 }
 
 .application-shell {
@@ -348,7 +358,7 @@ textarea:focus {
 .metric-card {
   min-width: 0;
   padding: 14px;
-  box-shadow: none;
+  box-shadow: var(--shadow-touch);
 }
 
 .metric-card span,
@@ -386,6 +396,57 @@ textarea:focus {
   color: var(--color-purple-light);
 }
 
+.filter-chip-row {
+  display: flex;
+  gap: 10px;
+  margin: 0 -16px 14px;
+  overflow-x: auto;
+  padding: 0 16px 4px;
+  scrollbar-width: none;
+}
+
+.filter-chip-row::-webkit-scrollbar {
+  display: none;
+}
+
+.filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: max-content;
+  min-height: 46px;
+  border: var(--border-subtle);
+  border-radius: 999px;
+  padding: 0 14px;
+  background: var(--color-purple-dark);
+  color: var(--color-white);
+  font-size: 13px;
+  font-weight: 950;
+}
+
+.filter-chip strong {
+  display: grid;
+  min-width: 28px;
+  height: 28px;
+  place-items: center;
+  border-radius: 999px;
+  background: var(--color-black);
+  color: var(--color-purple-light);
+  font-size: 12px;
+}
+
+.filter-chip.is-active {
+  border-color: var(--color-purple-light);
+  background: var(--color-purple-light);
+  color: var(--color-black);
+  box-shadow: var(--shadow-touch);
+}
+
+.filter-chip.is-active strong {
+  background: var(--color-purple);
+  color: var(--color-white);
+}
+
 .project-tools {
   display: grid;
   gap: 12px;
@@ -407,6 +468,12 @@ textarea:focus {
   padding: 15px;
 }
 
+.data-card:focus-within,
+.data-card:hover {
+  border-color: var(--color-purple-light);
+  box-shadow: var(--shadow-touch);
+}
+
 .card-header {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
@@ -421,7 +488,8 @@ textarea:focus {
 }
 
 .card-title-group h2,
-.card-title-group h3 {
+.card-title-group h3,
+.card-title-group h4 {
   margin: 0;
   overflow: hidden;
   color: var(--color-white);
@@ -652,6 +720,127 @@ textarea:focus {
   gap: 10px;
 }
 
+.unit-cost-preview {
+  display: grid;
+  gap: 5px;
+  padding: 14px;
+  border: var(--border-strong);
+  border-radius: var(--radius-medium);
+  background: var(--color-black);
+}
+
+.unit-cost-preview span {
+  color: var(--color-purple-light);
+  font-size: 12px;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.unit-cost-preview strong {
+  color: var(--color-white);
+  font-size: 24px;
+  font-weight: 950;
+  line-height: 1;
+}
+
+.sheet-modal {
+  position: fixed;
+  inset: auto 0 0;
+  width: min(100%, 920px);
+  max-height: 88dvh;
+  margin: auto auto 0;
+}
+
+.sheet-card {
+  max-height: 88dvh;
+  overflow: hidden;
+  border-radius: var(--radius-large) var(--radius-large) 0 0;
+}
+
+.sheet-handle {
+  width: 56px;
+  height: 5px;
+  margin: 0 auto;
+  border-radius: 999px;
+  background: var(--color-purple-light);
+}
+
+.sheet-search-field {
+  margin-bottom: 0;
+}
+
+.sheet-item-list {
+  display: grid;
+  gap: 16px;
+  min-height: 180px;
+  max-height: min(58dvh, 560px);
+  overflow: auto;
+  padding-right: 2px;
+}
+
+.sheet-category-group {
+  display: grid;
+  gap: 10px;
+}
+
+.sheet-category-header {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 2px;
+  background: var(--color-purple-dark);
+}
+
+.sheet-category-header h3 {
+  margin: 0;
+  color: var(--color-purple-light);
+  font-size: 12px;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.sheet-category-header span {
+  display: grid;
+  min-width: 28px;
+  height: 28px;
+  place-items: center;
+  border-radius: 999px;
+  background: var(--color-black);
+  color: var(--color-white);
+  font-size: 12px;
+  font-weight: 950;
+}
+
+.sheet-category-items {
+  display: grid;
+  gap: 10px;
+}
+
+.sheet-item {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border: var(--border-subtle);
+  border-radius: var(--radius-large);
+  background: var(--color-black);
+}
+
+.sheet-item.is-selected {
+  border-color: var(--color-purple-light);
+  background: var(--color-purple);
+  box-shadow: var(--shadow-touch);
+}
+
+.sheet-item-main,
+.sheet-item-control {
+  display: grid;
+  gap: 12px;
+}
+
 .bottom-navigation {
   position: fixed;
   right: 0;
@@ -710,8 +899,20 @@ textarea:focus {
   .card-actions,
   .project-item-control,
   .project-tools,
+  .sheet-item-main,
+  .sheet-item-control,
   .modal-actions {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .sheet-item-main {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+  }
+
+  .sheet-item-control {
+    grid-template-columns: minmax(0, 1fr) minmax(132px, auto);
+    align-items: end;
   }
 
   .form-field-wide,

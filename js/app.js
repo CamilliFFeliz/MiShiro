@@ -6,20 +6,25 @@ import {
 } from "./calculation-engine.js";
 import { LocalStorageRepository } from "./storage-repository.js";
 
-const APPLICATION_STORAGE_KEY = "CALCULADORA_TATTOO_PROJECTS_V1";
+const APPLICATION_STORAGE_KEY = "CALCULADORA_TATTOO_PROJECTS_V2";
 const DEFAULT_PRICE_TABLE_ID = "base";
 const DEFAULT_LABOR_HOURS = 1;
 const DEFAULT_HOURLY_RATE = 0;
-const NEEDLE_CATEGORY_NAME = "Agulhas";
+const ALL_CATEGORIES_FILTER = "Todos";
+const NEEDLE_CATEGORY_NAME = "Cartuchos/Agulhas";
 const CSV_PROCESS_BATCH_SIZE = 24;
 
 const INVENTORY_CATEGORY_OPTIONS = [
-  "Geral",
-  "Agulhas",
-  "Higiene",
-  "Protecao",
-  "Pigmentos",
-  "Transfer"
+  "Cartuchos/Agulhas",
+  "Biossegurança",
+  "Tintas",
+  "Descartáveis",
+  "Outros"
+];
+
+const INVENTORY_FILTER_OPTIONS = [
+  ALL_CATEGORIES_FILTER,
+  ...INVENTORY_CATEGORY_OPTIONS
 ];
 
 const DEFAULT_CSV_COLUMN_INDEXES = {
@@ -29,7 +34,7 @@ const DEFAULT_CSV_COLUMN_INDEXES = {
   packagePrice: 3,
   category: 4,
   brand: 5,
-  needleType: 6
+  needleSpecification: 6
 };
 
 const CSV_HEADER_ALIASES = {
@@ -39,27 +44,27 @@ const CSV_HEADER_ALIASES = {
   unitLabel: ["unidade", "un", "unit", "unitlabel"],
   packagePrice: ["precopacote", "precoembalagem", "preco", "valor", "packageprice"],
   brand: ["marca", "brand"],
-  needleType: ["tipo", "modelo", "codigotipo", "needletype"]
+  needleSpecification: ["especificacao", "numeracao", "numero", "tipo", "modelo", "codigotipo", "needletype"]
 };
 
 const BASE_PRICE_TABLE_ITEMS = [
-  { name: "Sabonete liquido", category: "Higiene", packageQuantity: 400, unitLabel: "ml", packagePrice: 37 },
-  { name: "Bandagem", category: "Protecao", packageQuantity: 4.5, unitLabel: "metros", packagePrice: 10 },
-  { name: "Lamina", category: "Higiene", packageQuantity: 7, unitLabel: "un", packagePrice: 7 },
-  { name: "Batoque", category: "Geral", packageQuantity: 50, unitLabel: "un", packagePrice: 30 },
-  { name: "Agulhas", category: "Agulhas", packageQuantity: 1, unitLabel: "un", packagePrice: 15, brand: "White Head", needleType: "RL0310" },
-  { name: "Vaselina", category: "Higiene", packageQuantity: 150, unitLabel: "gramas", packagePrice: 30 },
-  { name: "Transfer", category: "Transfer", packageQuantity: 30, unitLabel: "ml", packagePrice: 28 },
-  { name: "Folha stencil", category: "Transfer", packageQuantity: 1, unitLabel: "folha", packagePrice: 4.5 },
-  { name: "Papel toalha", category: "Higiene", packageQuantity: 200, unitLabel: "folhas", packagePrice: 12 },
-  { name: "Mascara", category: "Protecao", packageQuantity: 100, unitLabel: "un", packagePrice: 25 },
-  { name: "Plastico filme", category: "Protecao", packageQuantity: 70, unitLabel: "metros", packagePrice: 15 },
-  { name: "Palito descartavel", category: "Geral", packageQuantity: 100, unitLabel: "un", packagePrice: 6 },
-  { name: "Luvas", category: "Protecao", packageQuantity: 100, unitLabel: "un", packagePrice: 30 },
-  { name: "Tinta preto linha", category: "Pigmentos", packageQuantity: 20, unitLabel: "ml", packagePrice: 50 },
-  { name: "Tinta preto tribal", category: "Pigmentos", packageQuantity: 20, unitLabel: "ml", packagePrice: 50 },
-  { name: "Tinta Raven Clow", category: "Pigmentos", packageQuantity: 20, unitLabel: "ml", packagePrice: 79 },
-  { name: "Tinta color", category: "Pigmentos", packageQuantity: 20, unitLabel: "ml", packagePrice: 50 }
+  { name: "Sabonete liquido", category: "Biossegurança", packageQuantity: 400, unitLabel: "ml", packagePrice: 37 },
+  { name: "Bandagem", category: "Descartáveis", packageQuantity: 4.5, unitLabel: "metros", packagePrice: 10 },
+  { name: "Lamina", category: "Biossegurança", packageQuantity: 7, unitLabel: "un", packagePrice: 7 },
+  { name: "Batoque", category: "Descartáveis", packageQuantity: 50, unitLabel: "un", packagePrice: 30 },
+  { name: "Cartucho White Head", category: "Cartuchos/Agulhas", packageQuantity: 1, unitLabel: "un", packagePrice: 15, brand: "White Head", needleSpecification: "RL0310" },
+  { name: "Vaselina", category: "Biossegurança", packageQuantity: 150, unitLabel: "gramas", packagePrice: 30 },
+  { name: "Transfer", category: "Outros", packageQuantity: 30, unitLabel: "ml", packagePrice: 28 },
+  { name: "Folha stencil", category: "Descartáveis", packageQuantity: 1, unitLabel: "folha", packagePrice: 4.5 },
+  { name: "Papel toalha", category: "Descartáveis", packageQuantity: 200, unitLabel: "folhas", packagePrice: 12 },
+  { name: "Mascara", category: "Biossegurança", packageQuantity: 100, unitLabel: "un", packagePrice: 25 },
+  { name: "Plastico filme", category: "Descartáveis", packageQuantity: 70, unitLabel: "metros", packagePrice: 15 },
+  { name: "Palito descartavel", category: "Descartáveis", packageQuantity: 100, unitLabel: "un", packagePrice: 6 },
+  { name: "Luvas", category: "Biossegurança", packageQuantity: 100, unitLabel: "un", packagePrice: 30 },
+  { name: "Tinta preto linha", category: "Tintas", packageQuantity: 20, unitLabel: "ml", packagePrice: 50 },
+  { name: "Tinta preto tribal", category: "Tintas", packageQuantity: 20, unitLabel: "ml", packagePrice: 50 },
+  { name: "Tinta Raven Clow", category: "Tintas", packageQuantity: 20, unitLabel: "ml", packagePrice: 79 },
+  { name: "Tinta color", category: "Tintas", packageQuantity: 20, unitLabel: "ml", packagePrice: 50 }
 ];
 
 const PRICE_TABLES = [
@@ -84,8 +89,9 @@ const CalculadoraTattooApp = (() => {
   const elementReferences = {};
 
   let applicationState = normalizeApplicationState(stateRepository.getState());
+  let activeInventoryCategory = ALL_CATEGORIES_FILTER;
   let inventorySearchTerm = "";
-  let projectSearchTerm = "";
+  let projectItemSheetSearchTerm = "";
 
   function initializeApplication() {
     bindElementReferences();
@@ -99,9 +105,12 @@ const CalculadoraTattooApp = (() => {
     elementReferences.applicationScreens = document.querySelectorAll("[data-screen-panel]");
     elementReferences.applyPriceTableButton = document.querySelector("#applyPriceTableButton");
     elementReferences.cancelCsvImportModalButton = document.querySelector("#cancelCsvImportModalButton");
+    elementReferences.cancelProjectModalButton = document.querySelector("#cancelProjectModalButton");
     elementReferences.cancelSupplyModalButton = document.querySelector("#cancelSupplyModalButton");
     elementReferences.clearProjectButton = document.querySelector("#clearProjectButton");
     elementReferences.closeCsvImportModalButton = document.querySelector("#closeCsvImportModalButton");
+    elementReferences.closeProjectModalButton = document.querySelector("#closeProjectModalButton");
+    elementReferences.closeProjectItemSheetButton = document.querySelector("#closeProjectItemSheetButton");
     elementReferences.closeSupplyModalButton = document.querySelector("#closeSupplyModalButton");
     elementReferences.createProjectButton = document.querySelector("#createProjectButton");
     elementReferences.csvFileInput = document.querySelector("#csvFileInput");
@@ -111,29 +120,36 @@ const CalculadoraTattooApp = (() => {
     elementReferences.downloadProjectPdfButton = document.querySelector("#downloadProjectPdfButton");
     elementReferences.emptyStateTemplate = document.querySelector("#emptyStateTemplate");
     elementReferences.hourlyRateInput = document.querySelector("#hourlyRateInput");
+    elementReferences.inventoryCategoryFilterList = document.querySelector("#inventoryCategoryFilterList");
     elementReferences.inventoryDashboard = document.querySelector("#inventoryDashboard");
     elementReferences.inventoryList = document.querySelector("#inventoryList");
     elementReferences.inventorySearchInput = document.querySelector("#inventorySearchInput");
     elementReferences.laborHoursInput = document.querySelector("#laborHoursInput");
     elementReferences.laborPreviewValue = document.querySelector("#laborPreviewValue");
     elementReferences.navigationButtons = document.querySelectorAll("[data-screen-target]");
+    elementReferences.newProjectNameInput = document.querySelector("#newProjectNameInput");
     elementReferences.needleBrandInput = document.querySelector("#needleBrandInput");
     elementReferences.needleExtraFields = document.querySelector("#needleExtraFields");
-    elementReferences.needleTypeInput = document.querySelector("#needleTypeInput");
+    elementReferences.needleSpecificationInput = document.querySelector("#needleSpecificationInput");
     elementReferences.openCsvImportModalButton = document.querySelector("#openCsvImportModalButton");
+    elementReferences.openProjectItemSheetButton = document.querySelector("#openProjectItemSheetButton");
     elementReferences.openSupplyModalButton = document.querySelector("#openSupplyModalButton");
     elementReferences.packagePriceInput = document.querySelector("#packagePriceInput");
     elementReferences.packageQuantityInput = document.querySelector("#packageQuantityInput");
     elementReferences.priceTableSelect = document.querySelector("#priceTableSelect");
     elementReferences.printDocument = document.querySelector("#printDocument");
     elementReferences.processCsvButton = document.querySelector("#processCsvButton");
+    elementReferences.projectCreationForm = document.querySelector("#projectCreationForm");
     elementReferences.projectClientInput = document.querySelector("#projectClientInput");
     elementReferences.projectDashboard = document.querySelector("#projectDashboard");
     elementReferences.projectForm = document.querySelector("#projectForm");
     elementReferences.projectItemList = document.querySelector("#projectItemList");
+    elementReferences.projectItemSheet = document.querySelector("#projectItemSheet");
+    elementReferences.projectItemSheetList = document.querySelector("#projectItemSheetList");
+    elementReferences.projectItemSheetSearchInput = document.querySelector("#projectItemSheetSearchInput");
+    elementReferences.projectModal = document.querySelector("#projectModal");
     elementReferences.projectNameInput = document.querySelector("#projectNameInput");
     elementReferences.projectNotesInput = document.querySelector("#projectNotesInput");
-    elementReferences.projectSearchInput = document.querySelector("#projectSearchInput");
     elementReferences.projectSelect = document.querySelector("#projectSelect");
     elementReferences.projectTotalDetail = document.querySelector("#projectTotalDetail");
     elementReferences.projectTotalValue = document.querySelector("#projectTotalValue");
@@ -142,6 +158,7 @@ const CalculadoraTattooApp = (() => {
     elementReferences.supplyForm = document.querySelector("#supplyForm");
     elementReferences.supplyModal = document.querySelector("#supplyModal");
     elementReferences.supplyNameInput = document.querySelector("#supplyNameInput");
+    elementReferences.supplyUnitCostPreview = document.querySelector("#supplyUnitCostPreview");
     elementReferences.unitLabelInput = document.querySelector("#unitLabelInput");
   }
 
@@ -164,12 +181,12 @@ const CalculadoraTattooApp = (() => {
     return priceTable.inventoryData.map((inventoryItem, inventoryIndex) => ({
       id: `${priceTable.id}-${inventoryIndex + 1}`,
       name: inventoryItem.name,
-      category: inventoryItem.category || inferInventoryCategory(inventoryItem.name),
+      category: normalizeInventoryCategory(inventoryItem.category || inferInventoryCategory(inventoryItem.name)),
       packageQuantity: normalizeNumber(inventoryItem.packageQuantity),
       unitLabel: inventoryItem.unitLabel || "un",
       packagePrice: normalizeNumber(inventoryItem.packagePrice),
       brand: inventoryItem.brand || "",
-      needleType: inventoryItem.needleType || ""
+      needleSpecification: inventoryItem.needleSpecification || inventoryItem.needleType || ""
     }));
   }
 
@@ -200,7 +217,7 @@ const CalculadoraTattooApp = (() => {
 
     const inventoryData = rawState.inventoryData.map((inventoryItem) => {
       const inventoryName = String(inventoryItem.name || "Novo insumo");
-      const inventoryCategory = String(inventoryItem.category || inferInventoryCategory(inventoryName));
+      const inventoryCategory = normalizeInventoryCategory(inventoryItem.category || inferInventoryCategory(inventoryName));
 
       return {
         id: inventoryItem.id || createEntityId("inventory"),
@@ -210,7 +227,7 @@ const CalculadoraTattooApp = (() => {
         unitLabel: String(inventoryItem.unitLabel || "un"),
         packagePrice: normalizeNumber(inventoryItem.packagePrice),
         brand: String(inventoryItem.brand || ""),
-        needleType: String(inventoryItem.needleType || "")
+        needleSpecification: String(inventoryItem.needleSpecification || inventoryItem.needleType || "")
       };
     });
 
@@ -293,6 +310,13 @@ const CalculadoraTattooApp = (() => {
       .replace(/'/g, "&#039;");
   }
 
+  function normalizeTextForSearch(value) {
+    return String(value || "")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase();
+  }
+
   function persistApplicationState() {
     stateRepository.saveState(applicationState);
   }
@@ -303,9 +327,12 @@ const CalculadoraTattooApp = (() => {
     renderProjectOptions();
     renderProjectForm();
     renderDashboard();
+    renderInventoryCategoryFilters();
     renderInventoryList();
     renderProjectItemList();
+    renderProjectItemSheet();
     updateSupplyCategoryFields();
+    updateSupplyUnitCostPreview();
   }
 
   function renderActiveScreen() {
@@ -407,8 +434,30 @@ const CalculadoraTattooApp = (() => {
     };
   }
 
+  function renderInventoryCategoryFilters() {
+    elementReferences.inventoryCategoryFilterList.innerHTML = INVENTORY_FILTER_OPTIONS.map((categoryName) => {
+      const isActive = categoryName === activeInventoryCategory;
+      const itemCount = getInventoryCountByCategory(categoryName);
+
+      return `
+        <button class="filter-chip ${isActive ? "is-active" : ""}" type="button" data-inventory-category-filter="${escapeHtml(categoryName)}" aria-pressed="${isActive}">
+          <span>${escapeHtml(categoryName)}</span>
+          <strong>${itemCount}</strong>
+        </button>
+      `;
+    }).join("");
+  }
+
+  function getInventoryCountByCategory(categoryName) {
+    if (categoryName === ALL_CATEGORIES_FILTER) {
+      return applicationState.inventoryData.length;
+    }
+
+    return applicationState.inventoryData.filter((inventoryItem) => inventoryItem.category === categoryName).length;
+  }
+
   function renderInventoryList() {
-    const filteredInventoryData = getFilteredInventoryData(inventorySearchTerm);
+    const filteredInventoryData = getFilteredInventoryData(inventorySearchTerm, activeInventoryCategory);
 
     if (filteredInventoryData.length === 0) {
       renderEmptyState(elementReferences.inventoryList);
@@ -418,26 +467,25 @@ const CalculadoraTattooApp = (() => {
     elementReferences.inventoryList.innerHTML = filteredInventoryData.map(createInventoryCardHtml).join("");
   }
 
-  function getFilteredInventoryData(searchTerm) {
-    const normalizedSearchTerm = searchTerm.trim().toLowerCase();
-
-    if (!normalizedSearchTerm) {
-      return applicationState.inventoryData;
-    }
+  function getFilteredInventoryData(searchTerm, categoryFilter = ALL_CATEGORIES_FILTER) {
+    const normalizedSearchTerm = normalizeTextForSearch(searchTerm).trim();
 
     return applicationState.inventoryData.filter((inventoryItem) => {
-      return getInventorySearchText(inventoryItem).includes(normalizedSearchTerm);
+      const matchesCategory = categoryFilter === ALL_CATEGORIES_FILTER || inventoryItem.category === categoryFilter;
+      const matchesSearch = !normalizedSearchTerm || getInventorySearchText(inventoryItem).includes(normalizedSearchTerm);
+
+      return matchesCategory && matchesSearch;
     });
   }
 
   function getInventorySearchText(inventoryItem) {
-    return [
+    return normalizeTextForSearch([
       inventoryItem.name,
       inventoryItem.category,
       inventoryItem.unitLabel,
       inventoryItem.brand,
-      inventoryItem.needleType
-    ].join(" ").toLowerCase();
+      inventoryItem.needleSpecification
+    ].join(" "));
   }
 
   function createInventoryCardHtml(inventoryItem) {
@@ -448,8 +496,8 @@ const CalculadoraTattooApp = (() => {
             <input type="text" value="${escapeHtml(inventoryItem.brand)}" data-inventory-field="brand" />
           </label>
           <label class="form-field">
-            <span>Tipo</span>
-            <input type="text" value="${escapeHtml(inventoryItem.needleType)}" data-inventory-field="needleType" />
+            <span>Especificação/Numeração</span>
+            <input type="text" value="${escapeHtml(inventoryItem.needleSpecification)}" data-inventory-field="needleSpecification" />
           </label>
         `
       : "";
@@ -458,7 +506,7 @@ const CalculadoraTattooApp = (() => {
       <article class="data-card" data-inventory-item-id="${escapeHtml(inventoryItem.id)}">
         <div class="card-header">
           <div class="card-title-group">
-            <h2>${escapeHtml(inventoryItem.name)}</h2>
+            <h2>${escapeHtml(getInventoryDisplayName(inventoryItem))}</h2>
             <span>${escapeHtml(getInventorySubtitle(inventoryItem))}</span>
           </div>
           <span class="pill">${formatCurrency(calculateUnitCost(inventoryItem))}/un</span>
@@ -483,13 +531,13 @@ const CalculadoraTattooApp = (() => {
             <input type="text" value="${escapeHtml(inventoryItem.unitLabel)}" data-inventory-field="unitLabel" />
           </label>
           <label class="form-field">
-            <span>Preco</span>
+            <span>Preço</span>
             <input type="text" inputmode="decimal" value="${escapeHtml(inventoryItem.packagePrice)}" data-inventory-field="packagePrice" />
           </label>
         </div>
 
         <div class="card-actions">
-          <button class="button button-primary" type="button" data-add-inventory-item-to-project>Usar no projeto</button>
+          <button class="button button-primary" type="button" data-open-project-item-sheet>Adicionar ao projeto</button>
           <button class="button button-danger" type="button" data-remove-inventory-item>Excluir</button>
         </div>
       </article>
@@ -497,69 +545,136 @@ const CalculadoraTattooApp = (() => {
   }
 
   function createInventoryCategoryOptionsHtml(currentCategory) {
-    const categoryOptions = INVENTORY_CATEGORY_OPTIONS.includes(currentCategory)
-      ? INVENTORY_CATEGORY_OPTIONS
-      : [currentCategory, ...INVENTORY_CATEGORY_OPTIONS];
-
-    return categoryOptions.map((categoryName) => {
+    return INVENTORY_CATEGORY_OPTIONS.map((categoryName) => {
       const selectedAttribute = categoryName === currentCategory ? "selected" : "";
       return `<option value="${escapeHtml(categoryName)}" ${selectedAttribute}>${escapeHtml(categoryName)}</option>`;
     }).join("");
   }
 
-  function getInventorySubtitle(inventoryItem) {
-    const packageText = `${formatNumber(inventoryItem.packageQuantity)} ${inventoryItem.unitLabel} por embalagem`;
-
-    if (inventoryItem.category === NEEDLE_CATEGORY_NAME) {
-      const needleText = [inventoryItem.brand, inventoryItem.needleType].filter(Boolean).join(" ");
-      return needleText ? `${inventoryItem.category} | ${needleText} | ${packageText}` : `${inventoryItem.category} | ${packageText}`;
+  function getInventoryDisplayName(inventoryItem) {
+    if (inventoryItem.category !== NEEDLE_CATEGORY_NAME) {
+      return inventoryItem.name;
     }
 
+    const needleIdentity = [inventoryItem.brand, inventoryItem.needleSpecification].filter(Boolean).join(" - ");
+    return needleIdentity || inventoryItem.name;
+  }
+
+  function getInventorySubtitle(inventoryItem) {
+    const packageText = `${formatNumber(inventoryItem.packageQuantity)} ${inventoryItem.unitLabel} por pacote`;
     return `${inventoryItem.category} | ${packageText}`;
   }
 
   function renderProjectItemList() {
-    const filteredInventoryData = getFilteredInventoryData(projectSearchTerm);
+    const activeProjectSummary = getActiveProjectSummary();
 
-    if (filteredInventoryData.length === 0) {
-      renderEmptyState(elementReferences.projectItemList);
+    if (activeProjectSummary.selectedItems.length === 0) {
+      elementReferences.projectItemList.innerHTML = `
+        <article class="empty-state">
+          <strong>Nenhum insumo no projeto</strong>
+          <span>Use o botao Adicionar insumo para montar o orcamento.</span>
+        </article>
+      `;
       return;
     }
 
-    elementReferences.projectItemList.innerHTML = filteredInventoryData.map(createProjectItemHtml).join("");
+    elementReferences.projectItemList.innerHTML = activeProjectSummary.selectedItems.map(createSelectedProjectItemHtml).join("");
   }
 
-  function createProjectItemHtml(inventoryItem) {
-    const activeProject = getActiveProject();
-    const quantityUsed = normalizeNumber(activeProject.materialUsage[inventoryItem.id]);
-    const isSelected = quantityUsed > 0;
+  function createSelectedProjectItemHtml(projectItem) {
+    const inventoryItem = projectItem.inventoryItem;
 
     return `
-      <article class="data-card project-item ${isSelected ? "is-selected" : ""}" data-project-item-id="${escapeHtml(inventoryItem.id)}">
+      <article class="data-card project-item is-selected" data-project-item-id="${escapeHtml(inventoryItem.id)}">
         <div class="card-header">
           <div class="card-title-group">
-            <h3>${escapeHtml(inventoryItem.name)}</h3>
-            <span>${formatCurrency(calculateUnitCost(inventoryItem))} por ${escapeHtml(inventoryItem.unitLabel)}</span>
+            <h3>${escapeHtml(getInventoryDisplayName(inventoryItem))}</h3>
+            <span>${escapeHtml(getInventorySubtitle(inventoryItem))}</span>
           </div>
-          <span class="pill">${formatCurrency(calculateMaterialCost(inventoryItem, quantityUsed))}</span>
+          <span class="pill">${formatCurrency(projectItem.materialCost)}</span>
         </div>
 
         <div class="project-item-control">
-          <button class="select-button" type="button" data-toggle-project-item aria-pressed="${isSelected}">
-            ${isSelected ? "Usando" : "Adicionar"}
-          </button>
           <label class="quantity-field">
-            <span>Qtd.</span>
+            <span>Quantidade usada</span>
             <span class="quantity-input-row">
-              <input type="text" inputmode="decimal" value="${quantityUsed > 0 ? escapeHtml(quantityUsed) : ""}" placeholder="0" data-material-usage />
+              <input type="text" inputmode="decimal" value="${escapeHtml(projectItem.quantityUsed)}" placeholder="0" data-material-usage />
               <span>${escapeHtml(inventoryItem.unitLabel)}</span>
             </span>
           </label>
+          <button class="button button-danger" type="button" data-remove-project-item>Remover</button>
         </div>
 
         <div class="line-total">
-          <span>Custo neste item</span>
-          <strong data-line-total>${formatCurrency(calculateMaterialCost(inventoryItem, quantityUsed))}</strong>
+          <span>${formatCurrency(projectItem.unitCost)} por unidade</span>
+          <strong data-line-total>${formatCurrency(projectItem.materialCost)}</strong>
+        </div>
+      </article>
+    `;
+  }
+
+  function renderProjectItemSheet() {
+    if (!elementReferences.projectItemSheetList) {
+      return;
+    }
+
+    const filteredInventoryData = getFilteredInventoryData(projectItemSheetSearchTerm, ALL_CATEGORIES_FILTER);
+
+    if (filteredInventoryData.length === 0) {
+      renderEmptyState(elementReferences.projectItemSheetList);
+      return;
+    }
+
+    elementReferences.projectItemSheetList.innerHTML = INVENTORY_CATEGORY_OPTIONS.map((categoryName) => {
+      const categoryItems = filteredInventoryData.filter((inventoryItem) => inventoryItem.category === categoryName);
+
+      if (categoryItems.length === 0) {
+        return "";
+      }
+
+      return `
+        <section class="sheet-category-group">
+          <div class="sheet-category-header">
+            <h3>${escapeHtml(categoryName)}</h3>
+            <span>${categoryItems.length}</span>
+          </div>
+          <div class="sheet-category-items">
+            ${categoryItems.map(createProjectSheetItemHtml).join("")}
+          </div>
+        </section>
+      `;
+    }).join("");
+  }
+
+  function createProjectSheetItemHtml(inventoryItem) {
+    const activeProject = getActiveProject();
+    const quantityUsed = normalizeNumber(activeProject.materialUsage[inventoryItem.id]);
+    const materialCost = calculateMaterialCost(inventoryItem, quantityUsed);
+
+    return `
+      <article class="sheet-item ${quantityUsed > 0 ? "is-selected" : ""}" data-sheet-inventory-item-id="${escapeHtml(inventoryItem.id)}">
+        <div class="sheet-item-main">
+          <div class="card-title-group">
+            <h4>${escapeHtml(getInventoryDisplayName(inventoryItem))}</h4>
+            <span>${escapeHtml(getInventorySubtitle(inventoryItem))}</span>
+          </div>
+          <span class="pill">${formatCurrency(calculateUnitCost(inventoryItem))}/un</span>
+        </div>
+
+        <div class="sheet-item-control">
+          <label class="quantity-field">
+            <span>Usar</span>
+            <span class="quantity-input-row">
+              <input type="text" inputmode="decimal" value="${quantityUsed > 0 ? escapeHtml(quantityUsed) : ""}" placeholder="0" data-sheet-material-usage />
+              <span>${escapeHtml(inventoryItem.unitLabel)}</span>
+            </span>
+          </label>
+          <button class="button button-primary" type="button" data-sheet-select-item>${quantityUsed > 0 ? "Atualizar" : "Adicionar"}</button>
+        </div>
+
+        <div class="line-total">
+          <span>Custo no projeto</span>
+          <strong data-sheet-line-total>${formatCurrency(materialCost)}</strong>
         </div>
       </article>
     `;
@@ -593,14 +708,16 @@ const CalculadoraTattooApp = (() => {
       ...projectData,
       materialUsage: createEmptyMaterialUsage(applicationState.inventoryData)
     }));
+    activeInventoryCategory = ALL_CATEGORIES_FILTER;
     persistApplicationState();
     renderApplication();
   }
 
   function openSupplyModal() {
     elementReferences.supplyForm.reset();
-    elementReferences.supplyCategorySelect.value = "Geral";
+    elementReferences.supplyCategorySelect.value = "Outros";
     updateSupplyCategoryFields();
+    updateSupplyUnitCostPreview();
     openModal(elementReferences.supplyModal);
     elementReferences.supplyNameInput.focus();
   }
@@ -610,6 +727,22 @@ const CalculadoraTattooApp = (() => {
     setCsvImportProgress("Aguardando arquivo CSV");
     elementReferences.processCsvButton.disabled = false;
     openModal(elementReferences.csvImportModal);
+  }
+
+  function openProjectCreationModal() {
+    elementReferences.projectCreationForm.reset();
+    elementReferences.newProjectNameInput.value = `Projeto ${applicationState.projects.length + 1}`;
+    openModal(elementReferences.projectModal);
+    elementReferences.newProjectNameInput.select();
+  }
+
+  function openProjectItemSheet(initialInventoryItemId = "") {
+    const initialInventoryItem = applicationState.inventoryData.find((inventoryItem) => inventoryItem.id === initialInventoryItemId);
+    projectItemSheetSearchTerm = initialInventoryItem ? getInventoryDisplayName(initialInventoryItem) : "";
+    elementReferences.projectItemSheetSearchInput.value = projectItemSheetSearchTerm;
+    renderProjectItemSheet();
+    openModal(elementReferences.projectItemSheet);
+    elementReferences.projectItemSheetSearchInput.focus();
   }
 
   function openModal(modalElement) {
@@ -635,16 +768,25 @@ const CalculadoraTattooApp = (() => {
 
     elementReferences.needleExtraFields.hidden = !isNeedleCategory;
     elementReferences.needleBrandInput.required = isNeedleCategory;
-    elementReferences.needleTypeInput.required = isNeedleCategory;
+    elementReferences.needleSpecificationInput.required = isNeedleCategory;
 
     if (isNeedleCategory && !elementReferences.supplyNameInput.value.trim()) {
-      elementReferences.supplyNameInput.value = NEEDLE_CATEGORY_NAME;
+      elementReferences.supplyNameInput.value = "Cartucho";
     }
+  }
+
+  function updateSupplyUnitCostPreview() {
+    const unitCost = calculateUnitCost({
+      packageQuantity: elementReferences.packageQuantityInput.value,
+      packagePrice: elementReferences.packagePriceInput.value
+    });
+
+    elementReferences.supplyUnitCostPreview.textContent = formatCurrency(unitCost);
   }
 
   function addInventoryItemFromForm() {
     const inventoryName = elementReferences.supplyNameInput.value.trim();
-    const inventoryCategory = elementReferences.supplyCategorySelect.value;
+    const inventoryCategory = normalizeInventoryCategory(elementReferences.supplyCategorySelect.value);
     const packageQuantity = normalizeNumber(elementReferences.packageQuantityInput.value);
     const unitLabel = elementReferences.unitLabelInput.value.trim();
     const packagePrice = normalizeNumber(elementReferences.packagePriceInput.value);
@@ -668,7 +810,7 @@ const CalculadoraTattooApp = (() => {
       unitLabel,
       packagePrice,
       brand: inventoryCategory === NEEDLE_CATEGORY_NAME ? elementReferences.needleBrandInput.value.trim() : "",
-      needleType: inventoryCategory === NEEDLE_CATEGORY_NAME ? elementReferences.needleTypeInput.value.trim() : ""
+      needleSpecification: inventoryCategory === NEEDLE_CATEGORY_NAME ? elementReferences.needleSpecificationInput.value.trim() : ""
     };
 
     addInventoryItems([createdInventoryItem]);
@@ -701,14 +843,20 @@ const CalculadoraTattooApp = (() => {
         return inventoryItem;
       }
 
+      const nextValue = fieldName === "category"
+        ? normalizeInventoryCategory(value)
+        : ["packageQuantity", "packagePrice"].includes(fieldName)
+          ? normalizeNumber(value)
+          : String(value);
+
       const nextInventoryItem = {
         ...inventoryItem,
-        [fieldName]: ["packageQuantity", "packagePrice"].includes(fieldName) ? normalizeNumber(value) : String(value)
+        [fieldName]: nextValue
       };
 
-      if (fieldName === "category" && value !== NEEDLE_CATEGORY_NAME) {
+      if (fieldName === "category" && nextValue !== NEEDLE_CATEGORY_NAME) {
         nextInventoryItem.brand = "";
-        nextInventoryItem.needleType = "";
+        nextInventoryItem.needleSpecification = "";
       }
 
       return nextInventoryItem;
@@ -734,25 +882,9 @@ const CalculadoraTattooApp = (() => {
     renderApplication();
   }
 
-  function addInventoryItemToProject(inventoryItemId) {
-    updateActiveProject((projectData) => {
-      const currentQuantity = normalizeNumber(projectData.materialUsage[inventoryItemId]);
-      projectData.materialUsage[inventoryItemId] = currentQuantity > 0 ? currentQuantity : 1;
-    });
-    applicationState.activeScreen = "projects";
-    persistApplicationState();
-    renderApplication();
-  }
-
-  function createNewProject() {
+  function createNewProjectFromForm() {
     const suggestedProjectName = `Projeto ${applicationState.projects.length + 1}`;
-    const enteredProjectName = window.prompt("Nome do projeto", suggestedProjectName);
-
-    if (enteredProjectName === null) {
-      return;
-    }
-
-    const projectName = enteredProjectName.trim() || suggestedProjectName;
+    const projectName = elementReferences.newProjectNameInput.value.trim() || suggestedProjectName;
     const newProject = createProject(projectName, applicationState.inventoryData);
 
     applicationState.projects.unshift(newProject);
@@ -760,6 +892,7 @@ const CalculadoraTattooApp = (() => {
     applicationState.activeScreen = "projects";
     persistApplicationState();
     renderApplication();
+    closeModal(elementReferences.projectModal);
     elementReferences.projectNameInput.focus();
   }
 
@@ -786,46 +919,96 @@ const CalculadoraTattooApp = (() => {
     elementReferences.laborPreviewValue.textContent = formatCurrency(getActiveProjectSummary().laborTotal);
   }
 
-  function updateMaterialUsage(inventoryItemId, value) {
+  function setProjectItemQuantity(inventoryItemId, value) {
+    const quantityUsed = normalizeNumber(value);
+
     updateActiveProject((projectData) => {
-      projectData.materialUsage[inventoryItemId] = normalizeNumber(value);
+      projectData.materialUsage[inventoryItemId] = quantityUsed;
     });
+
     persistApplicationState();
     renderDashboard();
-    updateProjectItemState(inventoryItemId);
+    updateProjectItemAfterQuantityChange(inventoryItemId, quantityUsed);
+    updateProjectItemSheetState(inventoryItemId);
   }
 
-  function toggleProjectItem(inventoryItemId) {
-    updateActiveProject((projectData) => {
-      const currentQuantity = normalizeNumber(projectData.materialUsage[inventoryItemId]);
-      projectData.materialUsage[inventoryItemId] = currentQuantity > 0 ? 0 : 1;
-    });
-    persistApplicationState();
-    renderApplication();
+  function updateProjectItemAfterQuantityChange(inventoryItemId, quantityUsed) {
+    if (quantityUsed <= 0) {
+      renderProjectItemList();
+      return;
+    }
+
+    const wasUpdated = updateProjectItemState(inventoryItemId);
+
+    if (!wasUpdated) {
+      renderProjectItemList();
+    }
   }
 
   function updateProjectItemState(inventoryItemId) {
     const activeProject = getActiveProject();
     const inventoryItem = applicationState.inventoryData.find((item) => item.id === inventoryItemId);
-    const projectItem = Array.from(elementReferences.projectItemList.querySelectorAll("[data-project-item-id]")).find((item) => {
-      return item.dataset.projectItemId === inventoryItemId;
+    const projectItem = Array.from(elementReferences.projectItemList.querySelectorAll("[data-project-item-id]")).find((itemElement) => {
+      return itemElement.dataset.projectItemId === inventoryItemId;
     });
 
     if (!activeProject || !inventoryItem || !projectItem) {
+      return false;
+    }
+
+    const quantityUsed = normalizeNumber(activeProject.materialUsage[inventoryItemId]);
+    const lineTotal = projectItem.querySelector("[data-line-total]");
+    const topPill = projectItem.querySelector(".pill");
+    const quantityInput = projectItem.querySelector("[data-material-usage]");
+    const materialCost = calculateMaterialCost(inventoryItem, quantityUsed);
+
+    if (document.activeElement !== quantityInput) {
+      quantityInput.value = quantityUsed > 0 ? formatNumber(quantityUsed) : "";
+    }
+
+    lineTotal.textContent = formatCurrency(materialCost);
+    topPill.textContent = formatCurrency(materialCost);
+    return true;
+  }
+
+  function updateProjectItemSheetState(inventoryItemId) {
+    const activeProject = getActiveProject();
+    const inventoryItem = applicationState.inventoryData.find((item) => item.id === inventoryItemId);
+    const sheetItem = Array.from(elementReferences.projectItemSheetList.querySelectorAll("[data-sheet-inventory-item-id]")).find((itemElement) => {
+      return itemElement.dataset.sheetInventoryItemId === inventoryItemId;
+    });
+
+    if (!activeProject || !inventoryItem || !sheetItem) {
       return;
     }
 
     const quantityUsed = normalizeNumber(activeProject.materialUsage[inventoryItemId]);
-    const isSelected = quantityUsed > 0;
-    const lineTotal = projectItem.querySelector("[data-line-total]");
-    const topPill = projectItem.querySelector(".pill");
-    const toggleButton = projectItem.querySelector("[data-toggle-project-item]");
+    const quantityInput = sheetItem.querySelector("[data-sheet-material-usage]");
+    const lineTotal = sheetItem.querySelector("[data-sheet-line-total]");
+    const actionButton = sheetItem.querySelector("[data-sheet-select-item]");
+    const materialCost = calculateMaterialCost(inventoryItem, quantityUsed);
 
-    projectItem.classList.toggle("is-selected", isSelected);
-    toggleButton.textContent = isSelected ? "Usando" : "Adicionar";
-    toggleButton.setAttribute("aria-pressed", String(isSelected));
-    lineTotal.textContent = formatCurrency(calculateMaterialCost(inventoryItem, quantityUsed));
-    topPill.textContent = formatCurrency(calculateMaterialCost(inventoryItem, quantityUsed));
+    sheetItem.classList.toggle("is-selected", quantityUsed > 0);
+    actionButton.textContent = quantityUsed > 0 ? "Atualizar" : "Adicionar";
+    lineTotal.textContent = formatCurrency(materialCost);
+
+    if (document.activeElement !== quantityInput) {
+      quantityInput.value = quantityUsed > 0 ? formatNumber(quantityUsed) : "";
+    }
+  }
+
+  function addProjectItemFromSheet(inventoryItemId) {
+    const sheetItem = Array.from(elementReferences.projectItemSheetList.querySelectorAll("[data-sheet-inventory-item-id]")).find((itemElement) => {
+      return itemElement.dataset.sheetInventoryItemId === inventoryItemId;
+    });
+    const quantityInput = sheetItem ? sheetItem.querySelector("[data-sheet-material-usage]") : null;
+    const quantityUsed = normalizeNumber(quantityInput ? quantityInput.value : 0) || 1;
+
+    setProjectItemQuantity(inventoryItemId, quantityUsed);
+  }
+
+  function removeProjectItem(inventoryItemId) {
+    setProjectItemQuantity(inventoryItemId, 0);
   }
 
   function clearActiveProjectItems() {
@@ -850,10 +1033,11 @@ const CalculadoraTattooApp = (() => {
     }
 
     applicationState = stateRepository.resetState();
+    activeInventoryCategory = ALL_CATEGORIES_FILTER;
     inventorySearchTerm = "";
-    projectSearchTerm = "";
+    projectItemSheetSearchTerm = "";
     elementReferences.inventorySearchInput.value = "";
-    elementReferences.projectSearchInput.value = "";
+    elementReferences.projectItemSheetSearchInput.value = "";
     renderApplication();
   }
 
@@ -916,11 +1100,7 @@ const CalculadoraTattooApp = (() => {
   }
 
   function normalizeCsvHeaderName(headerName) {
-    return String(headerName || "")
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .toLowerCase()
-      .replace(/[^a-z0-9]/g, "");
+    return normalizeTextForSearch(headerName).replace(/[^a-z0-9]/g, "");
   }
 
   function processCsvRowsInBatches(importPlan) {
@@ -965,7 +1145,7 @@ const CalculadoraTattooApp = (() => {
   function createInventoryItemFromCsvRow(csvRow, columnIndexes) {
     const inventoryName = getCsvColumnValue(csvRow, columnIndexes.name).trim();
     const inferredCategory = inferInventoryCategory(inventoryName);
-    const inventoryCategory = getCsvColumnValue(csvRow, columnIndexes.category).trim() || inferredCategory;
+    const inventoryCategory = normalizeInventoryCategory(getCsvColumnValue(csvRow, columnIndexes.category).trim() || inferredCategory);
     const packageQuantity = normalizeNumber(getCsvColumnValue(csvRow, columnIndexes.packageQuantity));
     const packagePrice = normalizeNumber(getCsvColumnValue(csvRow, columnIndexes.packagePrice));
     const unitLabel = getCsvColumnValue(csvRow, columnIndexes.unitLabel).trim() || "un";
@@ -982,7 +1162,7 @@ const CalculadoraTattooApp = (() => {
       unitLabel,
       packagePrice,
       brand: inventoryCategory === NEEDLE_CATEGORY_NAME ? getCsvColumnValue(csvRow, columnIndexes.brand).trim() : "",
-      needleType: inventoryCategory === NEEDLE_CATEGORY_NAME ? getCsvColumnValue(csvRow, columnIndexes.needleType).trim() : ""
+      needleSpecification: inventoryCategory === NEEDLE_CATEGORY_NAME ? getCsvColumnValue(csvRow, columnIndexes.needleSpecification).trim() : ""
     };
   }
 
@@ -1068,14 +1248,52 @@ const CalculadoraTattooApp = (() => {
     return csvRows;
   }
 
-  function inferInventoryCategory(inventoryName) {
-    const normalizedInventoryName = String(inventoryName || "").toLowerCase();
+  function normalizeInventoryCategory(categoryName) {
+    const normalizedCategoryName = normalizeCsvHeaderName(categoryName);
 
-    if (normalizedInventoryName.includes("agulha") || normalizedInventoryName.includes("rl") || normalizedInventoryName.includes("rs")) {
-      return NEEDLE_CATEGORY_NAME;
+    if (["agulhas", "cartuchosagulhas", "cartucho", "cartuchos", "needle", "needles"].includes(normalizedCategoryName)) {
+      return "Cartuchos/Agulhas";
     }
 
-    return "Geral";
+    if (["biosseguranca", "higiene", "protecao", "seguranca"].includes(normalizedCategoryName)) {
+      return "Biossegurança";
+    }
+
+    if (["tintas", "tinta", "pigmentos", "pigmento"].includes(normalizedCategoryName)) {
+      return "Tintas";
+    }
+
+    if (["descartaveis", "descartavel", "consumiveis", "consumivel"].includes(normalizedCategoryName)) {
+      return "Descartáveis";
+    }
+
+    if (INVENTORY_CATEGORY_OPTIONS.includes(categoryName)) {
+      return categoryName;
+    }
+
+    return "Outros";
+  }
+
+  function inferInventoryCategory(inventoryName) {
+    const normalizedInventoryName = normalizeTextForSearch(inventoryName);
+
+    if (normalizedInventoryName.includes("agulha") || normalizedInventoryName.includes("cartucho") || normalizedInventoryName.includes("rl") || normalizedInventoryName.includes("rs") || normalizedInventoryName.includes("mag")) {
+      return "Cartuchos/Agulhas";
+    }
+
+    if (normalizedInventoryName.includes("tinta") || normalizedInventoryName.includes("pigmento")) {
+      return "Tintas";
+    }
+
+    if (normalizedInventoryName.includes("luva") || normalizedInventoryName.includes("mascara") || normalizedInventoryName.includes("sabonete") || normalizedInventoryName.includes("vaselina") || normalizedInventoryName.includes("lamina")) {
+      return "Biossegurança";
+    }
+
+    if (normalizedInventoryName.includes("batoque") || normalizedInventoryName.includes("papel") || normalizedInventoryName.includes("plastico") || normalizedInventoryName.includes("palito") || normalizedInventoryName.includes("bandagem") || normalizedInventoryName.includes("stencil")) {
+      return "Descartáveis";
+    }
+
+    return "Outros";
   }
 
   function renderPrintDocument() {
@@ -1088,7 +1306,7 @@ const CalculadoraTattooApp = (() => {
     const itemRows = activeProjectSummary.selectedItems.length > 0
       ? activeProjectSummary.selectedItems.map((projectItem) => `
           <tr>
-            <td>${escapeHtml(projectItem.inventoryItem.name)}</td>
+            <td>${escapeHtml(getInventoryDisplayName(projectItem.inventoryItem))}</td>
             <td>${formatNumber(projectItem.quantityUsed)} ${escapeHtml(projectItem.inventoryItem.unitLabel)}</td>
             <td>${formatCurrency(projectItem.unitCost)}</td>
             <td>${formatCurrency(projectItem.materialCost)}</td>
@@ -1166,19 +1384,30 @@ const CalculadoraTattooApp = (() => {
 
     elementReferences.applyPriceTableButton.addEventListener("click", applyPriceTable);
     elementReferences.clearProjectButton.addEventListener("click", clearActiveProjectItems);
-    elementReferences.createProjectButton.addEventListener("click", createNewProject);
+    elementReferences.createProjectButton.addEventListener("click", openProjectCreationModal);
     elementReferences.downloadProjectPdfButton.addEventListener("click", downloadProjectPdf);
+    elementReferences.openProjectItemSheetButton.addEventListener("click", () => openProjectItemSheet());
     elementReferences.openSupplyModalButton.addEventListener("click", openSupplyModal);
     elementReferences.openCsvImportModalButton.addEventListener("click", openCsvImportModal);
     elementReferences.resetApplicationButton.addEventListener("click", resetApplication);
 
     elementReferences.cancelSupplyModalButton.addEventListener("click", () => closeModal(elementReferences.supplyModal));
     elementReferences.closeSupplyModalButton.addEventListener("click", () => closeModal(elementReferences.supplyModal));
+    elementReferences.cancelProjectModalButton.addEventListener("click", () => closeModal(elementReferences.projectModal));
+    elementReferences.closeProjectModalButton.addEventListener("click", () => closeModal(elementReferences.projectModal));
     elementReferences.cancelCsvImportModalButton.addEventListener("click", () => closeModal(elementReferences.csvImportModal));
     elementReferences.closeCsvImportModalButton.addEventListener("click", () => closeModal(elementReferences.csvImportModal));
+    elementReferences.closeProjectItemSheetButton.addEventListener("click", () => closeModal(elementReferences.projectItemSheet));
 
     elementReferences.supplyCategorySelect.addEventListener("change", updateSupplyCategoryFields);
+    elementReferences.packageQuantityInput.addEventListener("input", updateSupplyUnitCostPreview);
+    elementReferences.packagePriceInput.addEventListener("input", updateSupplyUnitCostPreview);
     elementReferences.csvImportForm.addEventListener("submit", handleCsvImportFormSubmit);
+
+    elementReferences.projectCreationForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      createNewProjectFromForm();
+    });
 
     elementReferences.projectSelect.addEventListener("change", (event) => {
       changeActiveProject(event.target.value);
@@ -1206,9 +1435,21 @@ const CalculadoraTattooApp = (() => {
       renderInventoryList();
     });
 
-    elementReferences.projectSearchInput.addEventListener("input", (event) => {
-      projectSearchTerm = event.target.value;
-      renderProjectItemList();
+    elementReferences.inventoryCategoryFilterList.addEventListener("click", (event) => {
+      const filterButton = event.target.closest("[data-inventory-category-filter]");
+
+      if (!filterButton) {
+        return;
+      }
+
+      activeInventoryCategory = filterButton.dataset.inventoryCategoryFilter;
+      renderInventoryCategoryFilters();
+      renderInventoryList();
+    });
+
+    elementReferences.projectItemSheetSearchInput.addEventListener("input", (event) => {
+      projectItemSheetSearchTerm = event.target.value;
+      renderProjectItemSheet();
     });
 
     elementReferences.inventoryList.addEventListener("change", (event) => {
@@ -1229,8 +1470,11 @@ const CalculadoraTattooApp = (() => {
         return;
       }
 
-      if (event.target.closest("[data-add-inventory-item-to-project]")) {
-        addInventoryItemToProject(inventoryCard.dataset.inventoryItemId);
+      if (event.target.closest("[data-open-project-item-sheet]")) {
+        applicationState.activeScreen = "projects";
+        persistApplicationState();
+        renderActiveScreen();
+        openProjectItemSheet(inventoryCard.dataset.inventoryItemId);
         return;
       }
 
@@ -1245,18 +1489,38 @@ const CalculadoraTattooApp = (() => {
       }
 
       const projectItem = event.target.closest("[data-project-item-id]");
-      updateMaterialUsage(projectItem.dataset.projectItemId, event.target.value);
+      setProjectItemQuantity(projectItem.dataset.projectItemId, event.target.value);
     });
 
     elementReferences.projectItemList.addEventListener("click", (event) => {
-      const toggleButton = event.target.closest("[data-toggle-project-item]");
+      const removeButton = event.target.closest("[data-remove-project-item]");
 
-      if (!toggleButton) {
+      if (!removeButton) {
         return;
       }
 
-      const projectItem = toggleButton.closest("[data-project-item-id]");
-      toggleProjectItem(projectItem.dataset.projectItemId);
+      const projectItem = removeButton.closest("[data-project-item-id]");
+      removeProjectItem(projectItem.dataset.projectItemId);
+    });
+
+    elementReferences.projectItemSheetList.addEventListener("input", (event) => {
+      if (!event.target.matches("[data-sheet-material-usage]")) {
+        return;
+      }
+
+      const sheetItem = event.target.closest("[data-sheet-inventory-item-id]");
+      setProjectItemQuantity(sheetItem.dataset.sheetInventoryItemId, event.target.value);
+    });
+
+    elementReferences.projectItemSheetList.addEventListener("click", (event) => {
+      const addButton = event.target.closest("[data-sheet-select-item]");
+
+      if (!addButton) {
+        return;
+      }
+
+      const sheetItem = addButton.closest("[data-sheet-inventory-item-id]");
+      addProjectItemFromSheet(sheetItem.dataset.sheetInventoryItemId);
     });
   }
 

@@ -56,6 +56,8 @@
 
         <section class="metric-grid" id="inventoryDashboard" aria-live="polite"></section>
 
+        <section class="filter-chip-row" id="inventoryCategoryFilterList" aria-label="Filtrar estoque por categoria"></section>
+
         <label class="search-field">
           <span class="visually-hidden">Buscar insumo</span>
           <input id="inventorySearchInput" type="search" placeholder="Buscar insumo" />
@@ -136,10 +138,7 @@
         <section class="metric-grid" id="projectDashboard" aria-live="polite"></section>
 
         <div class="project-tools">
-          <label class="search-field">
-            <span class="visually-hidden">Buscar item do projeto</span>
-            <input id="projectSearchInput" type="search" placeholder="Buscar item do projeto" />
-          </label>
+          <button class="button button-primary" id="openProjectItemSheetButton" type="button">Adicionar insumo</button>
           <button class="button button-quiet" id="clearProjectButton" type="button">Limpar itens</button>
         </div>
 
@@ -171,12 +170,11 @@
         <label class="form-field">
           <span>Categoria</span>
           <select id="supplyCategorySelect" name="category">
-            <option value="Geral">Geral</option>
-            <option value="Agulhas">Agulhas</option>
-            <option value="Higiene">Higiene</option>
-            <option value="Protecao">Protecao</option>
-            <option value="Pigmentos">Pigmentos</option>
-            <option value="Transfer">Transfer</option>
+            <option value="Outros">Outros</option>
+            <option value="Cartuchos/Agulhas">Cartuchos/Agulhas</option>
+            <option value="Biossegurança">Biossegurança</option>
+            <option value="Tintas">Tintas</option>
+            <option value="Descartáveis">Descartáveis</option>
           </select>
         </label>
 
@@ -192,8 +190,8 @@
           </label>
 
           <label class="form-field">
-            <span>Tipo</span>
-            <input id="needleTypeInput" name="needleType" type="text" placeholder="RL0310" />
+            <span>Especificação/Numeração</span>
+            <input id="needleSpecificationInput" name="needleSpecification" type="text" placeholder="RL0310" />
           </label>
         </div>
 
@@ -213,6 +211,11 @@
             <input id="packagePriceInput" name="packagePrice" type="text" inputmode="decimal" placeholder="30,00" required />
           </label>
         </div>
+
+        <section class="unit-cost-preview" aria-live="polite">
+          <span>Custo unitário</span>
+          <strong id="supplyUnitCostPreview">R$ 0,00</strong>
+        </section>
 
         <div class="modal-actions">
           <button class="button button-primary" type="submit">Salvar insumo</button>
@@ -239,7 +242,7 @@
         </label>
 
         <p class="helper-text">
-          Colunas aceitas: nome, categoria, quantidade embalagem, unidade, preco pacote, marca e tipo.
+          Colunas aceitas: nome, categoria, quantidade embalagem, unidade, preco pacote, marca e especificação.
         </p>
 
         <div class="import-progress" id="csvImportProgress" aria-live="polite">Aguardando arquivo CSV</div>
@@ -249,6 +252,51 @@
           <button class="button button-quiet" id="cancelCsvImportModalButton" type="button">Cancelar</button>
         </div>
       </form>
+    </div>
+  </dialog>
+
+  <dialog class="app-modal" id="projectModal" aria-labelledby="projectModalTitle">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div>
+          <span class="section-kicker">Novo orçamento</span>
+          <h2 id="projectModalTitle">Criar projeto</h2>
+        </div>
+        <button class="icon-button" id="closeProjectModalButton" type="button" aria-label="Fechar novo projeto">x</button>
+      </div>
+
+      <form class="stacked-form" id="projectCreationForm" autocomplete="off">
+        <label class="form-field">
+          <span>Nome do projeto</span>
+          <input id="newProjectNameInput" name="newProjectName" type="text" placeholder="Fechamento Braço - Cliente X" required />
+        </label>
+
+        <div class="modal-actions">
+          <button class="button button-primary" type="submit">Criar projeto</button>
+          <button class="button button-quiet" id="cancelProjectModalButton" type="button">Cancelar</button>
+        </div>
+      </form>
+    </div>
+  </dialog>
+
+  <dialog class="app-modal sheet-modal" id="projectItemSheet" aria-labelledby="projectItemSheetTitle">
+    <div class="modal-card sheet-card">
+      <div class="sheet-handle" aria-hidden="true"></div>
+
+      <div class="modal-header">
+        <div>
+          <span class="section-kicker">Selecionar insumos</span>
+          <h2 id="projectItemSheetTitle">Adicionar ao projeto</h2>
+        </div>
+        <button class="icon-button" id="closeProjectItemSheetButton" type="button" aria-label="Fechar selecao">x</button>
+      </div>
+
+      <label class="search-field sheet-search-field">
+        <span class="visually-hidden">Buscar insumo para o projeto</span>
+        <input id="projectItemSheetSearchInput" type="search" placeholder="Buscar por material, marca ou numeração" />
+      </label>
+
+      <section class="sheet-item-list" id="projectItemSheetList" aria-label="Insumos disponíveis por categoria"></section>
     </div>
   </dialog>
 
