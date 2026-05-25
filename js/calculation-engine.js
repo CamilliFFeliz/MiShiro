@@ -1,5 +1,18 @@
 export function normalizeNumber(value) {
-  const normalizedValue = String(value == null ? "" : value).replace(",", ".").trim();
+  const rawValue = String(value == null ? "" : value).trim();
+  const numericText = rawValue.replace(/\s/g, "").replace(/[R$]/g, "");
+  const lastCommaIndex = numericText.lastIndexOf(",");
+  const lastDotIndex = numericText.lastIndexOf(".");
+  let normalizedValue = numericText;
+
+  if (lastCommaIndex > -1 && lastDotIndex > -1) {
+    normalizedValue = lastCommaIndex > lastDotIndex
+      ? numericText.replace(/\./g, "").replace(",", ".")
+      : numericText.replace(/,/g, "");
+  } else if (lastCommaIndex > -1) {
+    normalizedValue = numericText.replace(",", ".");
+  }
+
   const parsedValue = Number(normalizedValue);
 
   if (!Number.isFinite(parsedValue) || parsedValue < 0) {
@@ -24,8 +37,8 @@ export function calculateMaterialCost(inventoryItem, quantityUsed) {
   return calculateUnitCost(inventoryItem) * normalizeNumber(quantityUsed);
 }
 
-export function calculateTotalCost({ inventoryData, budgetSheet }) {
-  const materialUsage = budgetSheet.materialUsage || {};
+export function calculateTotalCost({ inventoryData = [], projectData = {} } = {}) {
+  const materialUsage = projectData.materialUsage || {};
   const selectedItems = inventoryData
     .map((inventoryItem) => {
       const quantityUsed = normalizeNumber(materialUsage[inventoryItem.id]);
@@ -39,11 +52,11 @@ export function calculateTotalCost({ inventoryData, budgetSheet }) {
         materialCost
       };
     })
-    .filter((budgetItem) => budgetItem.quantityUsed > 0);
+    .filter((projectItem) => projectItem.quantityUsed > 0);
 
-  const materialTotal = selectedItems.reduce((total, budgetItem) => total + budgetItem.materialCost, 0);
-  const laborHours = normalizeNumber(budgetSheet.laborHours);
-  const hourlyRate = normalizeNumber(budgetSheet.hourlyRate);
+  const materialTotal = selectedItems.reduce((total, projectItem) => total + projectItem.materialCost, 0);
+  const laborHours = normalizeNumber(projectData.laborHours);
+  const hourlyRate = normalizeNumber(projectData.hourlyRate);
   const laborTotal = laborHours * hourlyRate;
 
   return {

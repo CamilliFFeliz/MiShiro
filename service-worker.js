@@ -1,4 +1,4 @@
-const CACHE_NAME = "calculadora-tattoo-cache-v1";
+const CACHE_NAME = "calculadora-tattoo-cache-v2";
 
 const STATIC_ASSETS = [
   "./",

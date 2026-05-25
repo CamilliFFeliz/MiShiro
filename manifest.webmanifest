@@ -1,7 +1,7 @@
 {
   "name": "CalculadoraTattoo",
   "short_name": "TattooCalc",
-  "description": "Calculadora mobile-first para insumos e orcamentos de tatuagem.",
+  "description": "Calculadora mobile-first para estoque e projetos de tatuagem.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

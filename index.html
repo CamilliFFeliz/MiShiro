@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#2D0B40" />
-  <meta name="description" content="CalculadoraTattoo: PWA mobile-first para calcular insumos e orcamentos de tatuagem." />
+  <meta name="description" content="CalculadoraTattoo: PWA mobile-first para estoque e projetos de tatuagem." />
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="icon" href="icons/icon.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="css/style.css" />
@@ -22,8 +22,8 @@
       </div>
 
       <section class="dashboard-total" aria-live="polite">
-        <span>Total ativo</span>
-        <strong id="activeSheetTotal">R$ 0,00</strong>
+        <span>Total do projeto</span>
+        <strong id="activeProjectTotal">R$ 0,00</strong>
       </section>
     </header>
 
@@ -31,10 +31,15 @@
       <section class="screen-panel" id="inventoryScreen" data-screen-panel="inventory" aria-labelledby="inventoryTitle">
         <div class="screen-heading">
           <div>
-            <span class="section-kicker">Estoque</span>
+            <span class="section-kicker">Estoque inteligente</span>
             <h1 id="inventoryTitle">Insumos</h1>
           </div>
-          <button class="button button-quiet" id="resetApplicationButton" type="button">Restaurar</button>
+
+          <div class="screen-actions">
+            <button class="button button-primary" id="openSupplyModalButton" type="button">Novo insumo</button>
+            <button class="button button-quiet" id="openCsvImportModalButton" type="button">Importar CSV</button>
+            <button class="button button-danger" id="resetApplicationButton" type="button">Restaurar</button>
+          </div>
         </div>
 
         <section class="surface-card price-table-card" aria-labelledby="priceTableTitle">
@@ -49,37 +54,6 @@
           <button class="button button-primary" id="applyPriceTableButton" type="button">Usar tabela</button>
         </section>
 
-        <form class="surface-card stacked-form" id="supplyForm" autocomplete="off">
-          <div class="section-header">
-            <span class="section-kicker">Cadastro rapido</span>
-            <h2>Novo insumo</h2>
-          </div>
-
-          <label class="form-field form-field-wide">
-            <span>Material</span>
-            <input id="supplyNameInput" name="supplyName" type="text" placeholder="Agulha, batoque, tinta..." required />
-          </label>
-
-          <div class="responsive-grid">
-            <label class="form-field">
-              <span>Qtd. pacote</span>
-              <input id="packageQuantityInput" name="packageQuantity" type="text" inputmode="decimal" placeholder="50" required />
-            </label>
-
-            <label class="form-field">
-              <span>Unidade</span>
-              <input id="unitLabelInput" name="unitLabel" type="text" placeholder="un, ml, folhas" required />
-            </label>
-
-            <label class="form-field">
-              <span>Preco pacote</span>
-              <input id="packagePriceInput" name="packagePrice" type="text" inputmode="decimal" placeholder="30,00" required />
-            </label>
-          </div>
-
-          <button class="button button-primary" type="submit">Salvar insumo</button>
-        </form>
-
         <section class="metric-grid" id="inventoryDashboard" aria-live="polite"></section>
 
         <label class="search-field">
@@ -90,43 +64,43 @@
         <section class="item-list" id="inventoryList" aria-label="Lista de insumos"></section>
       </section>
 
-      <section class="screen-panel" id="calculatorScreen" data-screen-panel="calculator" aria-labelledby="calculatorTitle">
+      <section class="screen-panel" id="projectScreen" data-screen-panel="projects" aria-labelledby="projectTitle">
         <div class="screen-heading">
           <div>
-            <span class="section-kicker">Calculadora</span>
-            <h1 id="calculatorTitle">Orcamento</h1>
+            <span class="section-kicker">Projetos</span>
+            <h1 id="projectTitle">Orcamentos</h1>
           </div>
           <div class="screen-actions">
-            <button class="button button-primary" id="downloadBudgetPdfButton" type="button">Baixar PDF</button>
-            <button class="button button-quiet" id="createBudgetSheetButton" type="button">Nova ficha</button>
+            <button class="button button-primary" id="downloadProjectPdfButton" type="button">Baixar PDF</button>
+            <button class="button button-quiet" id="createProjectButton" type="button">Novo projeto</button>
           </div>
         </div>
 
-        <section class="surface-card stacked-form" aria-labelledby="budgetSheetTitle">
+        <section class="surface-card stacked-form" aria-labelledby="projectDataTitle">
           <div class="section-header">
-            <span class="section-kicker">Ficha ativa</span>
-            <h2 id="budgetSheetTitle">Dados do orcamento</h2>
+            <span class="section-kicker">Projeto ativo</span>
+            <h2 id="projectDataTitle">Dados do orcamento</h2>
           </div>
 
           <label class="form-field">
-            <span>Selecionar ficha</span>
-            <select id="budgetSheetSelect"></select>
+            <span>Selecionar projeto</span>
+            <select id="projectSelect"></select>
           </label>
 
-          <form class="inner-form" id="budgetSheetForm" autocomplete="off">
+          <form class="inner-form" id="projectForm" autocomplete="off">
             <label class="form-field form-field-wide">
-              <span>Sessao</span>
-              <input id="budgetTitleInput" name="title" type="text" placeholder="Flash pequeno no antebraco" />
+              <span>Nome do projeto</span>
+              <input id="projectNameInput" name="projectName" type="text" placeholder="Fechamento braco - Cliente X" />
             </label>
 
             <label class="form-field">
               <span>Cliente</span>
-              <input id="clientNameInput" name="clientName" type="text" placeholder="Nome do cliente" />
+              <input id="projectClientInput" name="clientName" type="text" placeholder="Nome do cliente" />
             </label>
 
             <label class="form-field">
               <span>Observacoes</span>
-              <textarea id="sessionNotesInput" name="sessionNotes" rows="3" placeholder="Tamanho, regiao e detalhes"></textarea>
+              <textarea id="projectNotesInput" name="projectNotes" rows="3" placeholder="Tamanho, regiao e detalhes"></textarea>
             </label>
           </form>
         </section>
@@ -154,22 +128,22 @@
         </section>
 
         <section class="result-card" aria-live="polite">
-          <span>Valor do orcamento</span>
-          <strong id="calculatorTotalValue">R$ 0,00</strong>
-          <small id="calculatorTotalDetail">0 insumos selecionados</small>
+          <span>Valor do projeto</span>
+          <strong id="projectTotalValue">R$ 0,00</strong>
+          <small id="projectTotalDetail">0 insumos selecionados</small>
         </section>
 
-        <section class="metric-grid" id="calculatorDashboard" aria-live="polite"></section>
+        <section class="metric-grid" id="projectDashboard" aria-live="polite"></section>
 
-        <div class="calculator-tools">
+        <div class="project-tools">
           <label class="search-field">
-            <span class="visually-hidden">Buscar item do orcamento</span>
-            <input id="calculatorSearchInput" type="search" placeholder="Buscar item do orcamento" />
+            <span class="visually-hidden">Buscar item do projeto</span>
+            <input id="projectSearchInput" type="search" placeholder="Buscar item do projeto" />
           </label>
-          <button class="button button-quiet" id="clearBudgetSheetButton" type="button">Limpar itens</button>
+          <button class="button button-quiet" id="clearProjectButton" type="button">Limpar itens</button>
         </div>
 
-        <section class="item-list" id="calculatorItemList" aria-label="Itens do orcamento"></section>
+        <section class="item-list" id="projectItemList" aria-label="Itens do projeto"></section>
       </section>
     </main>
 
@@ -177,11 +151,106 @@
       <button class="navigation-button" type="button" data-screen-target="inventory" aria-label="Abrir estoque">
         <span>Estoque</span>
       </button>
-      <button class="navigation-button" type="button" data-screen-target="calculator" aria-label="Abrir calculadora">
-        <span>Calculadora</span>
+      <button class="navigation-button" type="button" data-screen-target="projects" aria-label="Abrir projetos">
+        <span>Projetos</span>
       </button>
     </nav>
   </div>
+
+  <dialog class="app-modal" id="supplyModal" aria-labelledby="supplyModalTitle">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div>
+          <span class="section-kicker">Cadastro</span>
+          <h2 id="supplyModalTitle">Novo insumo</h2>
+        </div>
+        <button class="icon-button" id="closeSupplyModalButton" type="button" aria-label="Fechar cadastro">x</button>
+      </div>
+
+      <form class="stacked-form" id="supplyForm" autocomplete="off">
+        <label class="form-field">
+          <span>Categoria</span>
+          <select id="supplyCategorySelect" name="category">
+            <option value="Geral">Geral</option>
+            <option value="Agulhas">Agulhas</option>
+            <option value="Higiene">Higiene</option>
+            <option value="Protecao">Protecao</option>
+            <option value="Pigmentos">Pigmentos</option>
+            <option value="Transfer">Transfer</option>
+          </select>
+        </label>
+
+        <label class="form-field form-field-wide">
+          <span>Material</span>
+          <input id="supplyNameInput" name="supplyName" type="text" placeholder="Agulha, batoque, tinta..." required />
+        </label>
+
+        <div class="conditional-fields" id="needleExtraFields" hidden>
+          <label class="form-field">
+            <span>Marca</span>
+            <input id="needleBrandInput" name="needleBrand" type="text" placeholder="White Head" />
+          </label>
+
+          <label class="form-field">
+            <span>Tipo</span>
+            <input id="needleTypeInput" name="needleType" type="text" placeholder="RL0310" />
+          </label>
+        </div>
+
+        <div class="responsive-grid">
+          <label class="form-field">
+            <span>Qtd. embalagem</span>
+            <input id="packageQuantityInput" name="packageQuantity" type="text" inputmode="decimal" placeholder="50" required />
+          </label>
+
+          <label class="form-field">
+            <span>Unidade</span>
+            <input id="unitLabelInput" name="unitLabel" type="text" placeholder="un, ml, folhas" required />
+          </label>
+
+          <label class="form-field">
+            <span>Preco embalagem</span>
+            <input id="packagePriceInput" name="packagePrice" type="text" inputmode="decimal" placeholder="30,00" required />
+          </label>
+        </div>
+
+        <div class="modal-actions">
+          <button class="button button-primary" type="submit">Salvar insumo</button>
+          <button class="button button-quiet" id="cancelSupplyModalButton" type="button">Cancelar</button>
+        </div>
+      </form>
+    </div>
+  </dialog>
+
+  <dialog class="app-modal" id="csvImportModal" aria-labelledby="csvImportModalTitle">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div>
+          <span class="section-kicker">Importacao</span>
+          <h2 id="csvImportModalTitle">Importar CSV</h2>
+        </div>
+        <button class="icon-button" id="closeCsvImportModalButton" type="button" aria-label="Fechar importacao">x</button>
+      </div>
+
+      <form class="stacked-form" id="csvImportForm">
+        <label class="form-field">
+          <span>Arquivo .csv</span>
+          <input id="csvFileInput" type="file" accept=".csv,text/csv" required />
+        </label>
+
+        <p class="helper-text">
+          Colunas aceitas: nome, categoria, quantidade embalagem, unidade, preco pacote, marca e tipo.
+        </p>
+
+        <div class="import-progress" id="csvImportProgress" aria-live="polite">Aguardando arquivo CSV</div>
+
+        <div class="modal-actions">
+          <button class="button button-primary" id="processCsvButton" type="submit">Carregar itens</button>
+          <button class="button button-quiet" id="cancelCsvImportModalButton" type="button">Cancelar</button>
+        </div>
+      </form>
+    </div>
+  </dialog>
 
   <template id="emptyStateTemplate">
     <article class="empty-state">

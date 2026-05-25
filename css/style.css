@@ -27,6 +27,7 @@ html {
 body {
   min-width: 320px;
   min-height: 100vh;
+  min-height: 100dvh;
   margin: 0;
   overflow-x: hidden;
   background: var(--color-black);
@@ -39,17 +40,16 @@ input,
 select,
 textarea {
   font: inherit;
-}
-
-button,
-input,
-select,
-textarea {
   -webkit-tap-highlight-color: transparent;
 }
 
 button {
   cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
 }
 
 input,
@@ -128,7 +128,7 @@ textarea:focus {
   width: 52px;
   height: 52px;
   place-items: center;
-  border: 1px solid var(--color-purple-light);
+  border: var(--border-strong);
   border-radius: var(--radius-medium);
   background: var(--color-purple);
   color: var(--color-white);
@@ -167,7 +167,7 @@ textarea:focus {
   gap: 5px;
   min-width: 0;
   padding: 14px;
-  border: 1px solid var(--color-purple-light);
+  border: var(--border-strong);
   border-radius: var(--radius-large);
   background: var(--color-black);
   color: var(--color-white);
@@ -222,6 +222,11 @@ textarea:focus {
   gap: 10px;
 }
 
+.screen-actions .button:only-child,
+.screen-actions .button:nth-child(3) {
+  grid-column: 1 / -1;
+}
+
 .section-kicker {
   color: var(--color-purple-light);
   font-size: 12px;
@@ -262,9 +267,14 @@ textarea:focus {
   gap: 14px;
 }
 
-.responsive-grid {
+.responsive-grid,
+.conditional-fields {
   display: grid;
   gap: 12px;
+}
+
+.conditional-fields[hidden] {
+  display: none;
 }
 
 .form-field,
@@ -284,12 +294,13 @@ textarea:focus {
 
 .button,
 .select-button,
-.navigation-button {
+.navigation-button,
+.icon-button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   min-height: 50px;
-  border: 1px solid var(--color-purple-light);
+  border: var(--border-strong);
   border-radius: var(--radius-medium);
   padding: 0 16px;
   font-size: 15px;
@@ -299,7 +310,8 @@ textarea:focus {
 
 .button:active,
 .navigation-button:active,
-.select-button:active {
+.select-button:active,
+.icon-button:active {
   transform: translateY(2px);
 }
 
@@ -315,6 +327,13 @@ textarea:focus {
 
 .button-danger {
   border-color: var(--color-black);
+  background: var(--color-black);
+  color: var(--color-white);
+}
+
+.icon-button {
+  width: 50px;
+  padding: 0;
   background: var(--color-black);
   color: var(--color-white);
 }
@@ -353,6 +372,7 @@ textarea:focus {
 
 .search-field {
   display: block;
+  margin-bottom: 14px;
 }
 
 .search-field input {
@@ -366,10 +386,14 @@ textarea:focus {
   color: var(--color-purple-light);
 }
 
-.calculator-tools {
+.project-tools {
   display: grid;
   gap: 12px;
   margin-bottom: 14px;
+}
+
+.project-tools .search-field {
+  margin-bottom: 0;
 }
 
 .item-list {
@@ -418,7 +442,7 @@ textarea:focus {
 .pill {
   max-width: 134px;
   padding: 8px 10px;
-  border: 1px solid var(--color-purple-light);
+  border: var(--border-strong);
   border-radius: var(--radius-medium);
   background: var(--color-purple-light);
   color: var(--color-black);
@@ -458,7 +482,7 @@ textarea:focus {
   gap: 7px;
   margin-bottom: 18px;
   padding: 18px;
-  border: 1px solid var(--color-purple-light);
+  border: var(--border-strong);
   border-radius: var(--radius-large);
   background: var(--color-purple);
   color: var(--color-white);
@@ -472,17 +496,17 @@ textarea:focus {
   line-height: 0.92;
 }
 
-.budget-item {
+.project-item {
   display: grid;
   gap: 12px;
 }
 
-.budget-item.is-selected {
+.project-item.is-selected {
   border-color: var(--color-purple-light);
   background: var(--color-purple);
 }
 
-.budget-item-control {
+.project-item-control {
   display: grid;
   gap: 12px;
 }
@@ -492,7 +516,7 @@ textarea:focus {
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   overflow: hidden;
-  border: 1px solid var(--color-purple);
+  border: var(--border-subtle);
   border-radius: var(--radius-medium);
   background: var(--color-white);
 }
@@ -518,7 +542,7 @@ textarea:focus {
   color: var(--color-black);
 }
 
-.budget-item.is-selected .select-button {
+.project-item.is-selected .select-button {
   background: var(--color-purple-light);
   color: var(--color-black);
 }
@@ -529,7 +553,7 @@ textarea:focus {
   gap: 10px;
   align-items: center;
   padding-top: 12px;
-  border-top: 1px solid var(--color-purple-light);
+  border-top: var(--border-strong);
 }
 
 .line-total span {
@@ -559,10 +583,73 @@ textarea:focus {
   font-weight: 950;
 }
 
-.empty-state span {
+.empty-state span,
+.helper-text {
   color: var(--color-purple-light);
   font-size: 14px;
   font-weight: 850;
+}
+
+.helper-text {
+  margin: 0;
+  line-height: 1.45;
+}
+
+.import-progress {
+  min-height: 50px;
+  padding: 14px;
+  border: var(--border-strong);
+  border-radius: var(--radius-medium);
+  background: var(--color-black);
+  color: var(--color-purple-light);
+  font-size: 14px;
+  font-weight: 950;
+}
+
+.app-modal {
+  width: min(100% - 24px, 560px);
+  max-height: calc(100dvh - 24px);
+  margin: auto;
+  padding: 0;
+  overflow: auto;
+  border: 0;
+  background: transparent;
+  color: var(--color-white);
+}
+
+.app-modal::backdrop {
+  background: var(--color-black);
+  opacity: 0.82;
+}
+
+.modal-card {
+  display: grid;
+  gap: 16px;
+  padding: 16px;
+  border: var(--border-strong);
+  border-radius: var(--radius-large);
+  background: var(--color-purple-dark);
+  box-shadow: var(--shadow-panel);
+}
+
+.modal-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+}
+
+.modal-header h2 {
+  margin: 3px 0 0;
+  color: var(--color-white);
+  font-size: 24px;
+  font-weight: 950;
+  line-height: 1.05;
+}
+
+.modal-actions {
+  display: grid;
+  gap: 10px;
 }
 
 .bottom-navigation {
@@ -578,7 +665,7 @@ textarea:focus {
   max-width: 920px;
   margin: 0 auto;
   padding: 10px var(--page-padding) calc(10px + env(safe-area-inset-bottom));
-  border-top: 1px solid var(--color-purple);
+  border-top: var(--border-subtle);
   background: var(--color-purple-dark);
 }
 
@@ -613,12 +700,17 @@ textarea:focus {
     align-items: end;
   }
 
-  .screen-actions,
+  .screen-actions {
+    width: min(100%, 360px);
+  }
+
   .responsive-grid,
+  .conditional-fields,
   .editable-grid,
   .card-actions,
-  .budget-item-control,
-  .calculator-tools {
+  .project-item-control,
+  .project-tools,
+  .modal-actions {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
@@ -668,7 +760,8 @@ textarea:focus {
     color: var(--color-black);
   }
 
-  .application-shell {
+  .application-shell,
+  .app-modal {
     display: none !important;
   }
 
@@ -726,7 +819,7 @@ textarea:focus {
 
   .print-summary div {
     padding: 10px;
-    border: 1px solid var(--color-purple-light);
+    border: var(--border-strong);
   }
 
   .print-summary dt {
@@ -752,7 +845,7 @@ textarea:focus {
   .print-table th,
   .print-table td {
     padding: 8px;
-    border: 1px solid var(--color-purple-light);
+    border: var(--border-strong);
     text-align: left;
     vertical-align: top;
   }
