@@ -208,7 +208,7 @@
     <div class="modal-card fullscreen-modal-card">
       <div class="modal-header">
         <div>
-          <span class="section-kicker">Ferramenta de entrada</span>
+          <span class="section-kicker" id="supplyModalKicker">Ferramenta de entrada</span>
           <h2 id="supplyModalTitle">Nova entrada</h2>
         </div>
         <button class="icon-button" id="closeSupplyModalButton" type="button" aria-label="Fechar nova entrada">x</button>
@@ -250,6 +250,11 @@
           </label>
 
           <label class="form-field">
+            <span>Estoque atual</span>
+            <input id="currentStockInput" name="currentStock" type="text" inputmode="decimal" placeholder="50" />
+          </label>
+
+          <label class="form-field">
             <span>Unidade</span>
             <input id="unitLabelInput" name="unitLabel" type="text" placeholder="un, ml, folhas" required />
           </label>
@@ -266,7 +271,7 @@
         </section>
 
         <div class="modal-actions">
-          <button class="button button-primary" type="submit">Salvar entrada</button>
+          <button class="button button-primary" id="saveSupplyButton" type="submit">Salvar entrada</button>
           <button class="button button-quiet" id="cancelSupplyModalButton" type="button">Cancelar</button>
         </div>
       </form>

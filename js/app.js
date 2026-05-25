@@ -84,8 +84,10 @@ const CalculadoraTattooApp = (() => {
   const elementReferences = {};
   let applicationState = createInitialState();
   let activeInventoryCategory = ALL_CATEGORIES_FILTER;
+  let editingInventoryItemId = null;
   let inventorySearchTerm = "";
   let projectItemSheetSearchTerm = "";
+  let shouldSyncCurrentStockWithPackageQuantity = false;
 
   async function initializeApplication() {
     bindElementReferences();
@@ -117,6 +119,7 @@ const CalculadoraTattooApp = (() => {
     elementReferences.closeProjectModalButton = document.querySelector("#closeProjectModalButton");
     elementReferences.closeSupplyModalButton = document.querySelector("#closeSupplyModalButton");
     elementReferences.createProjectButton = document.querySelector("#createProjectButton");
+    elementReferences.currentStockInput = document.querySelector("#currentStockInput");
     elementReferences.csvFileInput = document.querySelector("#csvFileInput");
     elementReferences.csvImportForm = document.querySelector("#csvImportForm");
     elementReferences.csvImportModal = document.querySelector("#csvImportModal");
@@ -163,8 +166,11 @@ const CalculadoraTattooApp = (() => {
     elementReferences.projectTotalDetail = document.querySelector("#projectTotalDetail");
     elementReferences.projectTotalValue = document.querySelector("#projectTotalValue");
     elementReferences.resetApplicationButton = document.querySelector("#resetApplicationButton");
+    elementReferences.saveSupplyButton = document.querySelector("#saveSupplyButton");
     elementReferences.supplyCategorySelect = document.querySelector("#supplyCategorySelect");
     elementReferences.supplyForm = document.querySelector("#supplyForm");
+    elementReferences.supplyModalKicker = document.querySelector("#supplyModalKicker");
+    elementReferences.supplyModalTitle = document.querySelector("#supplyModalTitle");
     elementReferences.supplyModal = document.querySelector("#supplyModal");
     elementReferences.supplyNameInput = document.querySelector("#supplyNameInput");
     elementReferences.supplyUnitCostPreview = document.querySelector("#supplyUnitCostPreview");
@@ -299,6 +305,15 @@ const CalculadoraTattooApp = (() => {
 
   function formatNumber(value) {
     return NUMBER_FORMATTER.format(Number.isFinite(value) ? value : 0);
+  }
+
+  function formatEditableNumber(value) {
+    const normalizedValue = normalizeNumber(value);
+    return String(normalizedValue).replace(".", ",");
+  }
+
+  function findInventoryItemById(inventoryItemId) {
+    return applicationState.inventoryData.find((inventoryItem) => inventoryItem.id === inventoryItemId);
   }
 
   function escapeHtml(value) {
@@ -528,13 +543,19 @@ const CalculadoraTattooApp = (() => {
 
         <div class="stock-row">
           <div>
-            <span>Estoque atual</span>
+            <span>Disponível</span>
             <strong>${formatNumber(availableStock)} ${escapeHtml(inventoryItem.unitLabel)}</strong>
           </div>
           <div>
             <span>Reservado</span>
             <strong>${formatNumber(reservedStock)} ${escapeHtml(inventoryItem.unitLabel)}</strong>
           </div>
+        </div>
+
+        <div class="inventory-card-actions">
+          <button class="button button-primary" type="button" data-edit-inventory-item>Editar</button>
+          <button class="button button-quiet" type="button" data-decrease-inventory-stock>Diminuir</button>
+          <button class="button button-danger" type="button" data-delete-inventory-item>Excluir</button>
         </div>
       </article>
     `;
@@ -679,12 +700,54 @@ const CalculadoraTattooApp = (() => {
   }
 
   function openSupplyModal() {
+    editingInventoryItemId = null;
+    shouldSyncCurrentStockWithPackageQuantity = true;
     elementReferences.supplyForm.reset();
+    clearSupplyFormValidation();
+    elementReferences.supplyModalKicker.textContent = "Ferramenta de entrada";
+    elementReferences.supplyModalTitle.textContent = "Nova entrada";
+    elementReferences.saveSupplyButton.textContent = "Salvar entrada";
     elementReferences.supplyCategorySelect.value = "Outros";
     updateSupplyCategoryFields();
     updateSupplyUnitCostPreview();
     openModal(elementReferences.supplyModal);
     elementReferences.supplyNameInput.focus();
+  }
+
+  function openInventoryEditModal(inventoryItemId, shouldFocusCurrentStock = false) {
+    const inventoryItem = findInventoryItemById(inventoryItemId);
+
+    if (!inventoryItem) {
+      return;
+    }
+
+    editingInventoryItemId = inventoryItem.id;
+    shouldSyncCurrentStockWithPackageQuantity = false;
+    clearSupplyFormValidation();
+    elementReferences.supplyForm.reset();
+    elementReferences.supplyModalKicker.textContent = "Gestão de estoque";
+    elementReferences.supplyModalTitle.textContent = "Editar insumo";
+    elementReferences.saveSupplyButton.textContent = "Salvar alterações";
+    elementReferences.supplyCategorySelect.value = inventoryItem.category;
+    elementReferences.supplyNameInput.value = inventoryItem.name;
+    elementReferences.cartridgeBrandInput.value = inventoryItem.brand || "";
+    elementReferences.cartridgeSpecificationInput.value = inventoryItem.specification || "";
+    elementReferences.packageQuantityInput.value = formatEditableNumber(inventoryItem.packageQuantity);
+    elementReferences.currentStockInput.value = formatEditableNumber(inventoryItem.currentStock);
+    elementReferences.unitLabelInput.value = inventoryItem.unitLabel;
+    elementReferences.packagePriceInput.value = formatEditableNumber(inventoryItem.packagePrice);
+    updateSupplyCategoryFields();
+    updateSupplyUnitCostPreview();
+    openModal(elementReferences.supplyModal);
+
+    if (shouldFocusCurrentStock) {
+      elementReferences.currentStockInput.focus();
+      elementReferences.currentStockInput.select();
+      return;
+    }
+
+    elementReferences.supplyNameInput.focus();
+    elementReferences.supplyNameInput.select();
   }
 
   function openCsvImportModal() {
@@ -752,6 +815,11 @@ const CalculadoraTattooApp = (() => {
     }
   }
 
+  function clearSupplyFormValidation() {
+    elementReferences.packageQuantityInput.setCustomValidity("");
+    elementReferences.currentStockInput.setCustomValidity("");
+  }
+
   function updateSupplyUnitCostPreview() {
     const unitCost = calculateUnitCost({
       packageQuantity: elementReferences.packageQuantityInput.value,
@@ -761,41 +829,110 @@ const CalculadoraTattooApp = (() => {
     elementReferences.supplyUnitCostPreview.textContent = formatCurrency(unitCost);
   }
 
-  function addInventoryItemFromForm() {
+  function syncCurrentStockWithPackageQuantity() {
+    if (!shouldSyncCurrentStockWithPackageQuantity) {
+      return;
+    }
+
+    elementReferences.currentStockInput.value = elementReferences.packageQuantityInput.value;
+  }
+
+  function saveInventoryItemFromForm() {
     const itemName = elementReferences.supplyNameInput.value.trim();
     const itemCategory = normalizeInventoryCategory(elementReferences.supplyCategorySelect.value);
     const packageQuantity = normalizeNumber(elementReferences.packageQuantityInput.value);
+    const currentStock = elementReferences.currentStockInput.value.trim()
+      ? normalizeNumber(elementReferences.currentStockInput.value)
+      : packageQuantity;
     const unitLabel = elementReferences.unitLabelInput.value.trim();
     const packagePrice = normalizeNumber(elementReferences.packagePriceInput.value);
+    const reservedStock = editingInventoryItemId ? getTotalUsedQuantity(editingInventoryItemId) : 0;
 
-    elementReferences.packageQuantityInput.setCustomValidity("");
+    clearSupplyFormValidation();
 
     if (packageQuantity <= 0) {
       elementReferences.packageQuantityInput.setCustomValidity("Informe uma quantidade maior que zero.");
     }
 
-    if (!itemName || !unitLabel || packageQuantity <= 0) {
+    if (currentStock < 0) {
+      elementReferences.currentStockInput.setCustomValidity("O estoque atual não pode ser negativo.");
+    }
+
+    if (currentStock < reservedStock) {
+      elementReferences.currentStockInput.setCustomValidity(`Este item já está usado em projetos: mínimo ${formatNumber(reservedStock)}.`);
+    }
+
+    if (!itemName || !unitLabel || packageQuantity <= 0 || currentStock < 0 || currentStock < reservedStock) {
       elementReferences.supplyForm.reportValidity();
       return;
     }
 
-    const createdInventoryItem = {
-      id: createEntityId("inventory"),
+    const existingInventoryItem = editingInventoryItemId ? findInventoryItemById(editingInventoryItemId) : null;
+    const savedInventoryItem = {
+      id: existingInventoryItem ? existingInventoryItem.id : createEntityId("inventory"),
       name: itemName,
       category: itemCategory,
       packageQuantity,
       unitLabel,
       packagePrice,
-      currentStock: packageQuantity,
+      currentStock,
       brand: itemCategory === CARTRIDGE_CATEGORY_NAME ? elementReferences.cartridgeBrandInput.value.trim() : "",
       specification: itemCategory === CARTRIDGE_CATEGORY_NAME ? elementReferences.cartridgeSpecificationInput.value.trim() : "",
-      createdAt: new Date().toISOString()
+      createdAt: existingInventoryItem ? existingInventoryItem.createdAt : new Date().toISOString(),
+      updatedAt: new Date().toISOString()
     };
 
-    addInventoryItems([createdInventoryItem]);
+    if (existingInventoryItem) {
+      updateInventoryItem(savedInventoryItem);
+    } else {
+      addInventoryItems([savedInventoryItem]);
+    }
+
     elementReferences.supplyForm.reset();
+    editingInventoryItemId = null;
     closeModal(elementReferences.supplyModal);
     applicationState.activeScreen = "inventory";
+    persistApplicationState();
+    renderApplication();
+  }
+
+  function updateInventoryItem(updatedInventoryItem) {
+    applicationState.inventoryData = applicationState.inventoryData.map((inventoryItem) => {
+      if (inventoryItem.id !== updatedInventoryItem.id) {
+        return inventoryItem;
+      }
+
+      return updatedInventoryItem;
+    });
+  }
+
+  function deleteInventoryItem(inventoryItemId) {
+    const inventoryItem = findInventoryItemById(inventoryItemId);
+
+    if (!inventoryItem) {
+      return;
+    }
+
+    const usedQuantity = getTotalUsedQuantity(inventoryItemId);
+    const confirmationMessage = usedQuantity > 0
+      ? `Excluir "${getInventoryDisplayName(inventoryItem)}"? Ele está usado em projetos e será removido desses orçamentos.`
+      : `Excluir "${getInventoryDisplayName(inventoryItem)}" do estoque?`;
+
+    if (!window.confirm(confirmationMessage)) {
+      return;
+    }
+
+    applicationState.inventoryData = applicationState.inventoryData.filter((item) => item.id !== inventoryItemId);
+    applicationState.projects = applicationState.projects.map((projectData) => {
+      const materialUsage = { ...projectData.materialUsage };
+      delete materialUsage[inventoryItemId];
+
+      return {
+        ...projectData,
+        materialUsage
+      };
+    });
+
     persistApplicationState();
     renderApplication();
   }
@@ -1331,11 +1468,17 @@ const CalculadoraTattooApp = (() => {
 
     elementReferences.floatingActionButton.addEventListener("click", openSupplyModal);
     elementReferences.supplyCategorySelect.addEventListener("change", updateSupplyCategoryFields);
-    elementReferences.packageQuantityInput.addEventListener("input", updateSupplyUnitCostPreview);
+    elementReferences.packageQuantityInput.addEventListener("input", () => {
+      updateSupplyUnitCostPreview();
+      syncCurrentStockWithPackageQuantity();
+    });
     elementReferences.packagePriceInput.addEventListener("input", updateSupplyUnitCostPreview);
+    elementReferences.currentStockInput.addEventListener("input", () => {
+      shouldSyncCurrentStockWithPackageQuantity = false;
+    });
     elementReferences.supplyForm.addEventListener("submit", (event) => {
       event.preventDefault();
-      addInventoryItemFromForm();
+      saveInventoryItemFromForm();
     });
 
     elementReferences.csvImportForm.addEventListener("submit", handleCsvImportFormSubmit);
@@ -1380,6 +1523,28 @@ const CalculadoraTattooApp = (() => {
       activeInventoryCategory = filterButton.dataset.inventoryCategoryFilter;
       renderInventoryCategoryFilters();
       renderInventoryList();
+    });
+
+    elementReferences.inventoryList.addEventListener("click", (event) => {
+      const inventoryCard = event.target.closest("[data-inventory-item-id]");
+
+      if (!inventoryCard) {
+        return;
+      }
+
+      if (event.target.closest("[data-edit-inventory-item]")) {
+        openInventoryEditModal(inventoryCard.dataset.inventoryItemId);
+        return;
+      }
+
+      if (event.target.closest("[data-decrease-inventory-stock]")) {
+        openInventoryEditModal(inventoryCard.dataset.inventoryItemId, true);
+        return;
+      }
+
+      if (event.target.closest("[data-delete-inventory-item]")) {
+        deleteInventoryItem(inventoryCard.dataset.inventoryItemId);
+      }
     });
 
     elementReferences.projectItemList.addEventListener("input", (event) => {
