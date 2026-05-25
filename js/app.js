@@ -27,6 +27,8 @@ const PRICE_TABLES = [
 ];
 
 const DEFAULT_PRICE_TABLE_ID = "base";
+const DEFAULT_LABOR_HOURS = 1;
+const DEFAULT_HOURLY_RATE = 0;
 
 const CURRENCY_FORMATTER = new Intl.NumberFormat("pt-BR", {
   style: "currency",
@@ -47,15 +49,20 @@ const DOM = {
   budgetTotalValue: document.querySelector("#budgetTotalValue"),
   clearBudgetButton: document.querySelector("#clearBudgetButton"),
   clientNameInput: document.querySelector("#clientNameInput"),
+  downloadBudgetPdfButton: document.querySelector("#downloadBudgetPdfButton"),
   emptyStateTemplate: document.querySelector("#emptyStateTemplate"),
   headerBudgetTotal: document.querySelector("#headerBudgetTotal"),
+  hourlyRateInput: document.querySelector("#hourlyRateInput"),
   inventoryMetricGrid: document.querySelector("#inventoryMetricGrid"),
   inventorySearchInput: document.querySelector("#inventorySearchInput"),
+  laborHoursInput: document.querySelector("#laborHoursInput"),
+  laborPreviewValue: document.querySelector("#laborPreviewValue"),
   navigationButtons: document.querySelectorAll("[data-screen-target]"),
   packagePriceInput: document.querySelector("#packagePriceInput"),
   packageQuantityInput: document.querySelector("#packageQuantityInput"),
   applyPriceTableButton: document.querySelector("#applyPriceTableButton"),
   priceTableSelect: document.querySelector("#priceTableSelect"),
+  printDocument: document.querySelector("#printDocument"),
   resetApplicationButton: document.querySelector("#resetApplicationButton"),
   sessionNameInput: document.querySelector("#sessionNameInput"),
   sessionNotesInput: document.querySelector("#sessionNotesInput"),
@@ -88,6 +95,8 @@ function createInitialState() {
       sessionName: "",
       clientName: "",
       sessionNotes: "",
+      laborHours: DEFAULT_LABOR_HOURS,
+      hourlyRate: DEFAULT_HOURLY_RATE,
       quantities: createEmptyQuantities(supplies)
     }
   };
@@ -159,6 +168,8 @@ function normalizeApplicationState(state) {
       sessionName: String(state.budget.sessionName || ""),
       clientName: String(state.budget.clientName || ""),
       sessionNotes: String(state.budget.sessionNotes || ""),
+      laborHours: normalizeNumber(state.budget.laborHours == null ? DEFAULT_LABOR_HOURS : state.budget.laborHours),
+      hourlyRate: normalizeNumber(state.budget.hourlyRate == null ? DEFAULT_HOURLY_RATE : state.budget.hourlyRate),
       quantities
     }
   };
@@ -226,7 +237,7 @@ function calculateInventorySummary() {
 }
 
 function calculateBudgetSummary() {
-  return appState.supplies.reduce(
+  const materialSummary = appState.supplies.reduce(
     (summary, supply) => {
       const quantityUsed = normalizeNumber(appState.budget.quantities[supply.id]);
 
@@ -234,14 +245,27 @@ function calculateBudgetSummary() {
         summary.selectedCount += 1;
       }
 
-      summary.totalCost += getUsageCost(supply, quantityUsed);
+      summary.materialTotal += getUsageCost(supply, quantityUsed);
       return summary;
     },
     {
       selectedCount: 0,
-      totalCost: 0
+      materialTotal: 0
     }
   );
+
+  const laborHours = normalizeNumber(appState.budget.laborHours);
+  const hourlyRate = normalizeNumber(appState.budget.hourlyRate);
+  const laborTotal = laborHours * hourlyRate;
+
+  return {
+    selectedCount: materialSummary.selectedCount,
+    materialTotal: materialSummary.materialTotal,
+    laborHours,
+    hourlyRate,
+    laborTotal,
+    totalCost: materialSummary.materialTotal + laborTotal
+  };
 }
 
 function setActiveScreen(screenName) {
@@ -283,6 +307,9 @@ function renderBudgetForm() {
   DOM.sessionNameInput.value = appState.budget.sessionName;
   DOM.clientNameInput.value = appState.budget.clientName;
   DOM.sessionNotesInput.value = appState.budget.sessionNotes;
+  DOM.laborHoursInput.value = formatNumber(normalizeNumber(appState.budget.laborHours));
+  DOM.hourlyRateInput.value = normalizeNumber(appState.budget.hourlyRate) > 0 ? formatNumber(appState.budget.hourlyRate) : "";
+  DOM.laborPreviewValue.textContent = formatCurrency(calculateBudgetSummary().laborTotal);
 }
 
 function renderInventorySummary() {
@@ -384,7 +411,15 @@ function renderBudgetSummary() {
       <strong>${summary.selectedCount}</strong>
     </article>
     <article class="metric-card">
-      <span>Total gasto</span>
+      <span>Materiais</span>
+      <strong>${formatCurrency(summary.materialTotal)}</strong>
+    </article>
+    <article class="metric-card">
+      <span>Mao de obra</span>
+      <strong>${formatCurrency(summary.laborTotal)}</strong>
+    </article>
+    <article class="metric-card">
+      <span>Total final</span>
       <strong>${formatCurrency(summary.totalCost)}</strong>
     </article>
   `;
@@ -583,11 +618,20 @@ function updateBudgetField(fieldName, value) {
   saveApplicationState();
 }
 
+function updateLaborField(fieldName, value) {
+  appState.budget[fieldName] = normalizeNumber(value);
+  saveApplicationState();
+  renderBudgetSummary();
+  DOM.laborPreviewValue.textContent = formatCurrency(calculateBudgetSummary().laborTotal);
+}
+
 function clearBudget() {
   appState.budget = {
     sessionName: "",
     clientName: "",
     sessionNotes: "",
+    laborHours: DEFAULT_LABOR_HOURS,
+    hourlyRate: DEFAULT_HOURLY_RATE,
     quantities: createEmptyQuantities(appState.supplies)
   };
 
@@ -596,6 +640,100 @@ function clearBudget() {
   renderInventorySummary();
   renderBudgetSummary();
   renderBudgetItemList();
+}
+
+function getSelectedBudgetItems() {
+  return appState.supplies
+    .map((supply) => {
+      const quantityUsed = normalizeNumber(appState.budget.quantities[supply.id]);
+
+      return {
+        supply,
+        quantityUsed,
+        unitCost: getUnitCost(supply),
+        totalCost: getUsageCost(supply, quantityUsed)
+      };
+    })
+    .filter((item) => item.quantityUsed > 0);
+}
+
+function renderPrintDocument() {
+  const summary = calculateBudgetSummary();
+  const selectedItems = getSelectedBudgetItems();
+  const sessionName = appState.budget.sessionName || "Orcamento de tatuagem";
+  const clientName = appState.budget.clientName || "Cliente nao informado";
+  const sessionNotes = appState.budget.sessionNotes || "Sem observacoes.";
+
+  const itemRows = selectedItems.length > 0
+    ? selectedItems.map((item) => `
+        <tr>
+          <td>${escapeHtml(item.supply.name)}</td>
+          <td>${formatNumber(item.quantityUsed)} ${escapeHtml(item.supply.unitLabel)}</td>
+          <td>${formatCurrency(item.unitCost)}</td>
+          <td>${formatCurrency(item.totalCost)}</td>
+        </tr>
+      `).join("")
+    : `
+        <tr>
+          <td colspan="4">Nenhum insumo selecionado.</td>
+        </tr>
+      `;
+
+  DOM.printDocument.innerHTML = `
+    <header class="print-header">
+      <span>CalculadoraTattoo</span>
+      <h1>${escapeHtml(sessionName)}</h1>
+      <p>${escapeHtml(clientName)}</p>
+    </header>
+
+    <section class="print-section">
+      <h2>Resumo</h2>
+      <dl class="print-summary">
+        <div>
+          <dt>Materiais</dt>
+          <dd>${formatCurrency(summary.materialTotal)}</dd>
+        </div>
+        <div>
+          <dt>Mao de obra</dt>
+          <dd>${formatCurrency(summary.laborTotal)}</dd>
+        </div>
+        <div>
+          <dt>Total</dt>
+          <dd>${formatCurrency(summary.totalCost)}</dd>
+        </div>
+      </dl>
+    </section>
+
+    <section class="print-section">
+      <h2>Itens usados</h2>
+      <table class="print-table">
+        <thead>
+          <tr>
+            <th>Insumo</th>
+            <th>Qtd.</th>
+            <th>Custo un.</th>
+            <th>Total</th>
+          </tr>
+        </thead>
+        <tbody>${itemRows}</tbody>
+      </table>
+    </section>
+
+    <section class="print-section">
+      <h2>Mao de obra</h2>
+      <p>${formatNumber(summary.laborHours)} h x ${formatCurrency(summary.hourlyRate)} por hora = <strong>${formatCurrency(summary.laborTotal)}</strong></p>
+    </section>
+
+    <section class="print-section">
+      <h2>Observacoes</h2>
+      <p>${escapeHtml(sessionNotes)}</p>
+    </section>
+  `;
+}
+
+function downloadBudgetPdf() {
+  renderPrintDocument();
+  window.print();
 }
 
 function resetApplication() {
@@ -678,6 +816,14 @@ DOM.budgetForm.addEventListener("input", (event) => {
   updateBudgetField(event.target.name, event.target.value);
 });
 
+DOM.laborHoursInput.addEventListener("input", (event) => {
+  updateLaborField("laborHours", event.target.value);
+});
+
+DOM.hourlyRateInput.addEventListener("input", (event) => {
+  updateLaborField("hourlyRate", event.target.value);
+});
+
 DOM.inventorySearchInput.addEventListener("input", (event) => {
   inventorySearchTerm = event.target.value;
   renderSupplyList();
@@ -689,6 +835,7 @@ DOM.budgetSearchInput.addEventListener("input", (event) => {
 });
 
 DOM.clearBudgetButton.addEventListener("click", clearBudget);
+DOM.downloadBudgetPdfButton.addEventListener("click", downloadBudgetPdf);
 DOM.applyPriceTableButton.addEventListener("click", applyPriceTable);
 DOM.resetApplicationButton.addEventListener("click", resetApplication);
 

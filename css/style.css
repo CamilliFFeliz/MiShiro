@@ -220,6 +220,19 @@ textarea:focus {
   line-height: 0.95;
 }
 
+.screen-actions {
+  display: grid;
+  gap: 8px;
+  min-width: 112px;
+}
+
+.screen-actions .button {
+  min-height: 44px;
+  padding: 0 12px;
+  font-size: 13px;
+  box-shadow: none;
+}
+
 .section-label {
   color: var(--color-purple);
   font-size: 12px;
@@ -257,6 +270,40 @@ textarea:focus {
   border-color: var(--color-purple);
   color: var(--color-purple-dark);
   font-weight: 900;
+}
+
+.labor-panel {
+  display: grid;
+  gap: 14px;
+  margin-bottom: 18px;
+  padding: 16px;
+}
+
+.labor-heading {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: end;
+}
+
+.labor-heading h2 {
+  margin: 2px 0 0;
+  color: var(--color-black);
+  font-size: 22px;
+  font-weight: 950;
+  line-height: 1;
+}
+
+.labor-heading strong {
+  color: var(--color-purple);
+  font-size: 22px;
+  font-weight: 950;
+  text-align: right;
+}
+
+.labor-grid {
+  display: grid;
+  gap: 12px;
 }
 
 .form-grid {
@@ -589,12 +636,22 @@ textarea:focus {
   white-space: nowrap;
 }
 
+.print-document {
+  display: none;
+}
+
 @media (min-width: 480px) {
   .form-grid,
   .editable-grid,
   .card-actions,
+  .labor-grid,
   .budget-item-control {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .screen-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    min-width: 226px;
   }
 
   .form-grid-wide,
@@ -628,5 +685,113 @@ textarea:focus {
   *::after {
     scroll-behavior: auto !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+@media print {
+  @page {
+    margin: 14mm;
+  }
+
+  html,
+  body {
+    min-width: 0;
+    background: var(--color-white);
+    color: var(--color-black);
+  }
+
+  .app-frame {
+    display: none !important;
+  }
+
+  .print-document {
+    display: block;
+    background: var(--color-white);
+    color: var(--color-black);
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+
+  .print-header {
+    margin-bottom: 18px;
+    padding-bottom: 14px;
+    border-bottom: 2px solid var(--color-black);
+  }
+
+  .print-header span {
+    color: var(--color-purple);
+    font-size: 12px;
+    font-weight: 950;
+    text-transform: uppercase;
+  }
+
+  .print-header h1 {
+    margin: 5px 0;
+    color: var(--color-black);
+    font-size: 28px;
+    line-height: 1.05;
+  }
+
+  .print-header p,
+  .print-section p {
+    margin: 0;
+    color: var(--color-purple-dark);
+    font-size: 13px;
+  }
+
+  .print-section {
+    margin: 0 0 16px;
+  }
+
+  .print-section h2 {
+    margin: 0 0 8px;
+    color: var(--color-purple);
+    font-size: 14px;
+    text-transform: uppercase;
+  }
+
+  .print-summary {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    margin: 0;
+  }
+
+  .print-summary div {
+    padding: 10px;
+    border: 1px solid var(--color-purple-light);
+  }
+
+  .print-summary dt {
+    color: var(--color-purple-dark);
+    font-size: 11px;
+    font-weight: 950;
+    text-transform: uppercase;
+  }
+
+  .print-summary dd {
+    margin: 5px 0 0;
+    color: var(--color-black);
+    font-size: 16px;
+    font-weight: 950;
+  }
+
+  .print-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+
+  .print-table th,
+  .print-table td {
+    padding: 8px;
+    border: 1px solid var(--color-purple-light);
+    text-align: left;
+    vertical-align: top;
+  }
+
+  .print-table th {
+    color: var(--color-white);
+    background: var(--color-purple-dark);
+    font-weight: 950;
   }
 }

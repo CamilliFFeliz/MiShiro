@@ -84,7 +84,10 @@
             <span class="section-label">Ficha</span>
             <h1>Orcamento</h1>
           </div>
-          <button class="button button-secondary" id="clearBudgetButton" type="button">Limpar</button>
+          <div class="screen-actions">
+            <button class="button button-primary" id="downloadBudgetPdfButton" type="button">Baixar PDF</button>
+            <button class="button button-secondary" id="clearBudgetButton" type="button">Limpar</button>
+          </div>
         </div>
 
         <form class="surface-card stacked-form" id="budgetForm" autocomplete="off">
@@ -104,8 +107,30 @@
           </label>
         </form>
 
+        <section class="surface-card labor-panel">
+          <div class="labor-heading">
+            <div>
+              <span class="section-label">Mao de obra</span>
+              <h2>Valor por hora</h2>
+            </div>
+            <strong id="laborPreviewValue">R$ 0,00</strong>
+          </div>
+
+          <div class="labor-grid">
+            <label class="field-group">
+              <span>Horas</span>
+              <input id="laborHoursInput" type="text" inputmode="decimal" placeholder="1" />
+            </label>
+
+            <label class="field-group">
+              <span>Valor 1 hr</span>
+              <input id="hourlyRateInput" type="text" inputmode="decimal" placeholder="100,00" />
+            </label>
+          </div>
+        </section>
+
         <section class="result-panel" aria-live="polite">
-          <span>Custo total gasto</span>
+          <span>Valor do orcamento</span>
           <strong id="budgetTotalValue">R$ 0,00</strong>
           <small id="budgetTotalDetail">0 insumos selecionados</small>
         </section>
@@ -137,6 +162,8 @@
       <span>Ajuste a busca ou cadastre um novo insumo.</span>
     </article>
   </template>
+
+  <section class="print-document" id="printDocument" aria-hidden="true"></section>
 
   <script src="js/app.js"></script>
 </body>
