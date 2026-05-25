@@ -1,0 +1,15 @@
+{
+  "expo": {
+    "name": "CalculadoraTattoo",
+    "slug": "calculadora-tattoo",
+    "version": "1.0.0",
+    "orientation": "default",
+    "userInterfaceStyle": "light",
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true
+    }
+  }
+}

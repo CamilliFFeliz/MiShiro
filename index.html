@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Calculadora de Tatuagem</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <span class="brand-icon">🎨</span>
+        <div>
+          <strong>Calculadora</strong>
+          <small>de tatuagem</small>
+        </div>
+      </div>
+
+      <button class="btn btn-primary btn-full" id="newQuoteBtn">+ Nova ficha</button>
+      <button class="btn btn-light btn-full" id="duplicateQuoteBtn">Duplicar ficha</button>
+
+      <div class="sidebar-title">Minhas fichas</div>
+      <div class="quote-list" id="quoteList"></div>
+
+      <div class="sidebar-footer">
+        <button class="btn btn-danger-soft btn-full" id="deleteQuoteBtn">Excluir ficha atual</button>
+        <button class="btn btn-ghost btn-full" id="resetAppBtn">Restaurar dados iniciais</button>
+        <small>Os dados ficam salvos neste navegador usando localStorage.</small>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Cotação rápida</p>
+          <h1>Ficha de orçamento</h1>
+          <p class="muted">Preencha quantidades, mão de obra e margem. O valor final é calculado automaticamente.</p>
+        </div>
+        <div class="topbar-actions">
+          <button class="btn btn-light" id="clearUsageBtn">Limpar quantidades</button>
+          <button class="btn btn-primary" id="printQuoteBtn">Imprimir / PDF</button>
+        </div>
+      </header>
+
+      <section class="panel form-panel">
+        <div class="field-group wide">
+          <label for="quoteTitle">Nome da ficha</label>
+          <input id="quoteTitle" type="text" data-quote-field="title" placeholder="Ex.: Flash pequeno no antebraço" />
+        </div>
+        <div class="field-group">
+          <label for="clientName">Cliente</label>
+          <input id="clientName" type="text" data-quote-field="client" placeholder="Nome do cliente" />
+        </div>
+        <div class="field-group">
+          <label for="quoteDate">Data</label>
+          <input id="quoteDate" type="date" data-quote-field="date" />
+        </div>
+        <div class="field-group wide full">
+          <label for="quoteNotes">Descrição / observações</label>
+          <textarea id="quoteNotes" data-quote-field="notes" rows="3" placeholder="Tamanho, região do corpo, estilo, detalhes do atendimento..."></textarea>
+        </div>
+      </section>
+
+      <section class="summary-grid" id="summaryGrid"></section>
+
+      <section class="panel labor-panel">
+        <div class="section-heading">
+          <div>
+            <h2>Mão de obra e margem</h2>
+            <p class="muted">Mesma lógica da planilha: horas × valor por hora, depois aplica margem sobre custo total.</p>
+          </div>
+        </div>
+        <div class="labor-grid">
+          <div class="field-group">
+            <label for="laborHours">Horas de trabalho</label>
+            <input id="laborHours" type="number" min="0" step="0.25" data-number-field="laborHours" />
+          </div>
+          <div class="field-group">
+            <label for="hourlyRate">Valor por hora</label>
+            <input id="hourlyRate" type="number" min="0" step="0.01" data-number-field="hourlyRate" />
+          </div>
+          <div class="field-group">
+            <label for="marginPercent">Margem de lucro (%)</label>
+            <input id="marginPercent" type="number" min="0" step="1" data-number-field="marginPercent" />
+          </div>
+        </div>
+      </section>
+
+      <section class="panel table-panel">
+        <div class="section-heading table-heading">
+          <div>
+            <h2>Materiais da ficha</h2>
+            <p class="muted">Edite preços, unidades e quantidades usadas. O custo por unidade é calculado pelo app.</p>
+          </div>
+          <div class="table-tools">
+            <input id="itemSearch" type="search" placeholder="Buscar material..." />
+            <button class="btn btn-light" id="addItemBtn">+ Adicionar item</button>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table class="items-table">
+            <thead>
+              <tr>
+                <th>Produto</th>
+                <th>Qtd pacote</th>
+                <th>Unidade</th>
+                <th>Preço pacote</th>
+                <th>Custo/unid</th>
+                <th>Qtd usada</th>
+                <th>Custo</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="itemsTableBody"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <template id="emptyStateTemplate">
+    <div class="empty-state">
+      <strong>Nenhum item encontrado.</strong>
+      <span>Limpe a busca ou adicione um novo material.</span>
+    </div>
+  </template>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
