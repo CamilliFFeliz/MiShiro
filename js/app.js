@@ -1,462 +1,616 @@
-const STORAGE_KEY = "tattooCalculatorV1";
+const STORAGE_KEY = "CALCULADORA_TATTOO_WEB_V1";
 
-const DEFAULT_ITEMS = [
-  { name: "Sabonete Líquido", packageQty: 400, unit: "ml", packagePrice: 37 },
-  { name: "Bandagem", packageQty: 4.5, unit: "metros", packagePrice: 10 },
-  { name: "Lâmina", packageQty: 7, unit: "unid", packagePrice: 7 },
-  { name: "Batoque", packageQty: 50, unit: "unid", packagePrice: 30 },
-  { name: "Agulhas", packageQty: 1, unit: "unid", packagePrice: 15 },
-  { name: "Vaselina", packageQty: 150, unit: "gramas", packagePrice: 30 },
-  { name: "Transfer", packageQty: 30, unit: "ml", packagePrice: 28 },
-  { name: "Folha Estêncil", packageQty: 1, unit: "folha", packagePrice: 4.5 },
-  { name: "Papel Toalha", packageQty: 200, unit: "folhas", packagePrice: 12 },
-  { name: "Máscara", packageQty: 100, unit: "unid", packagePrice: 25 },
-  { name: "Plástico Filme", packageQty: 70, unit: "metros", packagePrice: 15 },
-  { name: "Palito Descartável", packageQty: 100, unit: "unid", packagePrice: 6 },
-  { name: "Luvas", packageQty: 100, unit: "unid", packagePrice: 30 },
-  { name: "Tinta Preto Linha", packageQty: 20, unit: "ml", packagePrice: 50 },
-  { name: "Tinta Preto Tribal", packageQty: 20, unit: "ml", packagePrice: 50 },
-  { name: "Tinta Raven Clow", packageQty: 20, unit: "ml", packagePrice: 79 },
-  { name: "Tinta Color", packageQty: 20, unit: "ml", packagePrice: 50 }
+const DEFAULT_SUPPLIES = [
+  { id: "agulha-round-liner", name: "Agulha Round Liner", packageQuantity: 20, unitLabel: "un", packagePrice: 64.9 },
+  { id: "agulha-magnum", name: "Agulha Magnum", packageQuantity: 20, unitLabel: "un", packagePrice: 72 },
+  { id: "batoque", name: "Batoque descartavel", packageQuantity: 50, unitLabel: "un", packagePrice: 30 },
+  { id: "luvas-nitrilicas", name: "Luvas nitrilicas", packageQuantity: 100, unitLabel: "un", packagePrice: 39.9 },
+  { id: "tinta-preta", name: "Tinta preta", packageQuantity: 30, unitLabel: "ml", packagePrice: 58 },
+  { id: "gel-transfer", name: "Gel transfer", packageQuantity: 60, unitLabel: "ml", packagePrice: 35 },
+  { id: "papel-toalha", name: "Papel toalha", packageQuantity: 200, unitLabel: "folhas", packagePrice: 18 },
+  { id: "filme-plastico", name: "Filme plastico", packageQuantity: 70, unitLabel: "m", packagePrice: 16 }
 ];
 
-const brlFormatter = new Intl.NumberFormat("pt-BR", {
+const CURRENCY_FORMATTER = new Intl.NumberFormat("pt-BR", {
   style: "currency",
   currency: "BRL"
 });
 
-const dateFormatter = new Intl.DateTimeFormat("pt-BR", {
-  day: "2-digit",
-  month: "2-digit",
-  year: "numeric"
+const NUMBER_FORMATTER = new Intl.NumberFormat("pt-BR", {
+  maximumFractionDigits: 2
 });
 
-let state = loadState();
-let searchTerm = "";
+const DOM = {
+  applicationScreens: document.querySelectorAll("[data-screen-panel]"),
+  budgetForm: document.querySelector("#budgetForm"),
+  budgetItemList: document.querySelector("#budgetItemList"),
+  budgetMetricGrid: document.querySelector("#budgetMetricGrid"),
+  budgetSearchInput: document.querySelector("#budgetSearchInput"),
+  budgetTotalDetail: document.querySelector("#budgetTotalDetail"),
+  budgetTotalValue: document.querySelector("#budgetTotalValue"),
+  clearBudgetButton: document.querySelector("#clearBudgetButton"),
+  clientNameInput: document.querySelector("#clientNameInput"),
+  emptyStateTemplate: document.querySelector("#emptyStateTemplate"),
+  headerBudgetTotal: document.querySelector("#headerBudgetTotal"),
+  inventoryMetricGrid: document.querySelector("#inventoryMetricGrid"),
+  inventorySearchInput: document.querySelector("#inventorySearchInput"),
+  navigationButtons: document.querySelectorAll("[data-screen-target]"),
+  packagePriceInput: document.querySelector("#packagePriceInput"),
+  packageQuantityInput: document.querySelector("#packageQuantityInput"),
+  resetApplicationButton: document.querySelector("#resetApplicationButton"),
+  sessionNameInput: document.querySelector("#sessionNameInput"),
+  sessionNotesInput: document.querySelector("#sessionNotesInput"),
+  supplyForm: document.querySelector("#supplyForm"),
+  supplyList: document.querySelector("#supplyList"),
+  supplyNameInput: document.querySelector("#supplyNameInput"),
+  unitLabelInput: document.querySelector("#unitLabelInput")
+};
 
-const quoteList = document.querySelector("#quoteList");
-const summaryGrid = document.querySelector("#summaryGrid");
-const itemsTableBody = document.querySelector("#itemsTableBody");
-const emptyStateTemplate = document.querySelector("#emptyStateTemplate");
+let appState = loadApplicationState();
+let inventorySearchTerm = "";
+let budgetSearchTerm = "";
 
-const quoteTitle = document.querySelector("#quoteTitle");
-const clientName = document.querySelector("#clientName");
-const quoteDate = document.querySelector("#quoteDate");
-const quoteNotes = document.querySelector("#quoteNotes");
-const laborHours = document.querySelector("#laborHours");
-const hourlyRate = document.querySelector("#hourlyRate");
-const marginPercent = document.querySelector("#marginPercent");
-const itemSearch = document.querySelector("#itemSearch");
-
-function uid() {
+function createId(prefix) {
   if (window.crypto && typeof window.crypto.randomUUID === "function") {
-    return window.crypto.randomUUID();
+    return `${prefix}-${window.crypto.randomUUID()}`;
   }
 
-  return `id-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  return `${prefix}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }
 
-function todayISO() {
-  return new Date().toISOString().slice(0, 10);
-}
-
-function createDefaultItems() {
-  return DEFAULT_ITEMS.map((item) => ({
-    id: uid(),
-    name: item.name,
-    packageQty: item.packageQty,
-    unit: item.unit,
-    packagePrice: item.packagePrice,
-    quantityUsed: 0
-  }));
-}
-
-function createQuote(title = "Nova ficha", items = createDefaultItems()) {
-  const now = new Date().toISOString();
+function createInitialState() {
+  const supplies = DEFAULT_SUPPLIES.map((supply) => ({ ...supply }));
 
   return {
-    id: uid(),
-    title,
-    client: "",
-    date: todayISO(),
-    notes: "",
-    laborHours: 1,
-    hourlyRate: 25,
-    marginPercent: 100,
-    items: items.map((item) => ({ ...item, id: uid(), quantityUsed: Number(item.quantityUsed) || 0 })),
-    createdAt: now,
-    updatedAt: now
+    activeScreen: "budget",
+    supplies,
+    budget: {
+      sessionName: "",
+      clientName: "",
+      sessionNotes: "",
+      quantities: createEmptyQuantities(supplies)
+    }
   };
 }
 
-function initialState() {
-  const firstQuote = createQuote("Ficha base da planilha", createDefaultItems());
-
-  return {
-    activeQuoteId: firstQuote.id,
-    quotes: [firstQuote]
-  };
+function createEmptyQuantities(supplies) {
+  return supplies.reduce((quantities, supply) => {
+    quantities[supply.id] = 0;
+    return quantities;
+  }, {});
 }
 
-function loadState() {
-  const raw = localStorage.getItem(STORAGE_KEY);
+function loadApplicationState() {
+  const savedState = localStorage.getItem(STORAGE_KEY);
 
-  if (!raw) {
-    return initialState();
+  if (!savedState) {
+    return createInitialState();
   }
 
   try {
-    const parsed = JSON.parse(raw);
+    const parsedState = JSON.parse(savedState);
 
-    if (!parsed.quotes || !Array.isArray(parsed.quotes) || parsed.quotes.length === 0) {
-      return initialState();
+    if (!Array.isArray(parsedState.supplies) || !parsedState.budget) {
+      return createInitialState();
     }
 
-    return parsed;
+    return normalizeApplicationState(parsedState);
   } catch (error) {
-    console.warn("Não foi possível carregar os dados salvos. Restaurando dados iniciais.", error);
-    return initialState();
+    return createInitialState();
   }
 }
 
-function saveState() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-}
+function normalizeApplicationState(state) {
+  const supplies = state.supplies.map((supply) => ({
+    id: supply.id || createId("supply"),
+    name: String(supply.name || "Novo insumo"),
+    packageQuantity: normalizeNumber(supply.packageQuantity),
+    unitLabel: String(supply.unitLabel || "un"),
+    packagePrice: normalizeNumber(supply.packagePrice)
+  }));
 
-function getActiveQuote() {
-  return state.quotes.find((quote) => quote.id === state.activeQuoteId) || state.quotes[0];
-}
-
-function normalizeNumber(value) {
-  const parsed = Number(String(value).replace(",", "."));
-  return Number.isFinite(parsed) && parsed >= 0 ? parsed : 0;
-}
-
-function formatBRL(value) {
-  return brlFormatter.format(Number.isFinite(value) ? value : 0);
-}
-
-function formatNumber(value, decimals = 2) {
-  return new Intl.NumberFormat("pt-BR", {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: decimals
-  }).format(Number.isFinite(value) ? value : 0);
-}
-
-function escapeHTML(value) {
-  return String(value ?? "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
-}
-
-function getUnitCost(item) {
-  const packageQty = normalizeNumber(item.packageQty);
-  const packagePrice = normalizeNumber(item.packagePrice);
-
-  if (packageQty <= 0) {
-    return 0;
-  }
-
-  return packagePrice / packageQty;
-}
-
-function getItemTotal(item) {
-  return normalizeNumber(item.quantityUsed) * getUnitCost(item);
-}
-
-function calculateQuote(quote) {
-  const materialTotal = quote.items.reduce((sum, item) => sum + getItemTotal(item), 0);
-  const laborTotal = normalizeNumber(quote.laborHours) * normalizeNumber(quote.hourlyRate);
-  const costTotal = materialTotal + laborTotal;
-  const profit = costTotal * (normalizeNumber(quote.marginPercent) / 100);
-  const finalPrice = costTotal + profit;
+  const quantities = supplies.reduce((currentQuantities, supply) => {
+    const savedQuantity = state.budget.quantities ? state.budget.quantities[supply.id] : 0;
+    currentQuantities[supply.id] = normalizeNumber(savedQuantity);
+    return currentQuantities;
+  }, {});
 
   return {
-    materialTotal,
-    laborTotal,
-    costTotal,
-    profit,
-    finalPrice
+    activeScreen: state.activeScreen === "inventory" ? "inventory" : "budget",
+    supplies,
+    budget: {
+      sessionName: String(state.budget.sessionName || ""),
+      clientName: String(state.budget.clientName || ""),
+      sessionNotes: String(state.budget.sessionNotes || ""),
+      quantities
+    }
   };
 }
 
-function render() {
-  const quote = getActiveQuote();
+function saveApplicationState() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+}
 
-  if (!quote) {
-    return;
+function normalizeNumber(value) {
+  const normalizedValue = String(value == null ? "" : value).replace(",", ".").trim();
+  const parsedValue = Number(normalizedValue);
+
+  if (!Number.isFinite(parsedValue) || parsedValue < 0) {
+    return 0;
   }
 
-  state.activeQuoteId = quote.id;
-  renderQuoteList();
-  renderQuoteForm(quote);
-  renderSummary(quote);
-  renderItemsTable(quote);
+  return parsedValue;
 }
 
-function renderQuoteList() {
-  quoteList.innerHTML = state.quotes
-    .map((quote) => {
-      const totals = calculateQuote(quote);
-      const date = quote.date ? dateFormatter.format(new Date(`${quote.date}T00:00:00`)) : "Sem data";
-      const activeClass = quote.id === state.activeQuoteId ? "active" : "";
-
-      return `
-        <button class="quote-card ${activeClass}" data-select-quote="${quote.id}">
-          <strong>${escapeHTML(quote.title || "Ficha sem nome")}</strong>
-          <span>
-            <small>${escapeHTML(date)}</small>
-            <small>${formatBRL(totals.finalPrice)}</small>
-          </span>
-        </button>
-      `;
-    })
-    .join("");
+function formatCurrency(value) {
+  return CURRENCY_FORMATTER.format(Number.isFinite(value) ? value : 0);
 }
 
-function renderQuoteForm(quote) {
-  quoteTitle.value = quote.title || "";
-  clientName.value = quote.client || "";
-  quoteDate.value = quote.date || todayISO();
-  quoteNotes.value = quote.notes || "";
-  laborHours.value = normalizeNumber(quote.laborHours);
-  hourlyRate.value = normalizeNumber(quote.hourlyRate);
-  marginPercent.value = normalizeNumber(quote.marginPercent);
+function formatNumber(value) {
+  return NUMBER_FORMATTER.format(Number.isFinite(value) ? value : 0);
 }
 
-function renderSummary(quote) {
-  const totals = calculateQuote(quote);
+function escapeHtml(value) {
+  return String(value == null ? "" : value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
 
-  summaryGrid.innerHTML = `
-    <article class="summary-card">
-      <small>Total materiais</small>
-      <strong>${formatBRL(totals.materialTotal)}</strong>
+function getUnitCost(supply) {
+  const packageQuantity = normalizeNumber(supply.packageQuantity);
+
+  if (packageQuantity <= 0) {
+    return 0;
+  }
+
+  return normalizeNumber(supply.packagePrice) / packageQuantity;
+}
+
+function getUsageCost(supply, quantityUsed) {
+  return getUnitCost(supply) * normalizeNumber(quantityUsed);
+}
+
+function calculateInventorySummary() {
+  const supplyCount = appState.supplies.length;
+  const totalPackageCost = appState.supplies.reduce((total, supply) => total + normalizeNumber(supply.packagePrice), 0);
+  const averageUnitCost =
+    supplyCount > 0
+      ? appState.supplies.reduce((total, supply) => total + getUnitCost(supply), 0) / supplyCount
+      : 0;
+
+  return {
+    supplyCount,
+    totalPackageCost,
+    averageUnitCost
+  };
+}
+
+function calculateBudgetSummary() {
+  return appState.supplies.reduce(
+    (summary, supply) => {
+      const quantityUsed = normalizeNumber(appState.budget.quantities[supply.id]);
+
+      if (quantityUsed > 0) {
+        summary.selectedCount += 1;
+      }
+
+      summary.totalCost += getUsageCost(supply, quantityUsed);
+      return summary;
+    },
+    {
+      selectedCount: 0,
+      totalCost: 0
+    }
+  );
+}
+
+function setActiveScreen(screenName) {
+  appState.activeScreen = screenName;
+  saveApplicationState();
+  renderActiveScreen();
+}
+
+function renderActiveScreen() {
+  DOM.applicationScreens.forEach((screen) => {
+    screen.classList.toggle("is-active", screen.dataset.screenPanel === appState.activeScreen);
+  });
+
+  DOM.navigationButtons.forEach((button) => {
+    const isActive = button.dataset.screenTarget === appState.activeScreen;
+    button.classList.toggle("is-active", isActive);
+    button.setAttribute("aria-current", isActive ? "page" : "false");
+  });
+}
+
+function renderApplication() {
+  renderActiveScreen();
+  renderBudgetForm();
+  renderInventorySummary();
+  renderSupplyList();
+  renderBudgetSummary();
+  renderBudgetItemList();
+}
+
+function renderBudgetForm() {
+  DOM.sessionNameInput.value = appState.budget.sessionName;
+  DOM.clientNameInput.value = appState.budget.clientName;
+  DOM.sessionNotesInput.value = appState.budget.sessionNotes;
+}
+
+function renderInventorySummary() {
+  const summary = calculateInventorySummary();
+
+  DOM.inventoryMetricGrid.innerHTML = `
+    <article class="metric-card">
+      <span>Insumos</span>
+      <strong>${summary.supplyCount}</strong>
     </article>
-    <article class="summary-card">
-      <small>Mão de obra</small>
-      <strong>${formatBRL(totals.laborTotal)}</strong>
+    <article class="metric-card">
+      <span>Preco total</span>
+      <strong>${formatCurrency(summary.totalPackageCost)}</strong>
     </article>
-    <article class="summary-card">
-      <small>Custo total</small>
-      <strong>${formatBRL(totals.costTotal)}</strong>
+    <article class="metric-card">
+      <span>Media por unidade</span>
+      <strong>${formatCurrency(summary.averageUnitCost)}</strong>
     </article>
-    <article class="summary-card">
-      <small>Lucro</small>
-      <strong>${formatBRL(totals.profit)}</strong>
-    </article>
-    <article class="summary-card highlight">
-      <small>Cobrar</small>
-      <strong>${formatBRL(totals.finalPrice)}</strong>
+    <article class="metric-card">
+      <span>Selecionados</span>
+      <strong>${calculateBudgetSummary().selectedCount}</strong>
     </article>
   `;
 }
 
-function renderItemsTable(quote) {
-  const filteredItems = quote.items.filter((item) => {
-    const target = `${item.name} ${item.unit}`.toLowerCase();
-    return target.includes(searchTerm.trim().toLowerCase());
-  });
+function renderSupplyList() {
+  const filteredSupplies = getFilteredSupplies(inventorySearchTerm);
 
-  if (filteredItems.length === 0) {
-    const empty = emptyStateTemplate.content.cloneNode(true);
-    itemsTableBody.innerHTML = `<tr><td colspan="8"></td></tr>`;
-    itemsTableBody.querySelector("td").appendChild(empty);
+  if (filteredSupplies.length === 0) {
+    renderEmptyState(DOM.supplyList);
     return;
   }
 
-  itemsTableBody.innerHTML = filteredItems
-    .map((item) => `
-      <tr data-item-row="${item.id}">
-        <td>
-          <input class="product-input" type="text" value="${escapeHTML(item.name)}" data-item-field="name" data-item-id="${item.id}" />
-        </td>
-        <td>
-          <input type="number" min="0" step="0.01" value="${normalizeNumber(item.packageQty)}" data-item-field="packageQty" data-item-id="${item.id}" />
-        </td>
-        <td>
-          <input type="text" value="${escapeHTML(item.unit)}" data-item-field="unit" data-item-id="${item.id}" />
-        </td>
-        <td>
-          <input type="number" min="0" step="0.01" value="${normalizeNumber(item.packagePrice)}" data-item-field="packagePrice" data-item-id="${item.id}" />
-        </td>
-        <td>
-          <span class="readonly-pill">${formatBRL(getUnitCost(item))}</span>
-        </td>
-        <td>
-          <input type="number" min="0" step="0.01" value="${normalizeNumber(item.quantityUsed)}" data-item-field="quantityUsed" data-item-id="${item.id}" />
-        </td>
-        <td>
-          <span class="readonly-pill row-total">${formatBRL(getItemTotal(item))}</span>
-        </td>
-        <td>
-          <button class="icon-btn" title="Remover item" data-remove-item="${item.id}">×</button>
-        </td>
-      </tr>
-    `)
-    .join("");
+  DOM.supplyList.innerHTML = filteredSupplies.map(createSupplyCardHtml).join("");
 }
 
-function updateActiveQuote(callback) {
-  const quote = getActiveQuote();
+function getFilteredSupplies(searchTerm) {
+  const normalizedSearchTerm = searchTerm.trim().toLowerCase();
 
-  if (!quote) {
-    return;
+  if (!normalizedSearchTerm) {
+    return appState.supplies;
   }
 
-  callback(quote);
-  quote.updatedAt = new Date().toISOString();
-  saveState();
-  render();
+  return appState.supplies.filter((supply) => {
+    const searchableText = `${supply.name} ${supply.unitLabel}`.toLowerCase();
+    return searchableText.includes(normalizedSearchTerm);
+  });
 }
 
-quoteList.addEventListener("click", (event) => {
-  const button = event.target.closest("[data-select-quote]");
+function createSupplyCardHtml(supply) {
+  return `
+    <article class="data-card" data-supply-id="${escapeHtml(supply.id)}">
+      <div class="card-header">
+        <div class="card-title-group">
+          <h2>${escapeHtml(supply.name)}</h2>
+          <span>${formatNumber(supply.packageQuantity)} ${escapeHtml(supply.unitLabel)} por embalagem</span>
+        </div>
+        <span class="pill" data-unit-cost>${formatCurrency(getUnitCost(supply))}/un</span>
+      </div>
 
-  if (!button) {
+      <div class="editable-grid">
+        <label class="field-group">
+          <span>Material</span>
+          <input type="text" value="${escapeHtml(supply.name)}" data-supply-field="name" />
+        </label>
+        <label class="field-group">
+          <span>Qtd.</span>
+          <input type="text" inputmode="decimal" value="${escapeHtml(supply.packageQuantity)}" data-supply-field="packageQuantity" />
+        </label>
+        <label class="field-group">
+          <span>Unidade</span>
+          <input type="text" value="${escapeHtml(supply.unitLabel)}" data-supply-field="unitLabel" />
+        </label>
+        <label class="field-group">
+          <span>Preco</span>
+          <input type="text" inputmode="decimal" value="${escapeHtml(supply.packagePrice)}" data-supply-field="packagePrice" />
+        </label>
+      </div>
+
+      <div class="card-actions">
+        <button class="button button-danger" type="button" data-remove-supply>Excluir</button>
+      </div>
+    </article>
+  `;
+}
+
+function renderBudgetSummary() {
+  const summary = calculateBudgetSummary();
+  const detailText = `${summary.selectedCount} ${summary.selectedCount === 1 ? "insumo selecionado" : "insumos selecionados"}`;
+
+  DOM.headerBudgetTotal.textContent = formatCurrency(summary.totalCost);
+  DOM.budgetTotalValue.textContent = formatCurrency(summary.totalCost);
+  DOM.budgetTotalDetail.textContent = detailText;
+
+  DOM.budgetMetricGrid.innerHTML = `
+    <article class="metric-card">
+      <span>Selecionados</span>
+      <strong>${summary.selectedCount}</strong>
+    </article>
+    <article class="metric-card">
+      <span>Total gasto</span>
+      <strong>${formatCurrency(summary.totalCost)}</strong>
+    </article>
+  `;
+}
+
+function renderBudgetItemList() {
+  const filteredSupplies = getFilteredSupplies(budgetSearchTerm);
+
+  if (filteredSupplies.length === 0) {
+    renderEmptyState(DOM.budgetItemList);
     return;
   }
 
-  state.activeQuoteId = button.dataset.selectQuote;
-  saveState();
-  render();
-});
+  DOM.budgetItemList.innerHTML = filteredSupplies.map(createBudgetItemHtml).join("");
+}
 
-document.querySelector("#newQuoteBtn").addEventListener("click", () => {
-  const newQuote = createQuote(`Ficha ${state.quotes.length + 1}`, createDefaultItems());
-  state.quotes.unshift(newQuote);
-  state.activeQuoteId = newQuote.id;
-  saveState();
-  render();
-});
+function createBudgetItemHtml(supply) {
+  const quantityUsed = normalizeNumber(appState.budget.quantities[supply.id]);
+  const isSelected = quantityUsed > 0;
 
-document.querySelector("#duplicateQuoteBtn").addEventListener("click", () => {
-  const current = getActiveQuote();
-  const copy = createQuote(`${current.title || "Ficha"} - cópia`, current.items);
-  copy.client = current.client;
-  copy.notes = current.notes;
-  copy.laborHours = current.laborHours;
-  copy.hourlyRate = current.hourlyRate;
-  copy.marginPercent = current.marginPercent;
-  copy.date = todayISO();
+  return `
+    <article class="data-card budget-item ${isSelected ? "is-selected" : ""}" data-budget-supply-id="${escapeHtml(supply.id)}">
+      <div class="card-header">
+        <div class="card-title-group">
+          <h3>${escapeHtml(supply.name)}</h3>
+          <span>${formatCurrency(getUnitCost(supply))} por ${escapeHtml(supply.unitLabel)}</span>
+        </div>
+        <span class="pill">${formatCurrency(getUsageCost(supply, quantityUsed))}</span>
+      </div>
 
-  state.quotes.unshift(copy);
-  state.activeQuoteId = copy.id;
-  saveState();
-  render();
-});
+      <div class="budget-item-control">
+        <button class="select-button" type="button" data-toggle-budget-item aria-pressed="${isSelected}">
+          ${isSelected ? "Usando" : "Adicionar"}
+        </button>
+        <label class="quantity-field">
+          <span>Qtd.</span>
+          <span class="quantity-input-row">
+            <input type="text" inputmode="decimal" value="${quantityUsed > 0 ? escapeHtml(quantityUsed) : ""}" placeholder="0" data-budget-quantity />
+            <span>${escapeHtml(supply.unitLabel)}</span>
+          </span>
+        </label>
+      </div>
 
-document.querySelector("#deleteQuoteBtn").addEventListener("click", () => {
-  if (state.quotes.length === 1) {
-    alert("Você precisa manter pelo menos uma ficha.");
+      <div class="line-total">
+        <span>Custo neste item</span>
+        <strong data-line-total>${formatCurrency(getUsageCost(supply, quantityUsed))}</strong>
+      </div>
+    </article>
+  `;
+}
+
+function renderEmptyState(container) {
+  const emptyState = DOM.emptyStateTemplate.content.cloneNode(true);
+  container.innerHTML = "";
+  container.appendChild(emptyState);
+}
+
+function addSupplyFromForm() {
+  const supplyName = DOM.supplyNameInput.value.trim();
+  const packageQuantity = normalizeNumber(DOM.packageQuantityInput.value);
+  const unitLabel = DOM.unitLabelInput.value.trim();
+  const packagePrice = normalizeNumber(DOM.packagePriceInput.value);
+
+  DOM.packageQuantityInput.setCustomValidity("");
+
+  if (packageQuantity <= 0) {
+    DOM.packageQuantityInput.setCustomValidity("Informe uma quantidade maior que zero.");
+  }
+
+  if (!supplyName || !unitLabel || packageQuantity <= 0) {
+    DOM.supplyForm.reportValidity();
     return;
   }
 
-  const current = getActiveQuote();
-  const confirmed = confirm(`Excluir a ficha "${current.title || "sem nome"}"?`);
+  const createdSupply = {
+    id: createId("supply"),
+    name: supplyName,
+    packageQuantity,
+    unitLabel,
+    packagePrice
+  };
 
-  if (!confirmed) {
+  appState.supplies.unshift(createdSupply);
+  appState.budget.quantities[createdSupply.id] = 0;
+  saveApplicationState();
+  DOM.supplyForm.reset();
+  renderInventorySummary();
+  renderSupplyList();
+  renderBudgetItemList();
+}
+
+function updateSupply(supplyId, fieldName, rawValue) {
+  appState.supplies = appState.supplies.map((supply) => {
+    if (supply.id !== supplyId) {
+      return supply;
+    }
+
+    if (["packageQuantity", "packagePrice"].includes(fieldName)) {
+      return {
+        ...supply,
+        [fieldName]: normalizeNumber(rawValue)
+      };
+    }
+
+    return {
+      ...supply,
+      [fieldName]: String(rawValue)
+    };
+  });
+
+  saveApplicationState();
+  renderInventorySummary();
+  renderSupplyList();
+  renderBudgetSummary();
+  renderBudgetItemList();
+}
+
+function removeSupply(supplyId) {
+  appState.supplies = appState.supplies.filter((supply) => supply.id !== supplyId);
+  delete appState.budget.quantities[supplyId];
+  saveApplicationState();
+  renderInventorySummary();
+  renderSupplyList();
+  renderBudgetSummary();
+  renderBudgetItemList();
+}
+
+function updateBudgetQuantity(supplyId, rawValue) {
+  appState.budget.quantities[supplyId] = normalizeNumber(rawValue);
+  saveApplicationState();
+  renderInventorySummary();
+  renderBudgetSummary();
+  updateBudgetItemState(supplyId);
+}
+
+function toggleBudgetItem(supplyId) {
+  const currentQuantity = normalizeNumber(appState.budget.quantities[supplyId]);
+  appState.budget.quantities[supplyId] = currentQuantity > 0 ? 0 : 1;
+  saveApplicationState();
+  renderInventorySummary();
+  renderBudgetSummary();
+  renderBudgetItemList();
+}
+
+function updateBudgetItemState(supplyId) {
+  const supply = appState.supplies.find((item) => item.id === supplyId);
+  const budgetItem = Array.from(DOM.budgetItemList.querySelectorAll("[data-budget-supply-id]")).find((item) => {
+    return item.dataset.budgetSupplyId === supplyId;
+  });
+
+  if (!supply || !budgetItem) {
     return;
   }
 
-  state.quotes = state.quotes.filter((quote) => quote.id !== current.id);
-  state.activeQuoteId = state.quotes[0].id;
-  saveState();
-  render();
-});
+  const quantityUsed = normalizeNumber(appState.budget.quantities[supplyId]);
+  const isSelected = quantityUsed > 0;
+  const lineTotal = budgetItem.querySelector("[data-line-total]");
+  const topPill = budgetItem.querySelector(".pill");
+  const toggleButton = budgetItem.querySelector("[data-toggle-budget-item]");
 
-document.querySelector("#resetAppBtn").addEventListener("click", () => {
-  const confirmed = confirm("Isso apaga as fichas salvas neste navegador e restaura os preços iniciais da planilha. Continuar?");
+  budgetItem.classList.toggle("is-selected", isSelected);
+  toggleButton.textContent = isSelected ? "Usando" : "Adicionar";
+  toggleButton.setAttribute("aria-pressed", String(isSelected));
+  lineTotal.textContent = formatCurrency(getUsageCost(supply, quantityUsed));
+  topPill.textContent = formatCurrency(getUsageCost(supply, quantityUsed));
+}
 
-  if (!confirmed) {
+function updateBudgetField(fieldName, value) {
+  appState.budget[fieldName] = value;
+  saveApplicationState();
+}
+
+function clearBudget() {
+  appState.budget = {
+    sessionName: "",
+    clientName: "",
+    sessionNotes: "",
+    quantities: createEmptyQuantities(appState.supplies)
+  };
+
+  saveApplicationState();
+  renderBudgetForm();
+  renderInventorySummary();
+  renderBudgetSummary();
+  renderBudgetItemList();
+}
+
+function resetApplication() {
+  const shouldReset = window.confirm("Restaurar os dados padrao e apagar os dados salvos neste navegador?");
+
+  if (!shouldReset) {
     return;
   }
 
-  state = initialState();
-  searchTerm = "";
-  itemSearch.value = "";
-  saveState();
-  render();
-});
+  appState = createInitialState();
+  inventorySearchTerm = "";
+  budgetSearchTerm = "";
+  DOM.inventorySearchInput.value = "";
+  DOM.budgetSearchInput.value = "";
+  saveApplicationState();
+  renderApplication();
+}
 
-document.querySelector("#clearUsageBtn").addEventListener("click", () => {
-  updateActiveQuote((quote) => {
-    quote.items = quote.items.map((item) => ({ ...item, quantityUsed: 0 }));
+DOM.navigationButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    setActiveScreen(button.dataset.screenTarget);
   });
 });
 
-document.querySelector("#printQuoteBtn").addEventListener("click", () => {
-  window.print();
+DOM.supplyForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  addSupplyFromForm();
 });
 
-document.querySelector("#addItemBtn").addEventListener("click", () => {
-  updateActiveQuote((quote) => {
-    quote.items.push({
-      id: uid(),
-      name: "Novo material",
-      packageQty: 1,
-      unit: "unid",
-      packagePrice: 0,
-      quantityUsed: 0
-    });
-  });
-});
+DOM.supplyList.addEventListener("change", (event) => {
+  const supplyCard = event.target.closest("[data-supply-id]");
+  const fieldName = event.target.dataset.supplyField;
 
-itemSearch.addEventListener("input", (event) => {
-  searchTerm = event.target.value;
-  renderItemsTable(getActiveQuote());
-});
-
-document.addEventListener("input", (event) => {
-  const quoteField = event.target.dataset.quoteField;
-  const numberField = event.target.dataset.numberField;
-  const itemField = event.target.dataset.itemField;
-  const itemId = event.target.dataset.itemId;
-
-  if (quoteField) {
-    updateActiveQuote((quote) => {
-      quote[quoteField] = event.target.value;
-    });
+  if (!supplyCard || !fieldName) {
     return;
   }
 
-  if (numberField) {
-    updateActiveQuote((quote) => {
-      quote[numberField] = normalizeNumber(event.target.value);
-    });
+  updateSupply(supplyCard.dataset.supplyId, fieldName, event.target.value);
+});
+
+DOM.supplyList.addEventListener("click", (event) => {
+  const removeButton = event.target.closest("[data-remove-supply]");
+
+  if (!removeButton) {
     return;
   }
 
-  if (itemField && itemId) {
-    updateActiveQuote((quote) => {
-      const item = quote.items.find((entry) => entry.id === itemId);
-
-      if (!item) {
-        return;
-      }
-
-      if (["packageQty", "packagePrice", "quantityUsed"].includes(itemField)) {
-        item[itemField] = normalizeNumber(event.target.value);
-      } else {
-        item[itemField] = event.target.value;
-      }
-    });
-  }
+  const supplyCard = removeButton.closest("[data-supply-id]");
+  removeSupply(supplyCard.dataset.supplyId);
 });
 
-document.addEventListener("click", (event) => {
-  const removeId = event.target.dataset.removeItem;
-
-  if (!removeId) {
+DOM.budgetItemList.addEventListener("input", (event) => {
+  if (!event.target.matches("[data-budget-quantity]")) {
     return;
   }
 
-  updateActiveQuote((quote) => {
-    quote.items = quote.items.filter((item) => item.id !== removeId);
-  });
+  const budgetItem = event.target.closest("[data-budget-supply-id]");
+  updateBudgetQuantity(budgetItem.dataset.budgetSupplyId, event.target.value);
 });
 
-saveState();
-render();
+DOM.budgetItemList.addEventListener("click", (event) => {
+  const toggleButton = event.target.closest("[data-toggle-budget-item]");
+
+  if (!toggleButton) {
+    return;
+  }
+
+  const budgetItem = toggleButton.closest("[data-budget-supply-id]");
+  toggleBudgetItem(budgetItem.dataset.budgetSupplyId);
+});
+
+DOM.budgetForm.addEventListener("input", (event) => {
+  updateBudgetField(event.target.name, event.target.value);
+});
+
+DOM.inventorySearchInput.addEventListener("input", (event) => {
+  inventorySearchTerm = event.target.value;
+  renderSupplyList();
+});
+
+DOM.budgetSearchInput.addEventListener("input", (event) => {
+  budgetSearchTerm = event.target.value;
+  renderBudgetItemList();
+});
+
+DOM.clearBudgetButton.addEventListener("click", clearBudget);
+DOM.resetApplicationButton.addEventListener("click", resetApplication);
+
+saveApplicationState();
+renderApplication();
