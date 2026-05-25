@@ -84,6 +84,7 @@ const CalculadoraTattooApp = (() => {
   const elementReferences = {};
   let applicationState = createInitialState();
   let activeInventoryCategory = ALL_CATEGORIES_FILTER;
+  let adjustingInventoryItemId = null;
   let editingInventoryItemId = null;
   let inventorySearchTerm = "";
   let projectItemSheetSearchTerm = "";
@@ -108,6 +109,7 @@ const CalculadoraTattooApp = (() => {
     elementReferences.applicationScreens = document.querySelectorAll("[data-screen-panel]");
     elementReferences.cancelCsvImportModalButton = document.querySelector("#cancelCsvImportModalButton");
     elementReferences.cancelProjectModalButton = document.querySelector("#cancelProjectModalButton");
+    elementReferences.cancelStockAdjustmentModalButton = document.querySelector("#cancelStockAdjustmentModalButton");
     elementReferences.cancelSupplyModalButton = document.querySelector("#cancelSupplyModalButton");
     elementReferences.cartridgeBrandInput = document.querySelector("#cartridgeBrandInput");
     elementReferences.cartridgeExtraFields = document.querySelector("#cartridgeExtraFields");
@@ -117,6 +119,7 @@ const CalculadoraTattooApp = (() => {
     elementReferences.closeDrawerButton = document.querySelector("#closeDrawerButton");
     elementReferences.closeProjectItemSheetButton = document.querySelector("#closeProjectItemSheetButton");
     elementReferences.closeProjectModalButton = document.querySelector("#closeProjectModalButton");
+    elementReferences.closeStockAdjustmentModalButton = document.querySelector("#closeStockAdjustmentModalButton");
     elementReferences.closeSupplyModalButton = document.querySelector("#closeSupplyModalButton");
     elementReferences.createProjectButton = document.querySelector("#createProjectButton");
     elementReferences.currentStockInput = document.querySelector("#currentStockInput");
@@ -167,6 +170,13 @@ const CalculadoraTattooApp = (() => {
     elementReferences.projectTotalValue = document.querySelector("#projectTotalValue");
     elementReferences.resetApplicationButton = document.querySelector("#resetApplicationButton");
     elementReferences.saveSupplyButton = document.querySelector("#saveSupplyButton");
+    elementReferences.stockAdjustmentCurrentValue = document.querySelector("#stockAdjustmentCurrentValue");
+    elementReferences.stockAdjustmentForm = document.querySelector("#stockAdjustmentForm");
+    elementReferences.stockAdjustmentHelperText = document.querySelector("#stockAdjustmentHelperText");
+    elementReferences.stockAdjustmentModal = document.querySelector("#stockAdjustmentModal");
+    elementReferences.stockAdjustmentProjectedValue = document.querySelector("#stockAdjustmentProjectedValue");
+    elementReferences.stockAdjustmentReservedValue = document.querySelector("#stockAdjustmentReservedValue");
+    elementReferences.stockDecreaseQuantityInput = document.querySelector("#stockDecreaseQuantityInput");
     elementReferences.supplyCategorySelect = document.querySelector("#supplyCategorySelect");
     elementReferences.supplyForm = document.querySelector("#supplyForm");
     elementReferences.supplyModalKicker = document.querySelector("#supplyModalKicker");
@@ -543,6 +553,10 @@ const CalculadoraTattooApp = (() => {
 
         <div class="stock-row">
           <div>
+            <span>Cadastrado</span>
+            <strong>${formatNumber(inventoryItem.currentStock)} ${escapeHtml(inventoryItem.unitLabel)}</strong>
+          </div>
+          <div>
             <span>Disponível</span>
             <strong>${formatNumber(availableStock)} ${escapeHtml(inventoryItem.unitLabel)}</strong>
           </div>
@@ -554,7 +568,7 @@ const CalculadoraTattooApp = (() => {
 
         <div class="inventory-card-actions">
           <button class="button button-primary" type="button" data-edit-inventory-item>Editar</button>
-          <button class="button button-quiet" type="button" data-decrease-inventory-stock>Diminuir</button>
+          <button class="button button-quiet" type="button" data-decrease-inventory-stock ${availableStock <= 0 ? "disabled" : ""}>Diminuir</button>
           <button class="button button-danger" type="button" data-delete-inventory-item>Excluir</button>
         </div>
       </article>
@@ -748,6 +762,76 @@ const CalculadoraTattooApp = (() => {
 
     elementReferences.supplyNameInput.focus();
     elementReferences.supplyNameInput.select();
+  }
+
+  function openStockAdjustmentModal(inventoryItemId) {
+    const inventoryItem = findInventoryItemById(inventoryItemId);
+
+    if (!inventoryItem) {
+      return;
+    }
+
+    adjustingInventoryItemId = inventoryItem.id;
+    elementReferences.stockAdjustmentForm.reset();
+    elementReferences.stockDecreaseQuantityInput.setCustomValidity("");
+    updateStockAdjustmentPreview();
+    openModal(elementReferences.stockAdjustmentModal);
+    elementReferences.stockDecreaseQuantityInput.focus();
+  }
+
+  function updateStockAdjustmentPreview() {
+    const inventoryItem = findInventoryItemById(adjustingInventoryItemId);
+
+    if (!inventoryItem) {
+      return;
+    }
+
+    const reservedStock = getTotalUsedQuantity(inventoryItem.id);
+    const decreaseQuantity = normalizeNumber(elementReferences.stockDecreaseQuantityInput.value);
+    const projectedStock = Math.max(reservedStock, normalizeNumber(inventoryItem.currentStock) - decreaseQuantity);
+    const maximumDecrease = getMaximumStockDecrease(inventoryItem.id);
+    const stockTextSuffix = ` ${inventoryItem.unitLabel}`;
+
+    elementReferences.stockAdjustmentCurrentValue.textContent = `${formatNumber(inventoryItem.currentStock)}${stockTextSuffix}`;
+    elementReferences.stockAdjustmentReservedValue.textContent = `${formatNumber(reservedStock)}${stockTextSuffix}`;
+    elementReferences.stockAdjustmentProjectedValue.textContent = `${formatNumber(projectedStock)}${stockTextSuffix}`;
+    elementReferences.stockAdjustmentHelperText.textContent = `Máximo para baixa agora: ${formatNumber(maximumDecrease)} ${inventoryItem.unitLabel}.`;
+  }
+
+  function applyStockDecreaseFromForm() {
+    const inventoryItem = findInventoryItemById(adjustingInventoryItemId);
+
+    if (!inventoryItem) {
+      return;
+    }
+
+    const decreaseQuantity = normalizeNumber(elementReferences.stockDecreaseQuantityInput.value);
+    const maximumDecrease = getMaximumStockDecrease(inventoryItem.id);
+    elementReferences.stockDecreaseQuantityInput.setCustomValidity("");
+
+    if (decreaseQuantity <= 0) {
+      elementReferences.stockDecreaseQuantityInput.setCustomValidity("Informe uma quantidade maior que zero.");
+    }
+
+    if (decreaseQuantity > maximumDecrease) {
+      elementReferences.stockDecreaseQuantityInput.setCustomValidity(`Você pode diminuir no máximo ${formatNumber(maximumDecrease)} ${inventoryItem.unitLabel}.`);
+    }
+
+    if (decreaseQuantity <= 0 || decreaseQuantity > maximumDecrease) {
+      elementReferences.stockAdjustmentForm.reportValidity();
+      return;
+    }
+
+    updateInventoryItem({
+      ...inventoryItem,
+      currentStock: normalizeNumber(inventoryItem.currentStock) - decreaseQuantity,
+      updatedAt: new Date().toISOString()
+    });
+
+    adjustingInventoryItemId = null;
+    closeModal(elementReferences.stockAdjustmentModal);
+    persistApplicationState();
+    renderApplication();
   }
 
   function openCsvImportModal() {
@@ -1337,6 +1421,16 @@ const CalculadoraTattooApp = (() => {
     return Math.max(0, normalizeNumber(inventoryItem.currentStock) - getTotalUsedQuantity(inventoryItemId));
   }
 
+  function getMaximumStockDecrease(inventoryItemId) {
+    const inventoryItem = findInventoryItemById(inventoryItemId);
+
+    if (!inventoryItem) {
+      return 0;
+    }
+
+    return Math.max(0, normalizeNumber(inventoryItem.currentStock) - getTotalUsedQuantity(inventoryItemId));
+  }
+
   function downloadBackup() {
     closeDrawer();
     const serializedState = JSON.stringify(applicationState, null, 2);
@@ -1461,7 +1555,9 @@ const CalculadoraTattooApp = (() => {
     elementReferences.cancelSupplyModalButton.addEventListener("click", () => closeModal(elementReferences.supplyModal));
     elementReferences.closeSupplyModalButton.addEventListener("click", () => closeModal(elementReferences.supplyModal));
     elementReferences.cancelProjectModalButton.addEventListener("click", () => closeModal(elementReferences.projectModal));
+    elementReferences.cancelStockAdjustmentModalButton.addEventListener("click", () => closeModal(elementReferences.stockAdjustmentModal));
     elementReferences.closeProjectModalButton.addEventListener("click", () => closeModal(elementReferences.projectModal));
+    elementReferences.closeStockAdjustmentModalButton.addEventListener("click", () => closeModal(elementReferences.stockAdjustmentModal));
     elementReferences.cancelCsvImportModalButton.addEventListener("click", () => closeModal(elementReferences.csvImportModal));
     elementReferences.closeCsvImportModalButton.addEventListener("click", () => closeModal(elementReferences.csvImportModal));
     elementReferences.closeProjectItemSheetButton.addEventListener("click", () => closeModal(elementReferences.projectItemSheet));
@@ -1479,6 +1575,11 @@ const CalculadoraTattooApp = (() => {
     elementReferences.supplyForm.addEventListener("submit", (event) => {
       event.preventDefault();
       saveInventoryItemFromForm();
+    });
+    elementReferences.stockDecreaseQuantityInput.addEventListener("input", updateStockAdjustmentPreview);
+    elementReferences.stockAdjustmentForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      applyStockDecreaseFromForm();
     });
 
     elementReferences.csvImportForm.addEventListener("submit", handleCsvImportFormSubmit);
@@ -1538,7 +1639,7 @@ const CalculadoraTattooApp = (() => {
       }
 
       if (event.target.closest("[data-decrease-inventory-stock]")) {
-        openInventoryEditModal(inventoryCard.dataset.inventoryItemId, true);
+        openStockAdjustmentModal(inventoryCard.dataset.inventoryItemId);
         return;
       }
 

@@ -278,6 +278,49 @@
     </div>
   </dialog>
 
+  <dialog class="app-modal sheet-modal" id="stockAdjustmentModal" aria-labelledby="stockAdjustmentTitle">
+    <div class="modal-card sheet-card">
+      <div class="sheet-handle" aria-hidden="true"></div>
+
+      <div class="modal-header">
+        <div>
+          <span class="section-kicker">Baixa rápida</span>
+          <h2 id="stockAdjustmentTitle">Diminuir estoque</h2>
+        </div>
+        <button class="icon-button" id="closeStockAdjustmentModalButton" type="button" aria-label="Fechar baixa de estoque">x</button>
+      </div>
+
+      <section class="adjustment-summary-grid" aria-live="polite">
+        <div>
+          <span>Cadastrado</span>
+          <strong id="stockAdjustmentCurrentValue">0</strong>
+        </div>
+        <div>
+          <span>Reservado</span>
+          <strong id="stockAdjustmentReservedValue">0</strong>
+        </div>
+        <div>
+          <span>Após baixa</span>
+          <strong id="stockAdjustmentProjectedValue">0</strong>
+        </div>
+      </section>
+
+      <form class="stacked-form" id="stockAdjustmentForm" autocomplete="off">
+        <label class="form-field">
+          <span>Quantidade a diminuir</span>
+          <input id="stockDecreaseQuantityInput" name="stockDecreaseQuantity" type="text" inputmode="decimal" placeholder="1" required />
+        </label>
+
+        <p class="helper-text" id="stockAdjustmentHelperText">Informe a quantidade que saiu do estoque.</p>
+
+        <div class="modal-actions">
+          <button class="button button-primary" type="submit">Aplicar baixa</button>
+          <button class="button button-quiet" id="cancelStockAdjustmentModalButton" type="button">Cancelar</button>
+        </div>
+      </form>
+    </div>
+  </dialog>
+
   <dialog class="app-modal" id="csvImportModal" aria-labelledby="csvImportModalTitle">
     <div class="modal-card">
       <div class="modal-header">

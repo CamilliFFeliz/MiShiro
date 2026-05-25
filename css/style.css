@@ -610,13 +610,15 @@ textarea:focus-visible {
   text-align: right;
 }
 
-.stock-row {
+.stock-row,
+.adjustment-summary-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
 }
 
-.stock-row div {
+.stock-row div,
+.adjustment-summary-grid div {
   min-width: 0;
   padding: 12px;
   border: var(--border-subtle);
@@ -625,6 +627,7 @@ textarea:focus-visible {
 }
 
 .stock-row span,
+.adjustment-summary-grid span,
 .line-total span {
   display: block;
   color: var(--color-purple-light);
@@ -633,7 +636,8 @@ textarea:focus-visible {
   text-transform: uppercase;
 }
 
-.stock-row strong {
+.stock-row strong,
+.adjustment-summary-grid strong {
   display: block;
   overflow-wrap: anywhere;
   margin-top: 6px;
