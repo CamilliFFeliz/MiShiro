@@ -1,18 +1,17 @@
 :root {
-  --color-purple-dark: #210B46;
-  --color-purple: #6D28D9;
-  --color-purple-light: #E9DDFF;
-  --color-black: #09070D;
+  --color-purple-dark: #2D0B40;
+  --color-purple: #6A1B9A;
+  --color-purple-light: #E1BEE7;
+  --color-black: #121212;
   --color-white: #FFFFFF;
   --radius-small: 8px;
   --radius-medium: 12px;
   --radius-large: 20px;
   --page-padding: 16px;
-  --bottom-navigation-height: 82px;
+  --bottom-navigation-height: 84px;
+  --border-subtle: 1px solid var(--color-purple);
   --border-strong: 1px solid var(--color-purple-light);
-  --border-soft: 1px solid var(--color-purple-light);
-  --shadow-soft: 0 8px 0 var(--color-purple-light);
-  --shadow-strong: 0 6px 0 var(--color-purple-dark);
+  --shadow-panel: 0 8px 0 var(--color-purple-dark);
 }
 
 * {
@@ -22,7 +21,7 @@
 html {
   min-width: 320px;
   min-height: 100%;
-  background: var(--color-purple-dark);
+  background: var(--color-black);
 }
 
 body {
@@ -30,8 +29,8 @@ body {
   min-height: 100vh;
   margin: 0;
   overflow-x: hidden;
-  background: var(--color-purple-dark);
-  color: var(--color-black);
+  background: var(--color-black);
+  color: var(--color-white);
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
@@ -58,7 +57,7 @@ select,
 textarea {
   width: 100%;
   min-width: 0;
-  border: var(--border-soft);
+  border: var(--border-subtle);
   border-radius: var(--radius-medium);
   outline: none;
   background: var(--color-white);
@@ -67,14 +66,14 @@ textarea {
   line-height: 1.3;
 }
 
-input {
+input,
+select {
   min-height: 50px;
   padding: 0 14px;
 }
 
 select {
-  min-height: 50px;
-  padding: 0 38px 0 14px;
+  padding-right: 36px;
 }
 
 textarea {
@@ -91,34 +90,33 @@ textarea::placeholder {
 input:focus,
 select:focus,
 textarea:focus {
-  border-color: var(--color-purple);
-  box-shadow: 0 0 0 3px var(--color-purple-light);
+  border-color: var(--color-purple-light);
+  box-shadow: 0 0 0 3px var(--color-purple);
 }
 
-.app-frame {
+.application-shell {
   position: relative;
   width: 100%;
-  max-width: 880px;
+  max-width: 920px;
   min-height: 100vh;
   min-height: 100dvh;
   margin: 0 auto;
   padding-bottom: calc(var(--bottom-navigation-height) + env(safe-area-inset-bottom));
-  background: var(--color-white);
+  background: var(--color-black);
 }
 
-.app-header {
+.application-header {
   position: sticky;
   top: 0;
   z-index: 20;
   display: grid;
   gap: 16px;
   padding: max(16px, env(safe-area-inset-top)) var(--page-padding) 18px;
-  border-bottom: 1px solid var(--color-purple);
+  border-bottom: var(--border-subtle);
   background: var(--color-purple-dark);
-  color: var(--color-white);
 }
 
-.brand-row {
+.brand-block {
   display: grid;
   grid-template-columns: 52px minmax(0, 1fr);
   gap: 12px;
@@ -130,7 +128,7 @@ textarea:focus {
   width: 52px;
   height: 52px;
   place-items: center;
-  border: 1px solid var(--color-white);
+  border: 1px solid var(--color-purple-light);
   border-radius: var(--radius-medium);
   background: var(--color-purple);
   color: var(--color-white);
@@ -164,164 +162,121 @@ textarea:focus {
   font-weight: 850;
 }
 
-.total-card {
+.dashboard-total {
   display: grid;
-  grid-template-columns: minmax(0, 1fr);
   gap: 5px;
   min-width: 0;
   padding: 14px;
-  border: 1px solid var(--color-white);
+  border: 1px solid var(--color-purple-light);
   border-radius: var(--radius-large);
-  background: var(--color-white);
-  color: var(--color-black);
+  background: var(--color-black);
+  color: var(--color-white);
 }
 
-.total-card span {
-  color: var(--color-purple-dark);
+.dashboard-total span {
+  color: var(--color-purple-light);
   font-size: 12px;
   font-weight: 950;
   text-transform: uppercase;
 }
 
-.total-card strong {
+.dashboard-total strong {
   overflow-wrap: anywhere;
-  color: var(--color-purple);
+  color: var(--color-white);
   font-size: clamp(30px, 12vw, 48px);
   font-weight: 950;
   line-height: 0.95;
 }
 
-.app-content {
+.application-content {
   padding: 18px var(--page-padding) 22px;
 }
 
-.app-screen {
+.screen-panel {
   display: none;
   min-width: 0;
 }
 
-.app-screen.is-active {
+.screen-panel.is-active {
   display: block;
 }
 
 .screen-heading {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 12px;
-  align-items: end;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 14px;
   margin-bottom: 18px;
 }
 
 .screen-heading h1 {
-  margin: 2px 0 0;
-  color: var(--color-black);
-  font-size: clamp(32px, 12vw, 48px);
+  margin: 3px 0 0;
+  color: var(--color-white);
+  font-size: clamp(34px, 13vw, 54px);
   font-weight: 950;
   line-height: 0.95;
 }
 
 .screen-actions {
   display: grid;
-  gap: 8px;
-  min-width: 112px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
 }
 
-.screen-actions .button {
-  min-height: 44px;
-  padding: 0 12px;
-  font-size: 13px;
-  box-shadow: none;
-}
-
-.section-label {
-  color: var(--color-purple);
+.section-kicker {
+  color: var(--color-purple-light);
   font-size: 12px;
   font-weight: 950;
   text-transform: uppercase;
 }
 
 .surface-card,
-.result-panel,
 .metric-card,
 .data-card,
 .empty-state {
-  border: var(--border-strong);
+  border: var(--border-subtle);
   border-radius: var(--radius-large);
-  background: var(--color-white);
-  box-shadow: var(--shadow-soft);
+  background: var(--color-purple-dark);
+  box-shadow: var(--shadow-panel);
 }
 
-.stacked-form {
-  display: grid;
-  gap: 14px;
+.surface-card {
   margin-bottom: 18px;
   padding: 16px;
 }
 
-.price-table-panel {
-  display: grid;
-  gap: 12px;
-  margin-bottom: 18px;
-  padding: 16px;
-  background: var(--color-purple-light);
-}
-
-.price-table-panel select {
-  border-color: var(--color-purple);
-  color: var(--color-purple-dark);
-  font-weight: 900;
-}
-
-.labor-panel {
-  display: grid;
-  gap: 14px;
-  margin-bottom: 18px;
-  padding: 16px;
-}
-
-.labor-heading {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 12px;
-  align-items: end;
-}
-
+.section-header h2,
+.price-table-card h2,
 .labor-heading h2 {
-  margin: 2px 0 0;
-  color: var(--color-black);
-  font-size: 22px;
+  margin: 3px 0 0;
+  color: var(--color-white);
+  font-size: 20px;
   font-weight: 950;
-  line-height: 1;
+  line-height: 1.05;
 }
 
-.labor-heading strong {
-  color: var(--color-purple);
-  font-size: 22px;
-  font-weight: 950;
-  text-align: right;
+.stacked-form,
+.inner-form,
+.price-table-card,
+.labor-card {
+  display: grid;
+  gap: 14px;
 }
 
-.labor-grid {
+.responsive-grid {
   display: grid;
   gap: 12px;
 }
 
-.form-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 12px;
-}
-
-.field-group,
+.form-field,
 .quantity-field {
   display: grid;
   min-width: 0;
   gap: 7px;
 }
 
-.field-group span,
+.form-field span,
 .quantity-field > span {
-  color: var(--color-black);
+  color: var(--color-purple-light);
   font-size: 12px;
   font-weight: 950;
   text-transform: uppercase;
@@ -349,16 +304,13 @@ textarea:focus {
 }
 
 .button-primary {
-  border-color: var(--color-purple-dark);
   background: var(--color-purple);
   color: var(--color-white);
-  box-shadow: var(--shadow-strong);
 }
 
-.button-secondary {
-  border-color: var(--color-purple-light);
+.button-quiet {
   background: var(--color-purple-light);
-  color: var(--color-purple-dark);
+  color: var(--color-black);
 }
 
 .button-danger {
@@ -381,10 +333,10 @@ textarea:focus {
 }
 
 .metric-card span,
-.result-panel span,
-.result-panel small {
+.result-card span,
+.result-card small {
   display: block;
-  color: var(--color-purple-dark);
+  color: var(--color-purple-light);
   font-size: 11px;
   font-weight: 950;
   text-transform: uppercase;
@@ -394,24 +346,33 @@ textarea:focus {
   display: block;
   overflow-wrap: anywhere;
   margin-top: 6px;
-  color: var(--color-purple);
+  color: var(--color-white);
   font-size: 20px;
   font-weight: 950;
 }
 
 .search-field {
   display: block;
-  margin: 0 0 14px;
 }
 
 .search-field input {
-  border-color: var(--color-purple-light);
-  background: var(--color-purple-light);
-  color: var(--color-black);
+  border-color: var(--color-purple);
+  background: var(--color-purple-dark);
+  color: var(--color-white);
   font-weight: 850;
 }
 
-.card-list {
+.search-field input::placeholder {
+  color: var(--color-purple-light);
+}
+
+.calculator-tools {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.item-list {
   display: grid;
   gap: 14px;
   min-width: 0;
@@ -439,7 +400,7 @@ textarea:focus {
 .card-title-group h3 {
   margin: 0;
   overflow: hidden;
-  color: var(--color-black);
+  color: var(--color-white);
   font-size: 18px;
   font-weight: 950;
   line-height: 1.15;
@@ -449,18 +410,18 @@ textarea:focus {
 .card-title-group span {
   display: block;
   margin-top: 5px;
-  color: var(--color-purple-dark);
+  color: var(--color-purple-light);
   font-size: 12px;
   font-weight: 850;
 }
 
 .pill {
-  max-width: 130px;
+  max-width: 134px;
   padding: 8px 10px;
-  border: 1px solid var(--color-purple);
+  border: 1px solid var(--color-purple-light);
   border-radius: var(--radius-medium);
   background: var(--color-purple-light);
-  color: var(--color-purple-dark);
+  color: var(--color-black);
   font-size: 12px;
   font-weight: 950;
   line-height: 1.15;
@@ -469,7 +430,6 @@ textarea:focus {
 
 .editable-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr);
   gap: 12px;
 }
 
@@ -479,23 +439,32 @@ textarea:focus {
   margin-top: 14px;
 }
 
-.result-panel {
+.labor-heading {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: end;
+}
+
+.labor-heading strong {
+  color: var(--color-purple-light);
+  font-size: 22px;
+  font-weight: 950;
+  text-align: right;
+}
+
+.result-card {
   display: grid;
   gap: 7px;
   margin-bottom: 18px;
   padding: 18px;
-  border-color: var(--color-purple-dark);
-  background: var(--color-purple-dark);
-  box-shadow: 0 7px 0 var(--color-purple-light);
+  border: 1px solid var(--color-purple-light);
+  border-radius: var(--radius-large);
+  background: var(--color-purple);
   color: var(--color-white);
 }
 
-.result-panel span,
-.result-panel small {
-  color: var(--color-purple-light);
-}
-
-.result-panel strong {
+.result-card strong {
   overflow-wrap: anywhere;
   color: var(--color-white);
   font-size: clamp(38px, 15vw, 68px);
@@ -509,14 +478,12 @@ textarea:focus {
 }
 
 .budget-item.is-selected {
-  border-color: var(--color-purple);
-  background: var(--color-purple-light);
-  box-shadow: 0 7px 0 var(--color-purple);
+  border-color: var(--color-purple-light);
+  background: var(--color-purple);
 }
 
 .budget-item-control {
   display: grid;
-  grid-template-columns: minmax(0, 1fr);
   gap: 12px;
 }
 
@@ -525,7 +492,7 @@ textarea:focus {
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   overflow: hidden;
-  border: 1px solid var(--color-purple-light);
+  border: 1px solid var(--color-purple);
   border-radius: var(--radius-medium);
   background: var(--color-white);
 }
@@ -540,7 +507,7 @@ textarea:focus {
 
 .quantity-input-row span {
   padding-right: 12px;
-  color: var(--color-purple-dark);
+  color: var(--color-black);
   font-size: 12px;
   font-weight: 950;
 }
@@ -548,12 +515,12 @@ textarea:focus {
 .select-button {
   width: 100%;
   background: var(--color-white);
-  color: var(--color-purple-dark);
+  color: var(--color-black);
 }
 
 .budget-item.is-selected .select-button {
-  background: var(--color-purple);
-  color: var(--color-white);
+  background: var(--color-purple-light);
+  color: var(--color-black);
 }
 
 .line-total {
@@ -562,18 +529,18 @@ textarea:focus {
   gap: 10px;
   align-items: center;
   padding-top: 12px;
-  border-top: var(--border-soft);
+  border-top: 1px solid var(--color-purple-light);
 }
 
 .line-total span {
-  color: var(--color-purple-dark);
+  color: var(--color-purple-light);
   font-size: 12px;
   font-weight: 950;
   text-transform: uppercase;
 }
 
 .line-total strong {
-  color: var(--color-purple);
+  color: var(--color-white);
   font-size: 18px;
   font-weight: 950;
   text-align: right;
@@ -587,13 +554,13 @@ textarea:focus {
 }
 
 .empty-state strong {
-  color: var(--color-black);
+  color: var(--color-white);
   font-size: 18px;
   font-weight: 950;
 }
 
 .empty-state span {
-  color: var(--color-purple-dark);
+  color: var(--color-purple-light);
   font-size: 14px;
   font-weight: 850;
 }
@@ -608,23 +575,23 @@ textarea:focus {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
   width: 100%;
-  max-width: 880px;
+  max-width: 920px;
   margin: 0 auto;
   padding: 10px var(--page-padding) calc(10px + env(safe-area-inset-bottom));
-  border-top: 1px solid var(--color-black);
+  border-top: 1px solid var(--color-purple);
   background: var(--color-purple-dark);
 }
 
 .navigation-button {
   min-width: 0;
   min-height: 58px;
-  background: var(--color-white);
-  color: var(--color-purple-dark);
+  background: var(--color-black);
+  color: var(--color-white);
 }
 
 .navigation-button.is-active {
-  background: var(--color-purple);
-  color: var(--color-white);
+  background: var(--color-purple-light);
+  color: var(--color-black);
 }
 
 .visually-hidden {
@@ -641,21 +608,22 @@ textarea:focus {
 }
 
 @media (min-width: 480px) {
-  .form-grid,
+  .screen-heading {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+  }
+
+  .screen-actions,
+  .responsive-grid,
   .editable-grid,
   .card-actions,
-  .labor-grid,
-  .budget-item-control {
+  .budget-item-control,
+  .calculator-tools {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .screen-actions {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    min-width: 226px;
-  }
-
-  .form-grid-wide,
-  .editable-grid .field-group:first-child {
+  .form-field-wide,
+  .editable-grid .form-field:first-child {
     grid-column: 1 / -1;
   }
 }
@@ -665,12 +633,12 @@ textarea:focus {
     --page-padding: 24px;
   }
 
-  .app-header {
-    grid-template-columns: minmax(0, 1fr) minmax(280px, 340px);
+  .application-header {
+    grid-template-columns: minmax(0, 1fr) minmax(280px, 360px);
     align-items: center;
   }
 
-  .card-list {
+  .item-list {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
@@ -700,7 +668,7 @@ textarea:focus {
     color: var(--color-black);
   }
 
-  .app-frame {
+  .application-shell {
     display: none !important;
   }
 

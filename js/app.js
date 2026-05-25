@@ -1,34 +1,43 @@
-const STORAGE_KEY = "CALCULADORA_TATTOO_WEB_V2";
+import {
+  calculateMaterialCost,
+  calculateTotalCost,
+  calculateUnitCost,
+  normalizeNumber
+} from "./calculation-engine.js";
+import { LocalStorageRepository } from "./storage-repository.js";
 
-const PRICE_TABLES = [
-  {
-    id: "base",
-    name: "Base da planilha",
-    supplies: [
-      { name: "Sabonete liquido", packageQuantity: 400, unitLabel: "ml", packagePrice: 37 },
-      { name: "Bandagem", packageQuantity: 4.5, unitLabel: "metros", packagePrice: 10 },
-      { name: "Lamina", packageQuantity: 7, unitLabel: "un", packagePrice: 7 },
-      { name: "Batoque", packageQuantity: 50, unitLabel: "un", packagePrice: 30 },
-      { name: "Agulhas", packageQuantity: 1, unitLabel: "un", packagePrice: 15 },
-      { name: "Vaselina", packageQuantity: 150, unitLabel: "gramas", packagePrice: 30 },
-      { name: "Transfer", packageQuantity: 30, unitLabel: "ml", packagePrice: 28 },
-      { name: "Folha stencil", packageQuantity: 1, unitLabel: "folha", packagePrice: 4.5 },
-      { name: "Papel toalha", packageQuantity: 200, unitLabel: "folhas", packagePrice: 12 },
-      { name: "Mascara", packageQuantity: 100, unitLabel: "un", packagePrice: 25 },
-      { name: "Plastico filme", packageQuantity: 70, unitLabel: "metros", packagePrice: 15 },
-      { name: "Palito descartavel", packageQuantity: 100, unitLabel: "un", packagePrice: 6 },
-      { name: "Luvas", packageQuantity: 100, unitLabel: "un", packagePrice: 30 },
-      { name: "Tinta preto linha", packageQuantity: 20, unitLabel: "ml", packagePrice: 50 },
-      { name: "Tinta preto tribal", packageQuantity: 20, unitLabel: "ml", packagePrice: 50 },
-      { name: "Tinta Raven Clow", packageQuantity: 20, unitLabel: "ml", packagePrice: 79 },
-      { name: "Tinta color", packageQuantity: 20, unitLabel: "ml", packagePrice: 50 }
-    ]
-  }
-];
-
+const APPLICATION_STORAGE_KEY = "CALCULADORA_TATTOO_PRODUCTION_V1";
 const DEFAULT_PRICE_TABLE_ID = "base";
 const DEFAULT_LABOR_HOURS = 1;
 const DEFAULT_HOURLY_RATE = 0;
+
+const BASE_PRICE_TABLE_ITEMS = [
+  { name: "Sabonete liquido", packageQuantity: 400, unitLabel: "ml", packagePrice: 37 },
+  { name: "Bandagem", packageQuantity: 4.5, unitLabel: "metros", packagePrice: 10 },
+  { name: "Lamina", packageQuantity: 7, unitLabel: "un", packagePrice: 7 },
+  { name: "Batoque", packageQuantity: 50, unitLabel: "un", packagePrice: 30 },
+  { name: "Agulhas", packageQuantity: 1, unitLabel: "un", packagePrice: 15 },
+  { name: "Vaselina", packageQuantity: 150, unitLabel: "gramas", packagePrice: 30 },
+  { name: "Transfer", packageQuantity: 30, unitLabel: "ml", packagePrice: 28 },
+  { name: "Folha stencil", packageQuantity: 1, unitLabel: "folha", packagePrice: 4.5 },
+  { name: "Papel toalha", packageQuantity: 200, unitLabel: "folhas", packagePrice: 12 },
+  { name: "Mascara", packageQuantity: 100, unitLabel: "un", packagePrice: 25 },
+  { name: "Plastico filme", packageQuantity: 70, unitLabel: "metros", packagePrice: 15 },
+  { name: "Palito descartavel", packageQuantity: 100, unitLabel: "un", packagePrice: 6 },
+  { name: "Luvas", packageQuantity: 100, unitLabel: "un", packagePrice: 30 },
+  { name: "Tinta preto linha", packageQuantity: 20, unitLabel: "ml", packagePrice: 50 },
+  { name: "Tinta preto tribal", packageQuantity: 20, unitLabel: "ml", packagePrice: 50 },
+  { name: "Tinta Raven Clow", packageQuantity: 20, unitLabel: "ml", packagePrice: 79 },
+  { name: "Tinta color", packageQuantity: 20, unitLabel: "ml", packagePrice: 50 }
+];
+
+const PRICE_TABLES = [
+  {
+    id: DEFAULT_PRICE_TABLE_ID,
+    name: "Base da planilha",
+    inventoryData: BASE_PRICE_TABLE_ITEMS
+  }
+];
 
 const CURRENCY_FORMATTER = new Intl.NumberFormat("pt-BR", {
   style: "currency",
@@ -39,805 +48,820 @@ const NUMBER_FORMATTER = new Intl.NumberFormat("pt-BR", {
   maximumFractionDigits: 2
 });
 
-const DOM = {
-  applicationScreens: document.querySelectorAll("[data-screen-panel]"),
-  budgetForm: document.querySelector("#budgetForm"),
-  budgetItemList: document.querySelector("#budgetItemList"),
-  budgetMetricGrid: document.querySelector("#budgetMetricGrid"),
-  budgetSearchInput: document.querySelector("#budgetSearchInput"),
-  budgetTotalDetail: document.querySelector("#budgetTotalDetail"),
-  budgetTotalValue: document.querySelector("#budgetTotalValue"),
-  clearBudgetButton: document.querySelector("#clearBudgetButton"),
-  clientNameInput: document.querySelector("#clientNameInput"),
-  downloadBudgetPdfButton: document.querySelector("#downloadBudgetPdfButton"),
-  emptyStateTemplate: document.querySelector("#emptyStateTemplate"),
-  headerBudgetTotal: document.querySelector("#headerBudgetTotal"),
-  hourlyRateInput: document.querySelector("#hourlyRateInput"),
-  inventoryMetricGrid: document.querySelector("#inventoryMetricGrid"),
-  inventorySearchInput: document.querySelector("#inventorySearchInput"),
-  laborHoursInput: document.querySelector("#laborHoursInput"),
-  laborPreviewValue: document.querySelector("#laborPreviewValue"),
-  navigationButtons: document.querySelectorAll("[data-screen-target]"),
-  packagePriceInput: document.querySelector("#packagePriceInput"),
-  packageQuantityInput: document.querySelector("#packageQuantityInput"),
-  applyPriceTableButton: document.querySelector("#applyPriceTableButton"),
-  priceTableSelect: document.querySelector("#priceTableSelect"),
-  printDocument: document.querySelector("#printDocument"),
-  resetApplicationButton: document.querySelector("#resetApplicationButton"),
-  sessionNameInput: document.querySelector("#sessionNameInput"),
-  sessionNotesInput: document.querySelector("#sessionNotesInput"),
-  supplyForm: document.querySelector("#supplyForm"),
-  supplyList: document.querySelector("#supplyList"),
-  supplyNameInput: document.querySelector("#supplyNameInput"),
-  unitLabelInput: document.querySelector("#unitLabelInput")
-};
+const CalculadoraTattooApp = (() => {
+  const stateRepository = new LocalStorageRepository(APPLICATION_STORAGE_KEY, createInitialState);
 
-let appState = loadApplicationState();
-let inventorySearchTerm = "";
-let budgetSearchTerm = "";
+  let applicationState = normalizeApplicationState(stateRepository.getState());
+  let inventorySearchTerm = "";
+  let calculatorSearchTerm = "";
 
-function createId(prefix) {
-  if (window.crypto && typeof window.crypto.randomUUID === "function") {
-    return `${prefix}-${window.crypto.randomUUID()}`;
+  const dom = {};
+
+  function initializeApplication() {
+    bindDomReferences();
+    renderApplication();
+    bindEventListeners();
+    registerServiceWorker();
   }
 
-  return `${prefix}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
-}
+  function bindDomReferences() {
+    dom.activeSheetTotal = document.querySelector("#activeSheetTotal");
+    dom.applicationScreens = document.querySelectorAll("[data-screen-panel]");
+    dom.applyPriceTableButton = document.querySelector("#applyPriceTableButton");
+    dom.budgetSheetForm = document.querySelector("#budgetSheetForm");
+    dom.budgetSheetSelect = document.querySelector("#budgetSheetSelect");
+    dom.budgetTitleInput = document.querySelector("#budgetTitleInput");
+    dom.calculatorDashboard = document.querySelector("#calculatorDashboard");
+    dom.calculatorItemList = document.querySelector("#calculatorItemList");
+    dom.calculatorSearchInput = document.querySelector("#calculatorSearchInput");
+    dom.calculatorTotalDetail = document.querySelector("#calculatorTotalDetail");
+    dom.calculatorTotalValue = document.querySelector("#calculatorTotalValue");
+    dom.clearBudgetSheetButton = document.querySelector("#clearBudgetSheetButton");
+    dom.clientNameInput = document.querySelector("#clientNameInput");
+    dom.createBudgetSheetButton = document.querySelector("#createBudgetSheetButton");
+    dom.downloadBudgetPdfButton = document.querySelector("#downloadBudgetPdfButton");
+    dom.emptyStateTemplate = document.querySelector("#emptyStateTemplate");
+    dom.hourlyRateInput = document.querySelector("#hourlyRateInput");
+    dom.inventoryDashboard = document.querySelector("#inventoryDashboard");
+    dom.inventoryList = document.querySelector("#inventoryList");
+    dom.inventorySearchInput = document.querySelector("#inventorySearchInput");
+    dom.laborHoursInput = document.querySelector("#laborHoursInput");
+    dom.laborPreviewValue = document.querySelector("#laborPreviewValue");
+    dom.navigationButtons = document.querySelectorAll("[data-screen-target]");
+    dom.packagePriceInput = document.querySelector("#packagePriceInput");
+    dom.packageQuantityInput = document.querySelector("#packageQuantityInput");
+    dom.priceTableSelect = document.querySelector("#priceTableSelect");
+    dom.printDocument = document.querySelector("#printDocument");
+    dom.resetApplicationButton = document.querySelector("#resetApplicationButton");
+    dom.sessionNotesInput = document.querySelector("#sessionNotesInput");
+    dom.supplyForm = document.querySelector("#supplyForm");
+    dom.supplyNameInput = document.querySelector("#supplyNameInput");
+    dom.unitLabelInput = document.querySelector("#unitLabelInput");
+  }
 
-function createInitialState() {
-  const supplies = createSuppliesFromPriceTable(DEFAULT_PRICE_TABLE_ID);
+  function createInitialState() {
+    const inventoryData = createInventoryDataFromPriceTable(DEFAULT_PRICE_TABLE_ID);
+    const firstBudgetSheet = createBudgetSheet("Ficha 1", inventoryData);
 
-  return {
-    activeScreen: "budget",
-    activePriceTableId: DEFAULT_PRICE_TABLE_ID,
-    supplies,
-    budget: {
-      sessionName: "",
+    return {
+      activeScreen: "calculator",
+      activePriceTableId: DEFAULT_PRICE_TABLE_ID,
+      activeBudgetSheetId: firstBudgetSheet.id,
+      inventoryData,
+      budgetSheets: [firstBudgetSheet]
+    };
+  }
+
+  function createInventoryDataFromPriceTable(priceTableId) {
+    const priceTable = getPriceTableById(priceTableId);
+
+    return priceTable.inventoryData.map((inventoryItem, inventoryIndex) => ({
+      id: `${priceTable.id}-${inventoryIndex + 1}`,
+      name: inventoryItem.name,
+      packageQuantity: normalizeNumber(inventoryItem.packageQuantity),
+      unitLabel: inventoryItem.unitLabel,
+      packagePrice: normalizeNumber(inventoryItem.packagePrice)
+    }));
+  }
+
+  function createBudgetSheet(title, inventoryData) {
+    return {
+      id: createEntityId("budget-sheet"),
+      title,
       clientName: "",
       sessionNotes: "",
       laborHours: DEFAULT_LABOR_HOURS,
       hourlyRate: DEFAULT_HOURLY_RATE,
-      quantities: createEmptyQuantities(supplies)
-    }
-  };
-}
-
-function createSuppliesFromPriceTable(priceTableId) {
-  const priceTable = getPriceTableById(priceTableId);
-
-  return priceTable.supplies.map((supply, supplyIndex) => ({
-    id: `${priceTable.id}-${supplyIndex + 1}`,
-    name: supply.name,
-    packageQuantity: supply.packageQuantity,
-    unitLabel: supply.unitLabel,
-    packagePrice: supply.packagePrice
-  }));
-}
-
-function getPriceTableById(priceTableId) {
-  return PRICE_TABLES.find((priceTable) => priceTable.id === priceTableId) || PRICE_TABLES[0];
-}
-
-function createEmptyQuantities(supplies) {
-  return supplies.reduce((quantities, supply) => {
-    quantities[supply.id] = 0;
-    return quantities;
-  }, {});
-}
-
-function loadApplicationState() {
-  const savedState = localStorage.getItem(STORAGE_KEY);
-
-  if (!savedState) {
-    return createInitialState();
+      materialUsage: createEmptyMaterialUsage(inventoryData),
+      createdAt: new Date().toISOString()
+    };
   }
 
-  try {
-    const parsedState = JSON.parse(savedState);
+  function createEmptyMaterialUsage(inventoryData) {
+    return inventoryData.reduce((materialUsage, inventoryItem) => {
+      materialUsage[inventoryItem.id] = 0;
+      return materialUsage;
+    }, {});
+  }
 
-    if (!Array.isArray(parsedState.supplies) || !parsedState.budget) {
+  function normalizeApplicationState(rawState) {
+    if (!rawState || !Array.isArray(rawState.inventoryData) || !Array.isArray(rawState.budgetSheets)) {
       return createInitialState();
     }
 
-    return normalizeApplicationState(parsedState);
-  } catch (error) {
-    return createInitialState();
-  }
-}
+    const inventoryData = rawState.inventoryData.map((inventoryItem) => ({
+      id: inventoryItem.id || createEntityId("inventory"),
+      name: String(inventoryItem.name || "Novo insumo"),
+      packageQuantity: normalizeNumber(inventoryItem.packageQuantity),
+      unitLabel: String(inventoryItem.unitLabel || "un"),
+      packagePrice: normalizeNumber(inventoryItem.packagePrice)
+    }));
 
-function normalizeApplicationState(state) {
-  const supplies = state.supplies.map((supply) => ({
-    id: supply.id || createId("supply"),
-    name: String(supply.name || "Novo insumo"),
-    packageQuantity: normalizeNumber(supply.packageQuantity),
-    unitLabel: String(supply.unitLabel || "un"),
-    packagePrice: normalizeNumber(supply.packagePrice)
-  }));
+    const budgetSheets = rawState.budgetSheets.map((budgetSheet, budgetIndex) => ({
+      id: budgetSheet.id || createEntityId("budget-sheet"),
+      title: String(budgetSheet.title || `Ficha ${budgetIndex + 1}`),
+      clientName: String(budgetSheet.clientName || ""),
+      sessionNotes: String(budgetSheet.sessionNotes || ""),
+      laborHours: normalizeNumber(budgetSheet.laborHours == null ? DEFAULT_LABOR_HOURS : budgetSheet.laborHours),
+      hourlyRate: normalizeNumber(budgetSheet.hourlyRate == null ? DEFAULT_HOURLY_RATE : budgetSheet.hourlyRate),
+      materialUsage: normalizeMaterialUsage(budgetSheet.materialUsage, inventoryData),
+      createdAt: budgetSheet.createdAt || new Date().toISOString()
+    }));
 
-  const quantities = supplies.reduce((currentQuantities, supply) => {
-    const savedQuantity = state.budget.quantities ? state.budget.quantities[supply.id] : 0;
-    currentQuantities[supply.id] = normalizeNumber(savedQuantity);
-    return currentQuantities;
-  }, {});
-
-  return {
-    activeScreen: state.activeScreen === "inventory" ? "inventory" : "budget",
-    activePriceTableId: state.activePriceTableId || DEFAULT_PRICE_TABLE_ID,
-    supplies,
-    budget: {
-      sessionName: String(state.budget.sessionName || ""),
-      clientName: String(state.budget.clientName || ""),
-      sessionNotes: String(state.budget.sessionNotes || ""),
-      laborHours: normalizeNumber(state.budget.laborHours == null ? DEFAULT_LABOR_HOURS : state.budget.laborHours),
-      hourlyRate: normalizeNumber(state.budget.hourlyRate == null ? DEFAULT_HOURLY_RATE : state.budget.hourlyRate),
-      quantities
-    }
-  };
-}
-
-function saveApplicationState() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
-}
-
-function normalizeNumber(value) {
-  const normalizedValue = String(value == null ? "" : value).replace(",", ".").trim();
-  const parsedValue = Number(normalizedValue);
-
-  if (!Number.isFinite(parsedValue) || parsedValue < 0) {
-    return 0;
-  }
-
-  return parsedValue;
-}
-
-function formatCurrency(value) {
-  return CURRENCY_FORMATTER.format(Number.isFinite(value) ? value : 0);
-}
-
-function formatNumber(value) {
-  return NUMBER_FORMATTER.format(Number.isFinite(value) ? value : 0);
-}
-
-function escapeHtml(value) {
-  return String(value == null ? "" : value)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
-}
-
-function getUnitCost(supply) {
-  const packageQuantity = normalizeNumber(supply.packageQuantity);
-
-  if (packageQuantity <= 0) {
-    return 0;
-  }
-
-  return normalizeNumber(supply.packagePrice) / packageQuantity;
-}
-
-function getUsageCost(supply, quantityUsed) {
-  return getUnitCost(supply) * normalizeNumber(quantityUsed);
-}
-
-function calculateInventorySummary() {
-  const supplyCount = appState.supplies.length;
-  const totalPackageCost = appState.supplies.reduce((total, supply) => total + normalizeNumber(supply.packagePrice), 0);
-  const averageUnitCost =
-    supplyCount > 0
-      ? appState.supplies.reduce((total, supply) => total + getUnitCost(supply), 0) / supplyCount
-      : 0;
-
-  return {
-    supplyCount,
-    totalPackageCost,
-    averageUnitCost
-  };
-}
-
-function calculateBudgetSummary() {
-  const materialSummary = appState.supplies.reduce(
-    (summary, supply) => {
-      const quantityUsed = normalizeNumber(appState.budget.quantities[supply.id]);
-
-      if (quantityUsed > 0) {
-        summary.selectedCount += 1;
-      }
-
-      summary.materialTotal += getUsageCost(supply, quantityUsed);
-      return summary;
-    },
-    {
-      selectedCount: 0,
-      materialTotal: 0
-    }
-  );
-
-  const laborHours = normalizeNumber(appState.budget.laborHours);
-  const hourlyRate = normalizeNumber(appState.budget.hourlyRate);
-  const laborTotal = laborHours * hourlyRate;
-
-  return {
-    selectedCount: materialSummary.selectedCount,
-    materialTotal: materialSummary.materialTotal,
-    laborHours,
-    hourlyRate,
-    laborTotal,
-    totalCost: materialSummary.materialTotal + laborTotal
-  };
-}
-
-function setActiveScreen(screenName) {
-  appState.activeScreen = screenName;
-  saveApplicationState();
-  renderActiveScreen();
-}
-
-function renderActiveScreen() {
-  DOM.applicationScreens.forEach((screen) => {
-    screen.classList.toggle("is-active", screen.dataset.screenPanel === appState.activeScreen);
-  });
-
-  DOM.navigationButtons.forEach((button) => {
-    const isActive = button.dataset.screenTarget === appState.activeScreen;
-    button.classList.toggle("is-active", isActive);
-    button.setAttribute("aria-current", isActive ? "page" : "false");
-  });
-}
-
-function renderApplication() {
-  renderActiveScreen();
-  renderPriceTableOptions();
-  renderBudgetForm();
-  renderInventorySummary();
-  renderSupplyList();
-  renderBudgetSummary();
-  renderBudgetItemList();
-}
-
-function renderPriceTableOptions() {
-  DOM.priceTableSelect.innerHTML = PRICE_TABLES.map((priceTable) => {
-    const selectedAttribute = priceTable.id === appState.activePriceTableId ? "selected" : "";
-    return `<option value="${escapeHtml(priceTable.id)}" ${selectedAttribute}>${escapeHtml(priceTable.name)}</option>`;
-  }).join("");
-}
-
-function renderBudgetForm() {
-  DOM.sessionNameInput.value = appState.budget.sessionName;
-  DOM.clientNameInput.value = appState.budget.clientName;
-  DOM.sessionNotesInput.value = appState.budget.sessionNotes;
-  DOM.laborHoursInput.value = formatNumber(normalizeNumber(appState.budget.laborHours));
-  DOM.hourlyRateInput.value = normalizeNumber(appState.budget.hourlyRate) > 0 ? formatNumber(appState.budget.hourlyRate) : "";
-  DOM.laborPreviewValue.textContent = formatCurrency(calculateBudgetSummary().laborTotal);
-}
-
-function renderInventorySummary() {
-  const summary = calculateInventorySummary();
-
-  DOM.inventoryMetricGrid.innerHTML = `
-    <article class="metric-card">
-      <span>Insumos</span>
-      <strong>${summary.supplyCount}</strong>
-    </article>
-    <article class="metric-card">
-      <span>Preco total</span>
-      <strong>${formatCurrency(summary.totalPackageCost)}</strong>
-    </article>
-    <article class="metric-card">
-      <span>Media por unidade</span>
-      <strong>${formatCurrency(summary.averageUnitCost)}</strong>
-    </article>
-    <article class="metric-card">
-      <span>Selecionados</span>
-      <strong>${calculateBudgetSummary().selectedCount}</strong>
-    </article>
-  `;
-}
-
-function renderSupplyList() {
-  const filteredSupplies = getFilteredSupplies(inventorySearchTerm);
-
-  if (filteredSupplies.length === 0) {
-    renderEmptyState(DOM.supplyList);
-    return;
-  }
-
-  DOM.supplyList.innerHTML = filteredSupplies.map(createSupplyCardHtml).join("");
-}
-
-function getFilteredSupplies(searchTerm) {
-  const normalizedSearchTerm = searchTerm.trim().toLowerCase();
-
-  if (!normalizedSearchTerm) {
-    return appState.supplies;
-  }
-
-  return appState.supplies.filter((supply) => {
-    const searchableText = `${supply.name} ${supply.unitLabel}`.toLowerCase();
-    return searchableText.includes(normalizedSearchTerm);
-  });
-}
-
-function createSupplyCardHtml(supply) {
-  return `
-    <article class="data-card price-card" data-supply-id="${escapeHtml(supply.id)}">
-      <div class="card-header">
-        <div class="card-title-group">
-          <h2>${escapeHtml(supply.name)}</h2>
-          <span>${formatNumber(supply.packageQuantity)} ${escapeHtml(supply.unitLabel)} por embalagem</span>
-        </div>
-        <span class="pill" data-unit-cost>${formatCurrency(getUnitCost(supply))}/un</span>
-      </div>
-
-      <div class="editable-grid">
-        <label class="field-group">
-          <span>Material</span>
-          <input type="text" value="${escapeHtml(supply.name)}" data-supply-field="name" />
-        </label>
-        <label class="field-group">
-          <span>Qtd.</span>
-          <input type="text" inputmode="decimal" value="${escapeHtml(supply.packageQuantity)}" data-supply-field="packageQuantity" />
-        </label>
-        <label class="field-group">
-          <span>Unidade</span>
-          <input type="text" value="${escapeHtml(supply.unitLabel)}" data-supply-field="unitLabel" />
-        </label>
-        <label class="field-group">
-          <span>Preco</span>
-          <input type="text" inputmode="decimal" value="${escapeHtml(supply.packagePrice)}" data-supply-field="packagePrice" />
-        </label>
-      </div>
-
-      <div class="card-actions">
-        <button class="button button-primary" type="button" data-use-supply>Usar na ficha</button>
-        <button class="button button-danger" type="button" data-remove-supply>Excluir</button>
-      </div>
-    </article>
-  `;
-}
-
-function renderBudgetSummary() {
-  const summary = calculateBudgetSummary();
-  const detailText = `${summary.selectedCount} ${summary.selectedCount === 1 ? "insumo selecionado" : "insumos selecionados"}`;
-
-  DOM.headerBudgetTotal.textContent = formatCurrency(summary.totalCost);
-  DOM.budgetTotalValue.textContent = formatCurrency(summary.totalCost);
-  DOM.budgetTotalDetail.textContent = detailText;
-
-  DOM.budgetMetricGrid.innerHTML = `
-    <article class="metric-card">
-      <span>Selecionados</span>
-      <strong>${summary.selectedCount}</strong>
-    </article>
-    <article class="metric-card">
-      <span>Materiais</span>
-      <strong>${formatCurrency(summary.materialTotal)}</strong>
-    </article>
-    <article class="metric-card">
-      <span>Mao de obra</span>
-      <strong>${formatCurrency(summary.laborTotal)}</strong>
-    </article>
-    <article class="metric-card">
-      <span>Total final</span>
-      <strong>${formatCurrency(summary.totalCost)}</strong>
-    </article>
-  `;
-}
-
-function renderBudgetItemList() {
-  const filteredSupplies = getFilteredSupplies(budgetSearchTerm);
-
-  if (filteredSupplies.length === 0) {
-    renderEmptyState(DOM.budgetItemList);
-    return;
-  }
-
-  DOM.budgetItemList.innerHTML = filteredSupplies.map(createBudgetItemHtml).join("");
-}
-
-function createBudgetItemHtml(supply) {
-  const quantityUsed = normalizeNumber(appState.budget.quantities[supply.id]);
-  const isSelected = quantityUsed > 0;
-
-  return `
-    <article class="data-card budget-item ${isSelected ? "is-selected" : ""}" data-budget-supply-id="${escapeHtml(supply.id)}">
-      <div class="card-header">
-        <div class="card-title-group">
-          <h3>${escapeHtml(supply.name)}</h3>
-          <span>${formatCurrency(getUnitCost(supply))} por ${escapeHtml(supply.unitLabel)}</span>
-        </div>
-        <span class="pill">${formatCurrency(getUsageCost(supply, quantityUsed))}</span>
-      </div>
-
-      <div class="budget-item-control">
-        <button class="select-button" type="button" data-toggle-budget-item aria-pressed="${isSelected}">
-          ${isSelected ? "Usando" : "Adicionar"}
-        </button>
-        <label class="quantity-field">
-          <span>Qtd.</span>
-          <span class="quantity-input-row">
-            <input type="text" inputmode="decimal" value="${quantityUsed > 0 ? escapeHtml(quantityUsed) : ""}" placeholder="0" data-budget-quantity />
-            <span>${escapeHtml(supply.unitLabel)}</span>
-          </span>
-        </label>
-      </div>
-
-      <div class="line-total">
-        <span>Custo neste item</span>
-        <strong data-line-total>${formatCurrency(getUsageCost(supply, quantityUsed))}</strong>
-      </div>
-    </article>
-  `;
-}
-
-function renderEmptyState(container) {
-  const emptyState = DOM.emptyStateTemplate.content.cloneNode(true);
-  container.innerHTML = "";
-  container.appendChild(emptyState);
-}
-
-function addSupplyFromForm() {
-  const supplyName = DOM.supplyNameInput.value.trim();
-  const packageQuantity = normalizeNumber(DOM.packageQuantityInput.value);
-  const unitLabel = DOM.unitLabelInput.value.trim();
-  const packagePrice = normalizeNumber(DOM.packagePriceInput.value);
-
-  DOM.packageQuantityInput.setCustomValidity("");
-
-  if (packageQuantity <= 0) {
-    DOM.packageQuantityInput.setCustomValidity("Informe uma quantidade maior que zero.");
-  }
-
-  if (!supplyName || !unitLabel || packageQuantity <= 0) {
-    DOM.supplyForm.reportValidity();
-    return;
-  }
-
-  const createdSupply = {
-    id: createId("supply"),
-    name: supplyName,
-    packageQuantity,
-    unitLabel,
-    packagePrice
-  };
-
-  appState.supplies.unshift(createdSupply);
-  appState.budget.quantities[createdSupply.id] = 0;
-  saveApplicationState();
-  DOM.supplyForm.reset();
-  renderInventorySummary();
-  renderSupplyList();
-  renderBudgetItemList();
-}
-
-function updateSupply(supplyId, fieldName, rawValue) {
-  appState.supplies = appState.supplies.map((supply) => {
-    if (supply.id !== supplyId) {
-      return supply;
+    if (budgetSheets.length === 0) {
+      budgetSheets.push(createBudgetSheet("Ficha 1", inventoryData));
     }
 
-    if (["packageQuantity", "packagePrice"].includes(fieldName)) {
-      return {
-        ...supply,
-        [fieldName]: normalizeNumber(rawValue)
-      };
-    }
+    const activeBudgetSheetId = budgetSheets.some((budgetSheet) => budgetSheet.id === rawState.activeBudgetSheetId)
+      ? rawState.activeBudgetSheetId
+      : budgetSheets[0].id;
 
     return {
-      ...supply,
-      [fieldName]: String(rawValue)
+      activeScreen: rawState.activeScreen === "inventory" ? "inventory" : "calculator",
+      activePriceTableId: rawState.activePriceTableId || DEFAULT_PRICE_TABLE_ID,
+      activeBudgetSheetId,
+      inventoryData,
+      budgetSheets
     };
-  });
-
-  saveApplicationState();
-  renderInventorySummary();
-  renderSupplyList();
-  renderBudgetSummary();
-  renderBudgetItemList();
-}
-
-function removeSupply(supplyId) {
-  appState.supplies = appState.supplies.filter((supply) => supply.id !== supplyId);
-  delete appState.budget.quantities[supplyId];
-  saveApplicationState();
-  renderInventorySummary();
-  renderSupplyList();
-  renderBudgetSummary();
-  renderBudgetItemList();
-}
-
-function addSupplyToBudget(supplyId) {
-  const currentQuantity = normalizeNumber(appState.budget.quantities[supplyId]);
-  appState.budget.quantities[supplyId] = currentQuantity > 0 ? currentQuantity : 1;
-  appState.activeScreen = "budget";
-  saveApplicationState();
-  renderApplication();
-}
-
-function applyPriceTable() {
-  const selectedPriceTableId = DOM.priceTableSelect.value;
-  const selectedPriceTable = getPriceTableById(selectedPriceTableId);
-  const shouldApply = window.confirm(`Usar a tabela "${selectedPriceTable.name}" e substituir os insumos atuais?`);
-
-  if (!shouldApply) {
-    DOM.priceTableSelect.value = appState.activePriceTableId;
-    return;
   }
 
-  const supplies = createSuppliesFromPriceTable(selectedPriceTableId);
-  appState.activePriceTableId = selectedPriceTableId;
-  appState.supplies = supplies;
-  appState.budget.quantities = createEmptyQuantities(supplies);
-  saveApplicationState();
-  renderApplication();
-}
-
-function updateBudgetQuantity(supplyId, rawValue) {
-  appState.budget.quantities[supplyId] = normalizeNumber(rawValue);
-  saveApplicationState();
-  renderInventorySummary();
-  renderBudgetSummary();
-  updateBudgetItemState(supplyId);
-}
-
-function toggleBudgetItem(supplyId) {
-  const currentQuantity = normalizeNumber(appState.budget.quantities[supplyId]);
-  appState.budget.quantities[supplyId] = currentQuantity > 0 ? 0 : 1;
-  saveApplicationState();
-  renderInventorySummary();
-  renderBudgetSummary();
-  renderBudgetItemList();
-}
-
-function updateBudgetItemState(supplyId) {
-  const supply = appState.supplies.find((item) => item.id === supplyId);
-  const budgetItem = Array.from(DOM.budgetItemList.querySelectorAll("[data-budget-supply-id]")).find((item) => {
-    return item.dataset.budgetSupplyId === supplyId;
-  });
-
-  if (!supply || !budgetItem) {
-    return;
+  function normalizeMaterialUsage(materialUsage, inventoryData) {
+    return inventoryData.reduce((normalizedUsage, inventoryItem) => {
+      normalizedUsage[inventoryItem.id] = normalizeNumber(materialUsage ? materialUsage[inventoryItem.id] : 0);
+      return normalizedUsage;
+    }, {});
   }
 
-  const quantityUsed = normalizeNumber(appState.budget.quantities[supplyId]);
-  const isSelected = quantityUsed > 0;
-  const lineTotal = budgetItem.querySelector("[data-line-total]");
-  const topPill = budgetItem.querySelector(".pill");
-  const toggleButton = budgetItem.querySelector("[data-toggle-budget-item]");
+  function getPriceTableById(priceTableId) {
+    return PRICE_TABLES.find((priceTable) => priceTable.id === priceTableId) || PRICE_TABLES[0];
+  }
 
-  budgetItem.classList.toggle("is-selected", isSelected);
-  toggleButton.textContent = isSelected ? "Usando" : "Adicionar";
-  toggleButton.setAttribute("aria-pressed", String(isSelected));
-  lineTotal.textContent = formatCurrency(getUsageCost(supply, quantityUsed));
-  topPill.textContent = formatCurrency(getUsageCost(supply, quantityUsed));
-}
+  function getActiveBudgetSheet() {
+    return applicationState.budgetSheets.find((budgetSheet) => budgetSheet.id === applicationState.activeBudgetSheetId)
+      || applicationState.budgetSheets[0];
+  }
 
-function updateBudgetField(fieldName, value) {
-  appState.budget[fieldName] = value;
-  saveApplicationState();
-}
+  function getActiveBudgetSummary() {
+    return calculateTotalCost({
+      inventoryData: applicationState.inventoryData,
+      budgetSheet: getActiveBudgetSheet()
+    });
+  }
 
-function updateLaborField(fieldName, value) {
-  appState.budget[fieldName] = normalizeNumber(value);
-  saveApplicationState();
-  renderBudgetSummary();
-  DOM.laborPreviewValue.textContent = formatCurrency(calculateBudgetSummary().laborTotal);
-}
+  function createEntityId(prefix) {
+    if (window.crypto && typeof window.crypto.randomUUID === "function") {
+      return `${prefix}-${window.crypto.randomUUID()}`;
+    }
 
-function clearBudget() {
-  appState.budget = {
-    sessionName: "",
-    clientName: "",
-    sessionNotes: "",
-    laborHours: DEFAULT_LABOR_HOURS,
-    hourlyRate: DEFAULT_HOURLY_RATE,
-    quantities: createEmptyQuantities(appState.supplies)
-  };
+    return `${prefix}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  }
 
-  saveApplicationState();
-  renderBudgetForm();
-  renderInventorySummary();
-  renderBudgetSummary();
-  renderBudgetItemList();
-}
+  function formatCurrency(value) {
+    return CURRENCY_FORMATTER.format(Number.isFinite(value) ? value : 0);
+  }
 
-function getSelectedBudgetItems() {
-  return appState.supplies
-    .map((supply) => {
-      const quantityUsed = normalizeNumber(appState.budget.quantities[supply.id]);
+  function formatNumber(value) {
+    return NUMBER_FORMATTER.format(Number.isFinite(value) ? value : 0);
+  }
+
+  function escapeHtml(value) {
+    return String(value == null ? "" : value)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
+
+  function persistApplicationState() {
+    stateRepository.saveState(applicationState);
+  }
+
+  function renderApplication() {
+    renderActiveScreen();
+    renderPriceTableOptions();
+    renderBudgetSheetOptions();
+    renderBudgetSheetForm();
+    renderDashboard();
+    renderInventoryList();
+    renderCalculatorItemList();
+  }
+
+  function renderActiveScreen() {
+    dom.applicationScreens.forEach((screenElement) => {
+      screenElement.classList.toggle("is-active", screenElement.dataset.screenPanel === applicationState.activeScreen);
+    });
+
+    dom.navigationButtons.forEach((navigationButton) => {
+      const isActive = navigationButton.dataset.screenTarget === applicationState.activeScreen;
+      navigationButton.classList.toggle("is-active", isActive);
+      navigationButton.setAttribute("aria-current", isActive ? "page" : "false");
+    });
+  }
+
+  function renderPriceTableOptions() {
+    dom.priceTableSelect.innerHTML = PRICE_TABLES.map((priceTable) => {
+      const selectedAttribute = priceTable.id === applicationState.activePriceTableId ? "selected" : "";
+      return `<option value="${escapeHtml(priceTable.id)}" ${selectedAttribute}>${escapeHtml(priceTable.name)}</option>`;
+    }).join("");
+  }
+
+  function renderBudgetSheetOptions() {
+    dom.budgetSheetSelect.innerHTML = applicationState.budgetSheets.map((budgetSheet) => {
+      const selectedAttribute = budgetSheet.id === applicationState.activeBudgetSheetId ? "selected" : "";
+      return `<option value="${escapeHtml(budgetSheet.id)}" ${selectedAttribute}>${escapeHtml(budgetSheet.title)}</option>`;
+    }).join("");
+  }
+
+  function renderBudgetSheetForm() {
+    const activeBudgetSheet = getActiveBudgetSheet();
+    const activeBudgetSummary = getActiveBudgetSummary();
+
+    dom.budgetTitleInput.value = activeBudgetSheet.title;
+    dom.clientNameInput.value = activeBudgetSheet.clientName;
+    dom.sessionNotesInput.value = activeBudgetSheet.sessionNotes;
+    dom.laborHoursInput.value = formatNumber(activeBudgetSheet.laborHours);
+    dom.hourlyRateInput.value = activeBudgetSheet.hourlyRate > 0 ? formatNumber(activeBudgetSheet.hourlyRate) : "";
+    dom.laborPreviewValue.textContent = formatCurrency(activeBudgetSummary.laborTotal);
+  }
+
+  function renderDashboard() {
+    const activeBudgetSummary = getActiveBudgetSummary();
+    const inventorySummary = calculateInventoryDashboard();
+
+    dom.activeSheetTotal.textContent = formatCurrency(activeBudgetSummary.totalCost);
+    dom.calculatorTotalValue.textContent = formatCurrency(activeBudgetSummary.totalCost);
+    dom.calculatorTotalDetail.textContent = `${activeBudgetSummary.selectedItemCount} ${activeBudgetSummary.selectedItemCount === 1 ? "insumo selecionado" : "insumos selecionados"}`;
+
+    dom.inventoryDashboard.innerHTML = `
+      <article class="metric-card">
+        <span>Insumos</span>
+        <strong>${inventorySummary.itemCount}</strong>
+      </article>
+      <article class="metric-card">
+        <span>Pacotes</span>
+        <strong>${formatCurrency(inventorySummary.packageTotal)}</strong>
+      </article>
+      <article class="metric-card">
+        <span>Media unidade</span>
+        <strong>${formatCurrency(inventorySummary.averageUnitCost)}</strong>
+      </article>
+      <article class="metric-card">
+        <span>Na ficha</span>
+        <strong>${activeBudgetSummary.selectedItemCount}</strong>
+      </article>
+    `;
+
+    dom.calculatorDashboard.innerHTML = `
+      <article class="metric-card">
+        <span>Selecionados</span>
+        <strong>${activeBudgetSummary.selectedItemCount}</strong>
+      </article>
+      <article class="metric-card">
+        <span>Materiais</span>
+        <strong>${formatCurrency(activeBudgetSummary.materialTotal)}</strong>
+      </article>
+      <article class="metric-card">
+        <span>Mao de obra</span>
+        <strong>${formatCurrency(activeBudgetSummary.laborTotal)}</strong>
+      </article>
+      <article class="metric-card">
+        <span>Total final</span>
+        <strong>${formatCurrency(activeBudgetSummary.totalCost)}</strong>
+      </article>
+    `;
+  }
+
+  function calculateInventoryDashboard() {
+    const itemCount = applicationState.inventoryData.length;
+    const packageTotal = applicationState.inventoryData.reduce((total, inventoryItem) => total + normalizeNumber(inventoryItem.packagePrice), 0);
+    const averageUnitCost = itemCount > 0
+      ? applicationState.inventoryData.reduce((total, inventoryItem) => total + calculateUnitCost(inventoryItem), 0) / itemCount
+      : 0;
+
+    return {
+      itemCount,
+      packageTotal,
+      averageUnitCost
+    };
+  }
+
+  function renderInventoryList() {
+    const filteredInventoryData = getFilteredInventoryData(inventorySearchTerm);
+
+    if (filteredInventoryData.length === 0) {
+      renderEmptyState(dom.inventoryList);
+      return;
+    }
+
+    dom.inventoryList.innerHTML = filteredInventoryData.map(createInventoryCardHtml).join("");
+  }
+
+  function getFilteredInventoryData(searchTerm) {
+    const normalizedSearchTerm = searchTerm.trim().toLowerCase();
+
+    if (!normalizedSearchTerm) {
+      return applicationState.inventoryData;
+    }
+
+    return applicationState.inventoryData.filter((inventoryItem) => {
+      const searchableText = `${inventoryItem.name} ${inventoryItem.unitLabel}`.toLowerCase();
+      return searchableText.includes(normalizedSearchTerm);
+    });
+  }
+
+  function createInventoryCardHtml(inventoryItem) {
+    return `
+      <article class="data-card" data-inventory-item-id="${escapeHtml(inventoryItem.id)}">
+        <div class="card-header">
+          <div class="card-title-group">
+            <h2>${escapeHtml(inventoryItem.name)}</h2>
+            <span>${formatNumber(inventoryItem.packageQuantity)} ${escapeHtml(inventoryItem.unitLabel)} por pacote</span>
+          </div>
+          <span class="pill">${formatCurrency(calculateUnitCost(inventoryItem))}/un</span>
+        </div>
+
+        <div class="editable-grid">
+          <label class="form-field">
+            <span>Material</span>
+            <input type="text" value="${escapeHtml(inventoryItem.name)}" data-inventory-field="name" />
+          </label>
+          <label class="form-field">
+            <span>Qtd.</span>
+            <input type="text" inputmode="decimal" value="${escapeHtml(inventoryItem.packageQuantity)}" data-inventory-field="packageQuantity" />
+          </label>
+          <label class="form-field">
+            <span>Unidade</span>
+            <input type="text" value="${escapeHtml(inventoryItem.unitLabel)}" data-inventory-field="unitLabel" />
+          </label>
+          <label class="form-field">
+            <span>Preco</span>
+            <input type="text" inputmode="decimal" value="${escapeHtml(inventoryItem.packagePrice)}" data-inventory-field="packagePrice" />
+          </label>
+        </div>
+
+        <div class="card-actions">
+          <button class="button button-primary" type="button" data-add-inventory-item-to-budget>Usar na calculadora</button>
+          <button class="button button-danger" type="button" data-remove-inventory-item>Excluir</button>
+        </div>
+      </article>
+    `;
+  }
+
+  function renderCalculatorItemList() {
+    const filteredInventoryData = getFilteredInventoryData(calculatorSearchTerm);
+
+    if (filteredInventoryData.length === 0) {
+      renderEmptyState(dom.calculatorItemList);
+      return;
+    }
+
+    dom.calculatorItemList.innerHTML = filteredInventoryData.map(createCalculatorItemHtml).join("");
+  }
+
+  function createCalculatorItemHtml(inventoryItem) {
+    const activeBudgetSheet = getActiveBudgetSheet();
+    const quantityUsed = normalizeNumber(activeBudgetSheet.materialUsage[inventoryItem.id]);
+    const isSelected = quantityUsed > 0;
+
+    return `
+      <article class="data-card budget-item ${isSelected ? "is-selected" : ""}" data-calculator-item-id="${escapeHtml(inventoryItem.id)}">
+        <div class="card-header">
+          <div class="card-title-group">
+            <h3>${escapeHtml(inventoryItem.name)}</h3>
+            <span>${formatCurrency(calculateUnitCost(inventoryItem))} por ${escapeHtml(inventoryItem.unitLabel)}</span>
+          </div>
+          <span class="pill">${formatCurrency(calculateMaterialCost(inventoryItem, quantityUsed))}</span>
+        </div>
+
+        <div class="budget-item-control">
+          <button class="select-button" type="button" data-toggle-calculator-item aria-pressed="${isSelected}">
+            ${isSelected ? "Usando" : "Adicionar"}
+          </button>
+          <label class="quantity-field">
+            <span>Qtd.</span>
+            <span class="quantity-input-row">
+              <input type="text" inputmode="decimal" value="${quantityUsed > 0 ? escapeHtml(quantityUsed) : ""}" placeholder="0" data-material-usage />
+              <span>${escapeHtml(inventoryItem.unitLabel)}</span>
+            </span>
+          </label>
+        </div>
+
+        <div class="line-total">
+          <span>Custo neste item</span>
+          <strong data-line-total>${formatCurrency(calculateMaterialCost(inventoryItem, quantityUsed))}</strong>
+        </div>
+      </article>
+    `;
+  }
+
+  function renderEmptyState(container) {
+    const emptyState = dom.emptyStateTemplate.content.cloneNode(true);
+    container.innerHTML = "";
+    container.appendChild(emptyState);
+  }
+
+  function setActiveScreen(screenName) {
+    applicationState.activeScreen = screenName;
+    persistApplicationState();
+    renderActiveScreen();
+  }
+
+  function applyPriceTable() {
+    const selectedPriceTableId = dom.priceTableSelect.value;
+    const selectedPriceTable = getPriceTableById(selectedPriceTableId);
+    const shouldApply = window.confirm(`Usar a tabela "${selectedPriceTable.name}" e substituir os insumos atuais?`);
+
+    if (!shouldApply) {
+      dom.priceTableSelect.value = applicationState.activePriceTableId;
+      return;
+    }
+
+    applicationState.activePriceTableId = selectedPriceTableId;
+    applicationState.inventoryData = createInventoryDataFromPriceTable(selectedPriceTableId);
+    applicationState.budgetSheets = applicationState.budgetSheets.map((budgetSheet) => ({
+      ...budgetSheet,
+      materialUsage: createEmptyMaterialUsage(applicationState.inventoryData)
+    }));
+    persistApplicationState();
+    renderApplication();
+  }
+
+  function addInventoryItemFromForm() {
+    const inventoryName = dom.supplyNameInput.value.trim();
+    const packageQuantity = normalizeNumber(dom.packageQuantityInput.value);
+    const unitLabel = dom.unitLabelInput.value.trim();
+    const packagePrice = normalizeNumber(dom.packagePriceInput.value);
+
+    dom.packageQuantityInput.setCustomValidity("");
+
+    if (packageQuantity <= 0) {
+      dom.packageQuantityInput.setCustomValidity("Informe uma quantidade maior que zero.");
+    }
+
+    if (!inventoryName || !unitLabel || packageQuantity <= 0) {
+      dom.supplyForm.reportValidity();
+      return;
+    }
+
+    const createdInventoryItem = {
+      id: createEntityId("inventory"),
+      name: inventoryName,
+      packageQuantity,
+      unitLabel,
+      packagePrice
+    };
+
+    applicationState.inventoryData.unshift(createdInventoryItem);
+    applicationState.budgetSheets = applicationState.budgetSheets.map((budgetSheet) => ({
+      ...budgetSheet,
+      materialUsage: {
+        ...budgetSheet.materialUsage,
+        [createdInventoryItem.id]: 0
+      }
+    }));
+
+    dom.supplyForm.reset();
+    persistApplicationState();
+    renderApplication();
+  }
+
+  function updateInventoryItem(inventoryItemId, fieldName, value) {
+    applicationState.inventoryData = applicationState.inventoryData.map((inventoryItem) => {
+      if (inventoryItem.id !== inventoryItemId) {
+        return inventoryItem;
+      }
+
+      if (["packageQuantity", "packagePrice"].includes(fieldName)) {
+        return {
+          ...inventoryItem,
+          [fieldName]: normalizeNumber(value)
+        };
+      }
 
       return {
-        supply,
-        quantityUsed,
-        unitCost: getUnitCost(supply),
-        totalCost: getUsageCost(supply, quantityUsed)
+        ...inventoryItem,
+        [fieldName]: String(value)
       };
-    })
-    .filter((item) => item.quantityUsed > 0);
-}
+    });
 
-function renderPrintDocument() {
-  const summary = calculateBudgetSummary();
-  const selectedItems = getSelectedBudgetItems();
-  const sessionName = appState.budget.sessionName || "Orcamento de tatuagem";
-  const clientName = appState.budget.clientName || "Cliente nao informado";
-  const sessionNotes = appState.budget.sessionNotes || "Sem observacoes.";
+    persistApplicationState();
+    renderApplication();
+  }
 
-  const itemRows = selectedItems.length > 0
-    ? selectedItems.map((item) => `
-        <tr>
-          <td>${escapeHtml(item.supply.name)}</td>
-          <td>${formatNumber(item.quantityUsed)} ${escapeHtml(item.supply.unitLabel)}</td>
-          <td>${formatCurrency(item.unitCost)}</td>
-          <td>${formatCurrency(item.totalCost)}</td>
-        </tr>
-      `).join("")
-    : `
-        <tr>
-          <td colspan="4">Nenhum insumo selecionado.</td>
-        </tr>
-      `;
+  function removeInventoryItem(inventoryItemId) {
+    applicationState.inventoryData = applicationState.inventoryData.filter((inventoryItem) => inventoryItem.id !== inventoryItemId);
+    applicationState.budgetSheets = applicationState.budgetSheets.map((budgetSheet) => {
+      const materialUsage = { ...budgetSheet.materialUsage };
+      delete materialUsage[inventoryItemId];
 
-  DOM.printDocument.innerHTML = `
-    <header class="print-header">
-      <span>CalculadoraTattoo</span>
-      <h1>${escapeHtml(sessionName)}</h1>
-      <p>${escapeHtml(clientName)}</p>
-    </header>
+      return {
+        ...budgetSheet,
+        materialUsage
+      };
+    });
 
-    <section class="print-section">
-      <h2>Resumo</h2>
-      <dl class="print-summary">
-        <div>
-          <dt>Materiais</dt>
-          <dd>${formatCurrency(summary.materialTotal)}</dd>
-        </div>
-        <div>
-          <dt>Mao de obra</dt>
-          <dd>${formatCurrency(summary.laborTotal)}</dd>
-        </div>
-        <div>
-          <dt>Total</dt>
-          <dd>${formatCurrency(summary.totalCost)}</dd>
-        </div>
-      </dl>
-    </section>
+    persistApplicationState();
+    renderApplication();
+  }
 
-    <section class="print-section">
-      <h2>Itens usados</h2>
-      <table class="print-table">
-        <thead>
+  function addInventoryItemToBudget(inventoryItemId) {
+    updateActiveBudgetSheet((budgetSheet) => {
+      const currentQuantity = normalizeNumber(budgetSheet.materialUsage[inventoryItemId]);
+      budgetSheet.materialUsage[inventoryItemId] = currentQuantity > 0 ? currentQuantity : 1;
+    });
+    applicationState.activeScreen = "calculator";
+    persistApplicationState();
+    renderApplication();
+  }
+
+  function createNewBudgetSheet() {
+    const newBudgetSheet = createBudgetSheet(`Ficha ${applicationState.budgetSheets.length + 1}`, applicationState.inventoryData);
+    applicationState.budgetSheets.unshift(newBudgetSheet);
+    applicationState.activeBudgetSheetId = newBudgetSheet.id;
+    persistApplicationState();
+    renderApplication();
+  }
+
+  function updateActiveBudgetSheet(mutator) {
+    const activeBudgetSheet = getActiveBudgetSheet();
+    mutator(activeBudgetSheet);
+  }
+
+  function updateBudgetSheetField(fieldName, value) {
+    updateActiveBudgetSheet((budgetSheet) => {
+      budgetSheet[fieldName] = value;
+    });
+    persistApplicationState();
+    renderBudgetSheetOptions();
+    renderDashboard();
+  }
+
+  function updateLaborField(fieldName, value) {
+    updateActiveBudgetSheet((budgetSheet) => {
+      budgetSheet[fieldName] = normalizeNumber(value);
+    });
+    persistApplicationState();
+    renderDashboard();
+    dom.laborPreviewValue.textContent = formatCurrency(getActiveBudgetSummary().laborTotal);
+  }
+
+  function updateMaterialUsage(inventoryItemId, value) {
+    updateActiveBudgetSheet((budgetSheet) => {
+      budgetSheet.materialUsage[inventoryItemId] = normalizeNumber(value);
+    });
+    persistApplicationState();
+    renderDashboard();
+    updateCalculatorItemState(inventoryItemId);
+  }
+
+  function toggleCalculatorItem(inventoryItemId) {
+    updateActiveBudgetSheet((budgetSheet) => {
+      const currentQuantity = normalizeNumber(budgetSheet.materialUsage[inventoryItemId]);
+      budgetSheet.materialUsage[inventoryItemId] = currentQuantity > 0 ? 0 : 1;
+    });
+    persistApplicationState();
+    renderApplication();
+  }
+
+  function updateCalculatorItemState(inventoryItemId) {
+    const activeBudgetSheet = getActiveBudgetSheet();
+    const inventoryItem = applicationState.inventoryData.find((item) => item.id === inventoryItemId);
+    const calculatorItem = Array.from(dom.calculatorItemList.querySelectorAll("[data-calculator-item-id]")).find((item) => {
+      return item.dataset.calculatorItemId === inventoryItemId;
+    });
+
+    if (!activeBudgetSheet || !inventoryItem || !calculatorItem) {
+      return;
+    }
+
+    const quantityUsed = normalizeNumber(activeBudgetSheet.materialUsage[inventoryItemId]);
+    const isSelected = quantityUsed > 0;
+    const lineTotal = calculatorItem.querySelector("[data-line-total]");
+    const topPill = calculatorItem.querySelector(".pill");
+    const toggleButton = calculatorItem.querySelector("[data-toggle-calculator-item]");
+
+    calculatorItem.classList.toggle("is-selected", isSelected);
+    toggleButton.textContent = isSelected ? "Usando" : "Adicionar";
+    toggleButton.setAttribute("aria-pressed", String(isSelected));
+    lineTotal.textContent = formatCurrency(calculateMaterialCost(inventoryItem, quantityUsed));
+    topPill.textContent = formatCurrency(calculateMaterialCost(inventoryItem, quantityUsed));
+  }
+
+  function clearActiveBudgetSheetItems() {
+    updateActiveBudgetSheet((budgetSheet) => {
+      budgetSheet.materialUsage = createEmptyMaterialUsage(applicationState.inventoryData);
+    });
+    persistApplicationState();
+    renderApplication();
+  }
+
+  function changeActiveBudgetSheet(budgetSheetId) {
+    applicationState.activeBudgetSheetId = budgetSheetId;
+    persistApplicationState();
+    renderApplication();
+  }
+
+  function resetApplication() {
+    const shouldReset = window.confirm("Restaurar dados iniciais e apagar dados salvos neste navegador?");
+
+    if (!shouldReset) {
+      return;
+    }
+
+    applicationState = stateRepository.resetState();
+    inventorySearchTerm = "";
+    calculatorSearchTerm = "";
+    dom.inventorySearchInput.value = "";
+    dom.calculatorSearchInput.value = "";
+    renderApplication();
+  }
+
+  function renderPrintDocument() {
+    const activeBudgetSheet = getActiveBudgetSheet();
+    const activeBudgetSummary = getActiveBudgetSummary();
+    const budgetTitle = activeBudgetSheet.title || "Orcamento de tatuagem";
+    const clientName = activeBudgetSheet.clientName || "Cliente nao informado";
+    const sessionNotes = activeBudgetSheet.sessionNotes || "Sem observacoes.";
+
+    const itemRows = activeBudgetSummary.selectedItems.length > 0
+      ? activeBudgetSummary.selectedItems.map((budgetItem) => `
           <tr>
-            <th>Insumo</th>
-            <th>Qtd.</th>
-            <th>Custo un.</th>
-            <th>Total</th>
+            <td>${escapeHtml(budgetItem.inventoryItem.name)}</td>
+            <td>${formatNumber(budgetItem.quantityUsed)} ${escapeHtml(budgetItem.inventoryItem.unitLabel)}</td>
+            <td>${formatCurrency(budgetItem.unitCost)}</td>
+            <td>${formatCurrency(budgetItem.materialCost)}</td>
           </tr>
-        </thead>
-        <tbody>${itemRows}</tbody>
-      </table>
-    </section>
+        `).join("")
+      : `
+          <tr>
+            <td colspan="4">Nenhum insumo selecionado.</td>
+          </tr>
+        `;
 
-    <section class="print-section">
-      <h2>Mao de obra</h2>
-      <p>${formatNumber(summary.laborHours)} h x ${formatCurrency(summary.hourlyRate)} por hora = <strong>${formatCurrency(summary.laborTotal)}</strong></p>
-    </section>
+    dom.printDocument.innerHTML = `
+      <header class="print-header">
+        <span>CalculadoraTattoo</span>
+        <h1>${escapeHtml(budgetTitle)}</h1>
+        <p>${escapeHtml(clientName)}</p>
+      </header>
 
-    <section class="print-section">
-      <h2>Observacoes</h2>
-      <p>${escapeHtml(sessionNotes)}</p>
-    </section>
-  `;
-}
+      <section class="print-section">
+        <h2>Resumo</h2>
+        <dl class="print-summary">
+          <div>
+            <dt>Materiais</dt>
+            <dd>${formatCurrency(activeBudgetSummary.materialTotal)}</dd>
+          </div>
+          <div>
+            <dt>Mao de obra</dt>
+            <dd>${formatCurrency(activeBudgetSummary.laborTotal)}</dd>
+          </div>
+          <div>
+            <dt>Total</dt>
+            <dd>${formatCurrency(activeBudgetSummary.totalCost)}</dd>
+          </div>
+        </dl>
+      </section>
 
-function downloadBudgetPdf() {
-  renderPrintDocument();
-  window.print();
-}
+      <section class="print-section">
+        <h2>Itens usados</h2>
+        <table class="print-table">
+          <thead>
+            <tr>
+              <th>Insumo</th>
+              <th>Qtd.</th>
+              <th>Custo un.</th>
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody>${itemRows}</tbody>
+        </table>
+      </section>
 
-function resetApplication() {
-  const shouldReset = window.confirm("Restaurar os dados padrao e apagar os dados salvos neste navegador?");
+      <section class="print-section">
+        <h2>Mao de obra</h2>
+        <p>${formatNumber(activeBudgetSummary.laborHours)} h x ${formatCurrency(activeBudgetSummary.hourlyRate)} por hora = <strong>${formatCurrency(activeBudgetSummary.laborTotal)}</strong></p>
+      </section>
 
-  if (!shouldReset) {
-    return;
+      <section class="print-section">
+        <h2>Observacoes</h2>
+        <p>${escapeHtml(sessionNotes)}</p>
+      </section>
+    `;
   }
 
-  appState = createInitialState();
-  inventorySearchTerm = "";
-  budgetSearchTerm = "";
-  DOM.inventorySearchInput.value = "";
-  DOM.budgetSearchInput.value = "";
-  saveApplicationState();
-  renderApplication();
-}
-
-DOM.navigationButtons.forEach((button) => {
-  button.addEventListener("click", () => {
-    setActiveScreen(button.dataset.screenTarget);
-  });
-});
-
-DOM.supplyForm.addEventListener("submit", (event) => {
-  event.preventDefault();
-  addSupplyFromForm();
-});
-
-DOM.supplyList.addEventListener("change", (event) => {
-  const supplyCard = event.target.closest("[data-supply-id]");
-  const fieldName = event.target.dataset.supplyField;
-
-  if (!supplyCard || !fieldName) {
-    return;
+  function downloadBudgetPdf() {
+    renderPrintDocument();
+    window.print();
   }
 
-  updateSupply(supplyCard.dataset.supplyId, fieldName, event.target.value);
-});
+  function bindEventListeners() {
+    dom.navigationButtons.forEach((navigationButton) => {
+      navigationButton.addEventListener("click", () => {
+        setActiveScreen(navigationButton.dataset.screenTarget);
+      });
+    });
 
-DOM.supplyList.addEventListener("click", (event) => {
-  const useSupplyButton = event.target.closest("[data-use-supply]");
-  const supplyCard = event.target.closest("[data-supply-id]");
+    dom.applyPriceTableButton.addEventListener("click", applyPriceTable);
+    dom.createBudgetSheetButton.addEventListener("click", createNewBudgetSheet);
+    dom.clearBudgetSheetButton.addEventListener("click", clearActiveBudgetSheetItems);
+    dom.downloadBudgetPdfButton.addEventListener("click", downloadBudgetPdf);
+    dom.resetApplicationButton.addEventListener("click", resetApplication);
 
-  if (useSupplyButton && supplyCard) {
-    addSupplyToBudget(supplyCard.dataset.supplyId);
-    return;
+    dom.budgetSheetSelect.addEventListener("change", (event) => {
+      changeActiveBudgetSheet(event.target.value);
+    });
+
+    dom.supplyForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      addInventoryItemFromForm();
+    });
+
+    dom.budgetSheetForm.addEventListener("input", (event) => {
+      updateBudgetSheetField(event.target.name, event.target.value);
+    });
+
+    dom.laborHoursInput.addEventListener("input", (event) => {
+      updateLaborField("laborHours", event.target.value);
+    });
+
+    dom.hourlyRateInput.addEventListener("input", (event) => {
+      updateLaborField("hourlyRate", event.target.value);
+    });
+
+    dom.inventorySearchInput.addEventListener("input", (event) => {
+      inventorySearchTerm = event.target.value;
+      renderInventoryList();
+    });
+
+    dom.calculatorSearchInput.addEventListener("input", (event) => {
+      calculatorSearchTerm = event.target.value;
+      renderCalculatorItemList();
+    });
+
+    dom.inventoryList.addEventListener("change", (event) => {
+      const inventoryCard = event.target.closest("[data-inventory-item-id]");
+      const fieldName = event.target.dataset.inventoryField;
+
+      if (!inventoryCard || !fieldName) {
+        return;
+      }
+
+      updateInventoryItem(inventoryCard.dataset.inventoryItemId, fieldName, event.target.value);
+    });
+
+    dom.inventoryList.addEventListener("click", (event) => {
+      const inventoryCard = event.target.closest("[data-inventory-item-id]");
+
+      if (!inventoryCard) {
+        return;
+      }
+
+      if (event.target.closest("[data-add-inventory-item-to-budget]")) {
+        addInventoryItemToBudget(inventoryCard.dataset.inventoryItemId);
+        return;
+      }
+
+      if (event.target.closest("[data-remove-inventory-item]")) {
+        removeInventoryItem(inventoryCard.dataset.inventoryItemId);
+      }
+    });
+
+    dom.calculatorItemList.addEventListener("input", (event) => {
+      if (!event.target.matches("[data-material-usage]")) {
+        return;
+      }
+
+      const calculatorItem = event.target.closest("[data-calculator-item-id]");
+      updateMaterialUsage(calculatorItem.dataset.calculatorItemId, event.target.value);
+    });
+
+    dom.calculatorItemList.addEventListener("click", (event) => {
+      const toggleButton = event.target.closest("[data-toggle-calculator-item]");
+
+      if (!toggleButton) {
+        return;
+      }
+
+      const calculatorItem = toggleButton.closest("[data-calculator-item-id]");
+      toggleCalculatorItem(calculatorItem.dataset.calculatorItemId);
+    });
   }
 
-  const removeButton = event.target.closest("[data-remove-supply]");
+  function registerServiceWorker() {
+    if (!("serviceWorker" in navigator)) {
+      return;
+    }
 
-  if (!removeButton) {
-    return;
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("./service-worker.js").catch(() => {});
+    });
   }
 
-  removeSupply(supplyCard.dataset.supplyId);
-});
+  return {
+    initializeApplication
+  };
+})();
 
-DOM.budgetItemList.addEventListener("input", (event) => {
-  if (!event.target.matches("[data-budget-quantity]")) {
-    return;
-  }
-
-  const budgetItem = event.target.closest("[data-budget-supply-id]");
-  updateBudgetQuantity(budgetItem.dataset.budgetSupplyId, event.target.value);
-});
-
-DOM.budgetItemList.addEventListener("click", (event) => {
-  const toggleButton = event.target.closest("[data-toggle-budget-item]");
-
-  if (!toggleButton) {
-    return;
-  }
-
-  const budgetItem = toggleButton.closest("[data-budget-supply-id]");
-  toggleBudgetItem(budgetItem.dataset.budgetSupplyId);
-});
-
-DOM.budgetForm.addEventListener("input", (event) => {
-  updateBudgetField(event.target.name, event.target.value);
-});
-
-DOM.laborHoursInput.addEventListener("input", (event) => {
-  updateLaborField("laborHours", event.target.value);
-});
-
-DOM.hourlyRateInput.addEventListener("input", (event) => {
-  updateLaborField("hourlyRate", event.target.value);
-});
-
-DOM.inventorySearchInput.addEventListener("input", (event) => {
-  inventorySearchTerm = event.target.value;
-  renderSupplyList();
-});
-
-DOM.budgetSearchInput.addEventListener("input", (event) => {
-  budgetSearchTerm = event.target.value;
-  renderBudgetItemList();
-});
-
-DOM.clearBudgetButton.addEventListener("click", clearBudget);
-DOM.downloadBudgetPdfButton.addEventListener("click", downloadBudgetPdf);
-DOM.applyPriceTableButton.addEventListener("click", applyPriceTable);
-DOM.resetApplicationButton.addEventListener("click", resetApplication);
-
-saveApplicationState();
-renderApplication();
+CalculadoraTattooApp.initializeApplication();

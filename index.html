@@ -3,64 +3,76 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#210B46" />
-  <title>CalculadoraTattoo</title>
+  <meta name="theme-color" content="#2D0B40" />
+  <meta name="description" content="CalculadoraTattoo: PWA mobile-first para calcular insumos e orcamentos de tatuagem." />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="css/style.css" />
+  <title>CalculadoraTattoo</title>
 </head>
 <body>
-  <div class="app-frame">
-    <header class="app-header">
-      <div class="brand-row" aria-label="CalculadoraTattoo">
+  <div class="application-shell">
+    <header class="application-header">
+      <div class="brand-block" aria-label="CalculadoraTattoo">
         <div class="brand-mark">CT</div>
         <div class="brand-copy">
           <strong>CalculadoraTattoo</strong>
-          <span>Estoque e ficha</span>
+          <span>PWA para estudio</span>
         </div>
       </div>
 
-      <section class="total-card" aria-live="polite">
-        <span>Total da ficha</span>
-        <strong id="headerBudgetTotal">R$ 0,00</strong>
+      <section class="dashboard-total" aria-live="polite">
+        <span>Total ativo</span>
+        <strong id="activeSheetTotal">R$ 0,00</strong>
       </section>
     </header>
 
-    <main class="app-content">
-      <section class="app-screen" id="inventoryScreen" data-screen-panel="inventory">
+    <main class="application-content">
+      <section class="screen-panel" id="inventoryScreen" data-screen-panel="inventory" aria-labelledby="inventoryTitle">
         <div class="screen-heading">
           <div>
-            <span class="section-label">Estoque</span>
-            <h1>Insumos</h1>
+            <span class="section-kicker">Estoque</span>
+            <h1 id="inventoryTitle">Insumos</h1>
           </div>
-          <button class="button button-secondary" id="resetApplicationButton" type="button">Restaurar</button>
+          <button class="button button-quiet" id="resetApplicationButton" type="button">Restaurar</button>
         </div>
 
-        <section class="surface-card price-table-panel">
-          <label class="field-group">
-            <span>Tabela de precos</span>
+        <section class="surface-card price-table-card" aria-labelledby="priceTableTitle">
+          <div>
+            <span class="section-kicker">Tabela base</span>
+            <h2 id="priceTableTitle">Precos do estudio</h2>
+          </div>
+          <label class="form-field">
+            <span>Tabela</span>
             <select id="priceTableSelect"></select>
           </label>
           <button class="button button-primary" id="applyPriceTableButton" type="button">Usar tabela</button>
         </section>
 
         <form class="surface-card stacked-form" id="supplyForm" autocomplete="off">
-          <label class="field-group">
+          <div class="section-header">
+            <span class="section-kicker">Cadastro rapido</span>
+            <h2>Novo insumo</h2>
+          </div>
+
+          <label class="form-field form-field-wide">
             <span>Material</span>
             <input id="supplyNameInput" name="supplyName" type="text" placeholder="Agulha, batoque, tinta..." required />
           </label>
 
-          <div class="form-grid">
-            <label class="field-group">
-              <span>Qtd. embalagem</span>
+          <div class="responsive-grid">
+            <label class="form-field">
+              <span>Qtd. pacote</span>
               <input id="packageQuantityInput" name="packageQuantity" type="text" inputmode="decimal" placeholder="50" required />
             </label>
 
-            <label class="field-group">
+            <label class="form-field">
               <span>Unidade</span>
               <input id="unitLabelInput" name="unitLabel" type="text" placeholder="un, ml, folhas" required />
             </label>
 
-            <label class="field-group form-grid-wide">
-              <span>Preco pago</span>
+            <label class="form-field">
+              <span>Preco pacote</span>
               <input id="packagePriceInput" name="packagePrice" type="text" inputmode="decimal" placeholder="30,00" required />
             </label>
           </div>
@@ -68,90 +80,105 @@
           <button class="button button-primary" type="submit">Salvar insumo</button>
         </form>
 
-        <div class="metric-grid" id="inventoryMetricGrid"></div>
+        <section class="metric-grid" id="inventoryDashboard" aria-live="polite"></section>
 
         <label class="search-field">
           <span class="visually-hidden">Buscar insumo</span>
           <input id="inventorySearchInput" type="search" placeholder="Buscar insumo" />
         </label>
 
-        <div class="card-list" id="supplyList"></div>
+        <section class="item-list" id="inventoryList" aria-label="Lista de insumos"></section>
       </section>
 
-      <section class="app-screen" id="budgetScreen" data-screen-panel="budget">
+      <section class="screen-panel" id="calculatorScreen" data-screen-panel="calculator" aria-labelledby="calculatorTitle">
         <div class="screen-heading">
           <div>
-            <span class="section-label">Ficha</span>
-            <h1>Orcamento</h1>
+            <span class="section-kicker">Calculadora</span>
+            <h1 id="calculatorTitle">Orcamento</h1>
           </div>
           <div class="screen-actions">
             <button class="button button-primary" id="downloadBudgetPdfButton" type="button">Baixar PDF</button>
-            <button class="button button-secondary" id="clearBudgetButton" type="button">Limpar</button>
+            <button class="button button-quiet" id="createBudgetSheetButton" type="button">Nova ficha</button>
           </div>
         </div>
 
-        <form class="surface-card stacked-form" id="budgetForm" autocomplete="off">
-          <label class="field-group">
-            <span>Sessao</span>
-            <input id="sessionNameInput" name="sessionName" type="text" placeholder="Flash pequeno no antebraco" />
+        <section class="surface-card stacked-form" aria-labelledby="budgetSheetTitle">
+          <div class="section-header">
+            <span class="section-kicker">Ficha ativa</span>
+            <h2 id="budgetSheetTitle">Dados do orcamento</h2>
+          </div>
+
+          <label class="form-field">
+            <span>Selecionar ficha</span>
+            <select id="budgetSheetSelect"></select>
           </label>
 
-          <label class="field-group">
-            <span>Cliente</span>
-            <input id="clientNameInput" name="clientName" type="text" placeholder="Nome do cliente" />
-          </label>
+          <form class="inner-form" id="budgetSheetForm" autocomplete="off">
+            <label class="form-field form-field-wide">
+              <span>Sessao</span>
+              <input id="budgetTitleInput" name="title" type="text" placeholder="Flash pequeno no antebraco" />
+            </label>
 
-          <label class="field-group">
-            <span>Observacoes</span>
-            <textarea id="sessionNotesInput" name="sessionNotes" rows="3" placeholder="Tamanho, regiao e detalhes"></textarea>
-          </label>
-        </form>
+            <label class="form-field">
+              <span>Cliente</span>
+              <input id="clientNameInput" name="clientName" type="text" placeholder="Nome do cliente" />
+            </label>
 
-        <section class="surface-card labor-panel">
+            <label class="form-field">
+              <span>Observacoes</span>
+              <textarea id="sessionNotesInput" name="sessionNotes" rows="3" placeholder="Tamanho, regiao e detalhes"></textarea>
+            </label>
+          </form>
+        </section>
+
+        <section class="surface-card labor-card" aria-labelledby="laborTitle">
           <div class="labor-heading">
             <div>
-              <span class="section-label">Mao de obra</span>
-              <h2>Valor por hora</h2>
+              <span class="section-kicker">Mao de obra</span>
+              <h2 id="laborTitle">Valor por hora</h2>
             </div>
             <strong id="laborPreviewValue">R$ 0,00</strong>
           </div>
 
-          <div class="labor-grid">
-            <label class="field-group">
+          <div class="responsive-grid">
+            <label class="form-field">
               <span>Horas</span>
               <input id="laborHoursInput" type="text" inputmode="decimal" placeholder="1" />
             </label>
 
-            <label class="field-group">
+            <label class="form-field">
               <span>Valor 1 hr</span>
               <input id="hourlyRateInput" type="text" inputmode="decimal" placeholder="100,00" />
             </label>
           </div>
         </section>
 
-        <section class="result-panel" aria-live="polite">
+        <section class="result-card" aria-live="polite">
           <span>Valor do orcamento</span>
-          <strong id="budgetTotalValue">R$ 0,00</strong>
-          <small id="budgetTotalDetail">0 insumos selecionados</small>
+          <strong id="calculatorTotalValue">R$ 0,00</strong>
+          <small id="calculatorTotalDetail">0 insumos selecionados</small>
         </section>
 
-        <div class="metric-grid" id="budgetMetricGrid"></div>
+        <section class="metric-grid" id="calculatorDashboard" aria-live="polite"></section>
 
-        <label class="search-field">
-          <span class="visually-hidden">Buscar item da ficha</span>
-          <input id="budgetSearchInput" type="search" placeholder="Buscar item da ficha" />
-        </label>
+        <div class="calculator-tools">
+          <label class="search-field">
+            <span class="visually-hidden">Buscar item do orcamento</span>
+            <input id="calculatorSearchInput" type="search" placeholder="Buscar item do orcamento" />
+          </label>
+          <button class="button button-quiet" id="clearBudgetSheetButton" type="button">Limpar itens</button>
+        </div>
 
-        <div class="card-list" id="budgetItemList"></div>
+        <section class="item-list" id="calculatorItemList" aria-label="Itens do orcamento"></section>
       </section>
     </main>
 
     <nav class="bottom-navigation" aria-label="Navegacao principal">
-      <button class="navigation-button" type="button" data-screen-target="inventory">
+      <button class="navigation-button" type="button" data-screen-target="inventory" aria-label="Abrir estoque">
         <span>Estoque</span>
       </button>
-      <button class="navigation-button" type="button" data-screen-target="budget">
-        <span>Ficha</span>
+      <button class="navigation-button" type="button" data-screen-target="calculator" aria-label="Abrir calculadora">
+        <span>Calculadora</span>
       </button>
     </nav>
   </div>
@@ -165,6 +192,6 @@
 
   <section class="print-document" id="printDocument" aria-hidden="true"></section>
 
-  <script src="js/app.js"></script>
+  <script type="module" src="js/app.js"></script>
 </body>
 </html>
