@@ -1504,3 +1504,98 @@ img {
     padding-inline: 12px 10px;
   }
 }
+
+/* Ajuste final mobile: topo do estoque e filtros fluídos sem sobreposição */
+#inventoryScreen .section-header,
+#budgetScreen .section-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: clamp(12px, 3vw, 20px);
+  align-items: end;
+}
+
+#inventoryScreen .section-header > div:first-child,
+#budgetScreen .section-header > div:first-child {
+  min-width: 0;
+}
+
+#inventoryScreen .section-header h2,
+#budgetScreen .section-header h2 {
+  overflow-wrap: anywhere;
+}
+
+#inventoryScreen .header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+  min-width: 0;
+}
+
+#inventoryScreen .toolbar-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 12px;
+  margin: 18px 0 12px;
+}
+
+#inventoryScreen .search-field {
+  min-width: 0;
+}
+
+#inventoryScreen .toolbar-grid .secondary-button {
+  min-width: 112px;
+  height: 54px;
+}
+
+#inventoryCategoryFilters,
+#budgetCategoryFilters {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 10px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 3px 2px 10px;
+  margin-inline: -2px;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+#inventoryCategoryFilters::-webkit-scrollbar,
+#budgetCategoryFilters::-webkit-scrollbar {
+  display: none;
+}
+
+#inventoryCategoryFilters .filter-chip,
+#budgetCategoryFilters .filter-chip {
+  flex: 0 0 auto;
+  max-width: min(84vw, 320px);
+}
+
+@media (max-width: 520px) {
+  #inventoryScreen .section-header,
+  #budgetScreen .section-header {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+
+  #inventoryScreen .header-actions {
+    display: grid;
+    grid-template-columns: minmax(0, auto) minmax(130px, 1fr);
+    justify-content: stretch;
+  }
+
+  #inventoryScreen .header-actions .primary-button {
+    width: 100%;
+  }
+
+  #inventoryScreen .toolbar-grid {
+    grid-template-columns: 1fr;
+  }
+
+  #inventoryScreen .toolbar-grid .secondary-button {
+    width: 100%;
+  }
+}

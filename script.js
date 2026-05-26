@@ -1,24 +1,23 @@
-const STORAGE_KEY = "CALCULADORA_TATTOO_STATE_V3";
+const STORAGE_KEY = "CALCULADORA_TATTOO_STATE_V5";
 const LEGACY_STORAGE_KEYS = [
   "CALCULADORA_TATTOO_LOCAL_STATE_V1",
-  "CALCULADORA_TATTOO_STATE_V2"
+  "CALCULADORA_TATTOO_STATE_V2",
+  "CALCULADORA_TATTOO_STATE_V3"
 ];
 const CATEGORY_ALL = "Todos";
 const CATEGORY_NEEDLES = "Agulhas e Cartuchos";
-const CATEGORY_LIQUIDS = "Líquidos e Pastosos";
+const CATEGORY_INKS = "Tintas";
+const CATEGORY_PASTES = "Pastosos";
 const CATEGORY_DISPOSABLES = "Biossegurança e Descartáveis";
-const CATEGORY_LINEAR = "Materiais de Área/Extensão";
-const CATEGORY_DIRECT_UNIT = "Unidade Avulsa Direta";
+const CATEGORY_LINEAR = "Materiais de Extensão";
 const CALCULATION_UNIT_BOX = "unitBox";
 const CALCULATION_FRACTIONAL = "fractional";
-const CALCULATION_DIRECT_UNIT = "directUnit";
 const PURCHASE_MODE_BOX = "box";
 const PURCHASE_MODE_SINGLE = "single";
 const MEASURE_UNIT = "un";
 const MEASURE_ML = "ml";
 const MEASURE_GRAM = "g";
 const MEASURE_METER = "m";
-const MEASURE_SHEET = "folhas";
 const INTEGER_STEP = 1;
 const DECIMAL_STEP = 0.5;
 const MAX_IMAGE_SIZE_BYTES = 1800000;
@@ -38,7 +37,7 @@ const NUMBER_FORMATTER = new Intl.NumberFormat("pt-BR", {
 const CATEGORY_DEFINITIONS = {
   [CATEGORY_NEEDLES]: {
     label: CATEGORY_NEEDLES,
-    helper: "Compra por caixa ou unidade avulsa, uso sempre inteiro.",
+    helper: "Cartuchos por caixa ou por unidade, com quantidade real em estoque.",
     calculationType: CALCULATION_UNIT_BOX,
     defaultMeasure: MEASURE_UNIT,
     fields: [
@@ -47,68 +46,80 @@ const CATEGORY_DEFINITIONS = {
       { key: "numbering", label: "Numeração", type: "text", placeholder: "Ex: 0310, 0712", required: true },
       { key: "purchaseMode", label: "Formato de compra", type: "select", required: true, options: [
         { value: PURCHASE_MODE_BOX, label: "Por Caixa" },
-        { value: PURCHASE_MODE_SINGLE, label: "Por Unidade Avulsa" }
+        { value: PURCHASE_MODE_SINGLE, label: "Por Unidade" }
       ] },
       { key: "packageQuantity", label: "Quantidade na caixa", type: "number", inputMode: "numeric", placeholder: "20", required: true, visibleWhen: { key: "purchaseMode", value: PURCHASE_MODE_BOX } },
       { key: "packagePrice", label: "Preço da caixa", type: "currency", inputMode: "decimal", placeholder: "300,00", required: true, visibleWhen: { key: "purchaseMode", value: PURCHASE_MODE_BOX } },
-      { key: "singleUnitPrice", label: "Preço unitário pago", type: "currency", inputMode: "decimal", placeholder: "15,00", required: true, visibleWhen: { key: "purchaseMode", value: PURCHASE_MODE_SINGLE } }
+      { key: "singleUnitPrice", label: "Preço unitário pago", type: "currency", inputMode: "decimal", placeholder: "15,00", required: true, visibleWhen: { key: "purchaseMode", value: PURCHASE_MODE_SINGLE } },
+      { key: "stockQuantity", label: "Quantidade em estoque", type: "number", inputMode: "numeric", placeholder: "5", required: true }
     ]
   },
-  [CATEGORY_LIQUIDS]: {
-    label: CATEGORY_LIQUIDS,
-    helper: "Compra em volume ou peso, uso fracionado.",
+  [CATEGORY_INKS]: {
+    label: CATEGORY_INKS,
+    helper: "Tintas em frasco, uso fracionado em ml.",
     calculationType: CALCULATION_FRACTIONAL,
     defaultMeasure: MEASURE_ML,
     fields: [
-      { key: "name", label: "Nome", type: "text", placeholder: "Ex: Tinta preta, vaselina", required: true },
+      { key: "name", label: "Nome", type: "text", placeholder: "Ex: Tinta preta linha", required: true },
       { key: "brand", label: "Marca", type: "text", placeholder: "Ex: Dynamic", required: false },
-      { key: "color", label: "Cor, se aplicável", type: "text", placeholder: "Ex: Preto linha", required: false },
-      { key: "packageQuantity", label: "Volume da embalagem", type: "measure", inputMode: "decimal", placeholder: "30", required: true, options: [MEASURE_ML, MEASURE_GRAM] },
-      { key: "packagePrice", label: "Preço da embalagem", type: "currency", inputMode: "decimal", placeholder: "100,00", required: true }
+      { key: "color", label: "Cor", type: "text", placeholder: "Ex: Preto", required: true },
+      { key: "packageQuantity", label: "Tamanho do frasco (ml)", type: "number", inputMode: "decimal", placeholder: "30", required: true },
+      { key: "packagePrice", label: "Preço do frasco", type: "currency", inputMode: "decimal", placeholder: "100,00", required: true },
+      { key: "stockQuantity", label: "Quantidade de frascos em estoque", type: "number", inputMode: "numeric", placeholder: "3", required: true }
+    ]
+  },
+  [CATEGORY_PASTES]: {
+    label: CATEGORY_PASTES,
+    helper: "Vaselina, transfer e pomadas em g ou ml.",
+    calculationType: CALCULATION_FRACTIONAL,
+    defaultMeasure: MEASURE_GRAM,
+    fields: [
+      { key: "name", label: "Nome", type: "text", placeholder: "Ex: Vaselina, transfer, pomada", required: true },
+      { key: "brand", label: "Marca", type: "text", placeholder: "Ex: Electric Ink", required: false },
+      { key: "packageQuantity", label: "Tamanho da embalagem", type: "measure", inputMode: "decimal", placeholder: "500", required: true, options: [MEASURE_GRAM, MEASURE_ML] },
+      { key: "packagePrice", label: "Preço da embalagem", type: "currency", inputMode: "decimal", placeholder: "35,00", required: true },
+      { key: "stockQuantity", label: "Quantidade de embalagens em estoque", type: "number", inputMode: "numeric", placeholder: "2", required: true }
     ]
   },
   [CATEGORY_DISPOSABLES]: {
     label: CATEGORY_DISPOSABLES,
-    helper: "Compra em pacote ou caixa, uso por unidade.",
+    helper: "Pacote/caixa ou unidade solta, uso sempre unitário.",
     calculationType: CALCULATION_UNIT_BOX,
     defaultMeasure: MEASURE_UNIT,
     fields: [
-      { key: "name", label: "Nome", type: "text", placeholder: "Ex: Luva nitrílica, batoque", required: true },
+      { key: "name", label: "Nome", type: "text", placeholder: "Ex: Luva, batoque, folha estêncil", required: true },
       { key: "brand", label: "Marca", type: "text", placeholder: "Ex: Supermax", required: false },
-      { key: "packageQuantity", label: "Qtd no pacote/caixa", type: "number", inputMode: "numeric", placeholder: "100", required: true },
-      { key: "packagePrice", label: "Preço do pacote", type: "currency", inputMode: "decimal", placeholder: "50,00", required: true }
+      { key: "purchaseMode", label: "Formato de compra", type: "select", required: true, options: [
+        { value: PURCHASE_MODE_BOX, label: "Comprado por Pacote/Caixa" },
+        { value: PURCHASE_MODE_SINGLE, label: "Comprado por Unidade" }
+      ] },
+      { key: "packageQuantity", label: "Qtd no pacote/caixa", type: "number", inputMode: "numeric", placeholder: "100", required: true, visibleWhen: { key: "purchaseMode", value: PURCHASE_MODE_BOX } },
+      { key: "packagePrice", label: "Preço do pacote", type: "currency", inputMode: "decimal", placeholder: "50,00", required: true, visibleWhen: { key: "purchaseMode", value: PURCHASE_MODE_BOX } },
+      { key: "singleUnitPrice", label: "Preço unitário", type: "currency", inputMode: "decimal", placeholder: "4,50", required: true, visibleWhen: { key: "purchaseMode", value: PURCHASE_MODE_SINGLE } },
+      { key: "stockQuantity", label: "Quantidade em estoque", type: "number", inputMode: "numeric", placeholder: "15", required: true }
     ]
   },
   [CATEGORY_LINEAR]: {
     label: CATEGORY_LINEAR,
-    helper: "Compra em rolo, uso por metro ou folha.",
+    helper: "Rolos medidos exclusivamente por metros.",
     calculationType: CALCULATION_FRACTIONAL,
     defaultMeasure: MEASURE_METER,
     fields: [
-      { key: "name", label: "Nome", type: "text", placeholder: "Ex: Plástico filme", required: true },
+      { key: "name", label: "Nome", type: "text", placeholder: "Ex: Plástico filme, bandagem", required: true },
       { key: "brand", label: "Marca", type: "text", placeholder: "Ex: Marca do rolo", required: false },
-      { key: "packageQuantity", label: "Tamanho total do rolo", type: "measure", inputMode: "decimal", placeholder: "30", required: true, options: [MEASURE_METER, MEASURE_SHEET] },
-      { key: "packagePrice", label: "Preço do rolo", type: "currency", inputMode: "decimal", placeholder: "25,00", required: true }
-    ]
-  },
-  [CATEGORY_DIRECT_UNIT]: {
-    label: CATEGORY_DIRECT_UNIT,
-    helper: "Compra avulsa, custo direto por unidade.",
-    calculationType: CALCULATION_DIRECT_UNIT,
-    defaultMeasure: MEASURE_UNIT,
-    fields: [
-      { key: "name", label: "Nome", type: "text", placeholder: "Ex: Folha de estêncil avulsa", required: true },
-      { key: "unitPrice", label: "Preço unitário pago", type: "currency", inputMode: "decimal", placeholder: "4,50", required: true }
+      { key: "packageQuantity", label: "Tamanho do rolo em metros", type: "number", inputMode: "decimal", placeholder: "30", required: true },
+      { key: "packagePrice", label: "Preço do rolo", type: "currency", inputMode: "decimal", placeholder: "25,00", required: true },
+      { key: "stockQuantity", label: "Quantidade de rolos em estoque", type: "number", inputMode: "numeric", placeholder: "2", required: true }
     ]
   }
 };
 const CATEGORY_ORDER = [
   CATEGORY_ALL,
   CATEGORY_NEEDLES,
-  CATEGORY_LIQUIDS,
+  CATEGORY_INKS,
+  CATEGORY_PASTES,
   CATEGORY_DISPOSABLES,
-  CATEGORY_LINEAR,
-  CATEGORY_DIRECT_UNIT
+  CATEGORY_LINEAR
 ];
 const DEFAULT_INVENTORY_ITEMS = [
   {
@@ -121,31 +132,48 @@ const DEFAULT_INVENTORY_ITEMS = [
     purchaseMode: PURCHASE_MODE_BOX,
     packageQuantity: 20,
     packagePrice: 300,
+    stockQuantity: 2,
     measureUnit: MEASURE_UNIT,
     calculationType: CALCULATION_UNIT_BOX,
     createdAt: "2026-01-01T00:00:00.000Z",
     updatedAt: "2026-01-01T00:00:00.000Z"
   },
   {
-    id: "item-liquid-black",
-    category: CATEGORY_LIQUIDS,
+    id: "item-ink-black",
+    category: CATEGORY_INKS,
     name: "Tinta preta linha",
     brand: "Dynamic",
     color: "Preto",
     packageQuantity: 30,
     packagePrice: 100,
+    stockQuantity: 3,
     measureUnit: MEASURE_ML,
     calculationType: CALCULATION_FRACTIONAL,
     createdAt: "2026-01-01T00:00:00.000Z",
     updatedAt: "2026-01-01T00:00:00.000Z"
   },
   {
-    id: "item-disposable-glove",
+    id: "item-paste-vaseline",
+    category: CATEGORY_PASTES,
+    name: "Vaselina sólida",
+    brand: "Studio Care",
+    packageQuantity: 500,
+    packagePrice: 35,
+    stockQuantity: 2,
+    measureUnit: MEASURE_GRAM,
+    calculationType: CALCULATION_FRACTIONAL,
+    createdAt: "2026-01-01T00:00:00.000Z",
+    updatedAt: "2026-01-01T00:00:00.000Z"
+  },
+  {
+    id: "item-disposable-stencil",
     category: CATEGORY_DISPOSABLES,
-    name: "Luvas nitrílicas",
-    brand: "Supermax",
-    packageQuantity: 100,
-    packagePrice: 50,
+    name: "Folha de estêncil",
+    brand: "Spirit",
+    purchaseMode: PURCHASE_MODE_SINGLE,
+    packageQuantity: 1,
+    packagePrice: 4.5,
+    stockQuantity: 15,
     measureUnit: MEASURE_UNIT,
     calculationType: CALCULATION_UNIT_BOX,
     createdAt: "2026-01-01T00:00:00.000Z",
@@ -158,21 +186,9 @@ const DEFAULT_INVENTORY_ITEMS = [
     brand: "Premium Wrap",
     packageQuantity: 30,
     packagePrice: 24,
+    stockQuantity: 2,
     measureUnit: MEASURE_METER,
     calculationType: CALCULATION_FRACTIONAL,
-    createdAt: "2026-01-01T00:00:00.000Z",
-    updatedAt: "2026-01-01T00:00:00.000Z"
-  },
-  {
-    id: "item-direct-stencil",
-    category: CATEGORY_DIRECT_UNIT,
-    name: "Folha de estêncil avulsa",
-    brand: "",
-    packageQuantity: 1,
-    packagePrice: 4.5,
-    unitPrice: 4.5,
-    measureUnit: MEASURE_UNIT,
-    calculationType: CALCULATION_DIRECT_UNIT,
     createdAt: "2026-01-01T00:00:00.000Z",
     updatedAt: "2026-01-01T00:00:00.000Z"
   }
@@ -346,9 +362,10 @@ function normalizeInventoryItem(item) {
   const category = normalizeCategory(item.category);
   const categoryDefinition = CATEGORY_DEFINITIONS[category];
   const purchaseMode = getNormalizedPurchaseMode(item, category);
-  const measureUnit = normalizeMeasureUnit(item.measureUnit || item.unitMeasure || item.unitLabel || item.tipoUnidade, categoryDefinition.defaultMeasure);
+  const measureUnit = getNormalizedMeasureUnit(item, category, categoryDefinition.defaultMeasure);
   const packageQuantity = getNormalizedPackageQuantity(item, category, purchaseMode);
   const packagePrice = getNormalizedPackagePrice(item, category, purchaseMode);
+  const stockQuantity = getNormalizedStockQuantity(item);
   const normalizedName = getNormalizedItemName(item, category);
 
   return {
@@ -362,13 +379,15 @@ function normalizeInventoryItem(item) {
     purchaseMode,
     packageQuantity,
     packagePrice,
-    unitPrice: category === CATEGORY_DIRECT_UNIT ? packagePrice : calculateRawUnitCost(packagePrice, packageQuantity),
+    stockQuantity,
+    unitPrice: calculateRawUnitCost(packagePrice, packageQuantity),
     measureUnit,
     calculationType: categoryDefinition.calculationType,
     createdAt: item.createdAt || new Date().toISOString(),
     updatedAt: item.updatedAt || item.createdAt || new Date().toISOString()
   };
 }
+
 
 function getNormalizedItemName(item, category) {
   if (category === CATEGORY_NEEDLES) {
@@ -382,13 +401,13 @@ function getNormalizedItemName(item, category) {
 }
 
 function getNormalizedPurchaseMode(item, category) {
-  if (category !== CATEGORY_NEEDLES) {
+  if (![CATEGORY_NEEDLES, CATEGORY_DISPOSABLES].includes(category)) {
     return "";
   }
 
   const rawPurchaseMode = sanitizeText(item.purchaseMode).toLowerCase();
-  const isSingle = rawPurchaseMode === PURCHASE_MODE_SINGLE || rawPurchaseMode === "unit" || rawPurchaseMode === "single" || rawPurchaseMode.includes("avul");
-  const isBox = rawPurchaseMode === PURCHASE_MODE_BOX || rawPurchaseMode === "caixa" || rawPurchaseMode.includes("box");
+  const isSingle = rawPurchaseMode === PURCHASE_MODE_SINGLE || rawPurchaseMode === "unit" || rawPurchaseMode === "single" || rawPurchaseMode.includes("unidade") || rawPurchaseMode.includes("avul");
+  const isBox = rawPurchaseMode === PURCHASE_MODE_BOX || rawPurchaseMode === "caixa" || rawPurchaseMode === "pacote" || rawPurchaseMode.includes("box") || rawPurchaseMode.includes("pacote");
 
   if (isSingle) {
     return PURCHASE_MODE_SINGLE;
@@ -401,8 +420,9 @@ function getNormalizedPurchaseMode(item, category) {
   return normalizeNumber(item.packageQuantity || item.quantity || item.quantidade) <= 1 ? PURCHASE_MODE_SINGLE : PURCHASE_MODE_BOX;
 }
 
+
 function getNormalizedPackageQuantity(item, category, purchaseMode = "") {
-  if (category === CATEGORY_DIRECT_UNIT || purchaseMode === PURCHASE_MODE_SINGLE) {
+  if (purchaseMode === PURCHASE_MODE_SINGLE) {
     return 1;
   }
 
@@ -410,8 +430,9 @@ function getNormalizedPackageQuantity(item, category, purchaseMode = "") {
   return value > 0 ? value : 1;
 }
 
+
 function getNormalizedPackagePrice(item, category, purchaseMode = "") {
-  if (category === CATEGORY_DIRECT_UNIT || purchaseMode === PURCHASE_MODE_SINGLE) {
+  if (purchaseMode === PURCHASE_MODE_SINGLE) {
     const unitPrice = normalizeNumber(item.singleUnitPrice || item.unitPrice || item.packagePrice || item.purchasePrice || item.valor || item.price);
     return unitPrice > 0 ? unitPrice : 0;
   }
@@ -429,6 +450,32 @@ function getNormalizedPackagePrice(item, category, purchaseMode = "") {
   }
 
   return legacyPurchasePrice > 0 ? legacyPurchasePrice : 0;
+}
+
+
+
+function getNormalizedStockQuantity(item) {
+  const stockQuantity = normalizeNumber(item.stockQuantity || item.inventoryQuantity || item.quantityInStock || item.qtdEstoque || item.estoque);
+  if (stockQuantity > 0) {
+    return stockQuantity;
+  }
+  return 1;
+}
+
+function getNormalizedMeasureUnit(item, category, fallbackUnit) {
+  if ([CATEGORY_NEEDLES, CATEGORY_DISPOSABLES].includes(category)) {
+    return MEASURE_UNIT;
+  }
+
+  if (category === CATEGORY_INKS) {
+    return MEASURE_ML;
+  }
+
+  if (category === CATEGORY_LINEAR) {
+    return MEASURE_METER;
+  }
+
+  return normalizeMeasureUnit(item.measureUnit || item.unitMeasure || item.unitLabel || item.tipoUnidade, fallbackUnit);
 }
 
 function normalizeBudget(budget) {
@@ -629,10 +676,6 @@ function createInventoryCardHtml(item) {
   const unitCost = calculateUnitCost(item);
   const totalValue = calculateTotalInventoryValue(item);
   const specification = getItemSpecification(item);
-  const shouldShowNeedleValue = item.category === CATEGORY_NEEDLES && item.purchaseMode === PURCHASE_MODE_SINGLE;
-  const featuredMetric = item.category === CATEGORY_NEEDLES && !shouldShowNeedleValue
-    ? `<div class="stock-metric is-featured"><span>Tipo + numeração</span><strong>${escapeHtml(specification)}</strong></div>`
-    : `<div class="stock-metric is-featured"><span>Valor financeiro total</span><strong>${formatCurrency(totalValue)}</strong></div>`;
 
   return `
     <article class="inventory-card" data-inventory-item-id="${escapeHtml(item.id)}">
@@ -654,16 +697,17 @@ function createInventoryCardHtml(item) {
         </div>
       </div>
       <div class="stock-metric-grid">
-        ${featuredMetric}
+        <div class="stock-metric is-featured"><span>Valor financeiro total</span><strong>${formatCurrency(totalValue)}</strong></div>
         <div class="stock-metric">
-          <span>Custo por ${escapeHtml(getMeasureLabel(item.measureUnit))}</span>
-          <strong>${formatCurrency(unitCost)}</strong>
+          <span>${item.category === CATEGORY_NEEDLES ? "Tipo + numeração" : `Custo por ${getMeasureLabel(item.measureUnit)}`}</span>
+          <strong>${item.category === CATEGORY_NEEDLES ? escapeHtml(specification) : formatCurrency(unitCost)}</strong>
         </div>
       </div>
       <p class="card-note">${escapeHtml(getCalculationDescription(item))}</p>
     </article>
   `;
 }
+
 
 function renderBudget() {
   const activeBudget = getActiveBudget();
@@ -976,17 +1020,14 @@ function buildInventoryItemFromForm() {
   const categoryDefinition = CATEGORY_DEFINITIONS[selectedFormCategory];
   const fieldData = readDynamicFormData();
   const existingItem = editingItemId ? findInventoryItem(editingItemId) : null;
-  const purchaseMode = selectedFormCategory === CATEGORY_NEEDLES ? sanitizeText(fieldData.purchaseMode || PURCHASE_MODE_BOX) : "";
-  const isSingleNeedle = selectedFormCategory === CATEGORY_NEEDLES && purchaseMode === PURCHASE_MODE_SINGLE;
-  const packageQuantity = selectedFormCategory === CATEGORY_DIRECT_UNIT || isSingleNeedle ? 1 : normalizeNumber(fieldData.packageQuantity);
-  const packagePrice = selectedFormCategory === CATEGORY_DIRECT_UNIT
-    ? normalizeNumber(fieldData.unitPrice)
-    : isSingleNeedle
-      ? normalizeNumber(fieldData.singleUnitPrice)
-      : normalizeNumber(fieldData.packagePrice);
-  const measureUnit = normalizeMeasureUnit(fieldData.measureUnit, categoryDefinition.defaultMeasure);
+  const purchaseMode = [CATEGORY_NEEDLES, CATEGORY_DISPOSABLES].includes(selectedFormCategory) ? sanitizeText(fieldData.purchaseMode || PURCHASE_MODE_BOX) : "";
+  const isSinglePurchase = purchaseMode === PURCHASE_MODE_SINGLE;
+  const packageQuantity = isSinglePurchase ? 1 : normalizeNumber(fieldData.packageQuantity);
+  const packagePrice = isSinglePurchase ? normalizeNumber(fieldData.singleUnitPrice) : normalizeNumber(fieldData.packagePrice);
+  const stockQuantity = normalizeNumber(fieldData.stockQuantity);
+  const measureUnit = getNormalizedMeasureUnit(fieldData, selectedFormCategory, categoryDefinition.defaultMeasure);
 
-  if (packageQuantity <= 0 || packagePrice <= 0 || !validateRequiredFields(categoryDefinition.fields, fieldData)) {
+  if (packageQuantity <= 0 || packagePrice <= 0 || stockQuantity <= 0 || !validateRequiredFields(categoryDefinition.fields, fieldData)) {
     return null;
   }
 
@@ -1001,7 +1042,8 @@ function buildInventoryItemFromForm() {
     purchaseMode,
     packageQuantity,
     packagePrice,
-    unitPrice: selectedFormCategory === CATEGORY_DIRECT_UNIT ? packagePrice : calculateRawUnitCost(packagePrice, packageQuantity),
+    stockQuantity,
+    unitPrice: calculateRawUnitCost(packagePrice, packageQuantity),
     measureUnit,
     calculationType: categoryDefinition.calculationType,
     createdAt: existingItem?.createdAt || new Date().toISOString(),
@@ -1010,6 +1052,7 @@ function buildInventoryItemFromForm() {
 
   return normalizeInventoryItem(baseItem);
 }
+
 
 function readDynamicFormData() {
   const formData = {};
@@ -1037,34 +1080,35 @@ function buildItemName(categoryName, fieldData) {
 function updateUnitCostPreview() {
   const fieldData = readDynamicFormData();
   const categoryDefinition = CATEGORY_DEFINITIONS[selectedFormCategory];
-  const purchaseMode = selectedFormCategory === CATEGORY_NEEDLES ? sanitizeText(fieldData.purchaseMode || PURCHASE_MODE_BOX) : "";
-  const isSingleNeedle = selectedFormCategory === CATEGORY_NEEDLES && purchaseMode === PURCHASE_MODE_SINGLE;
-  const packageQuantity = selectedFormCategory === CATEGORY_DIRECT_UNIT || isSingleNeedle ? 1 : normalizeNumber(fieldData.packageQuantity);
-  const packagePrice = selectedFormCategory === CATEGORY_DIRECT_UNIT
-    ? normalizeNumber(fieldData.unitPrice)
-    : isSingleNeedle
-      ? normalizeNumber(fieldData.singleUnitPrice)
-      : normalizeNumber(fieldData.packagePrice);
-  const measureUnit = normalizeMeasureUnit(fieldData.measureUnit, categoryDefinition.defaultMeasure);
+  const purchaseMode = [CATEGORY_NEEDLES, CATEGORY_DISPOSABLES].includes(selectedFormCategory) ? sanitizeText(fieldData.purchaseMode || PURCHASE_MODE_BOX) : "";
+  const isSinglePurchase = purchaseMode === PURCHASE_MODE_SINGLE;
+  const packageQuantity = isSinglePurchase ? 1 : normalizeNumber(fieldData.packageQuantity);
+  const packagePrice = isSinglePurchase ? normalizeNumber(fieldData.singleUnitPrice) : normalizeNumber(fieldData.packagePrice);
+  const stockQuantity = normalizeNumber(fieldData.stockQuantity);
+  const measureUnit = getNormalizedMeasureUnit(fieldData, selectedFormCategory, categoryDefinition.defaultMeasure);
   const unitCost = calculateRawUnitCost(packagePrice, packageQuantity);
+  const totalInventoryValue = packagePrice * Math.max(stockQuantity, 0);
   const previewLabel = getPreviewLabel(selectedFormCategory, measureUnit);
   dom.unitCostPreview.innerHTML = `
     <span>${escapeHtml(previewLabel)}</span>
     <strong>${formatCurrency(unitCost)}</strong>
+    <small>Valor em estoque: ${formatCurrency(totalInventoryValue)}</small>
   `;
 }
+
 
 function getPreviewLabel(categoryName, measureUnit) {
   if (categoryName === CATEGORY_NEEDLES) {
     return "Custo por cartucho/agulha";
   }
 
-  if (categoryName === CATEGORY_DIRECT_UNIT) {
-    return "Custo por unidade avulsa";
+  if (categoryName === CATEGORY_DISPOSABLES) {
+    return "Custo por unidade";
   }
 
   return `Custo por ${getMeasureLabel(measureUnit)}`;
 }
+
 
 function deleteInventoryItem(itemId) {
   appState.inventoryItems = appState.inventoryItems.filter((item) => item.id !== itemId);
@@ -1306,12 +1350,9 @@ function getCounterTotal(categoryName) {
 }
 
 function calculateUnitCost(item) {
-  if (item.category === CATEGORY_DIRECT_UNIT) {
-    return normalizeNumber(item.unitPrice || item.packagePrice);
-  }
-
   return calculateRawUnitCost(item.packagePrice, item.packageQuantity);
 }
+
 
 function calculateRawUnitCost(price, quantity) {
   const normalizedPrice = normalizeNumber(price);
@@ -1325,8 +1366,9 @@ function calculateRawUnitCost(price, quantity) {
 }
 
 function calculateTotalInventoryValue(item) {
-  return normalizeNumber(item.packagePrice);
+  return normalizeNumber(item.packagePrice) * normalizeNumber(item.stockQuantity);
 }
+
 
 function calculateLineSubtotal(item, quantityUsed) {
   return calculateUnitCost(item) * normalizeNumber(quantityUsed);
@@ -1351,12 +1393,13 @@ function getItemSpecification(item) {
     return [item.lineType, item.numbering].filter(Boolean).join(" ") || "Sem numeração";
   }
 
-  if (item.category === CATEGORY_LIQUIDS && item.color) {
+  if (item.category === CATEGORY_INKS && item.color) {
     return item.color;
   }
 
   return `${formatNumber(item.packageQuantity)} ${getMeasureLabel(item.measureUnit)}`;
 }
+
 
 function getItemSubtitle(item) {
   if (item.category === CATEGORY_NEEDLES) {
@@ -1369,24 +1412,32 @@ function getItemSubtitle(item) {
 }
 
 function getCalculationDescription(item) {
+  const stockQuantity = formatNumber(item.stockQuantity);
+  const totalValue = formatCurrency(calculateTotalInventoryValue(item));
+
   if (item.category === CATEGORY_NEEDLES && item.purchaseMode === PURCHASE_MODE_SINGLE) {
-    return "Compra avulsa: preço informado já é o custo por cartucho.";
+    return `${stockQuantity} unidade(s) em estoque. Valor financeiro total: ${totalValue}.`;
   }
 
   if (item.category === CATEGORY_NEEDLES) {
-    return `Caixa com ${formatNumber(item.packageQuantity)} unidades. Custo calculado por cartucho.`;
+    return `${stockQuantity} caixa(s) em estoque. Caixa com ${formatNumber(item.packageQuantity)} unidades. Valor financeiro total: ${totalValue}.`;
   }
 
-  if (item.category === CATEGORY_DIRECT_UNIT) {
-    return "Unidade avulsa com custo direto, sem divisão por embalagem.";
+  if (item.category === CATEGORY_DISPOSABLES && item.purchaseMode === PURCHASE_MODE_SINGLE) {
+    return `${stockQuantity} unidade(s) em estoque. Uso inteiro no orçamento.`;
   }
 
   if (item.category === CATEGORY_DISPOSABLES) {
-    return `Pacote com ${formatNumber(item.packageQuantity)} unidades. Uso inteiro no orçamento.`;
+    return `${stockQuantity} pacote(s)/caixa(s) em estoque. Pacote com ${formatNumber(item.packageQuantity)} unidades.`;
   }
 
-  return `Embalagem com ${formatNumber(item.packageQuantity)} ${getMeasureLabel(item.measureUnit)}. Uso fracionado no orçamento.`;
+  if (item.category === CATEGORY_LINEAR) {
+    return `${stockQuantity} rolo(s) em estoque. Rolo com ${formatNumber(item.packageQuantity)} metros.`;
+  }
+
+  return `${stockQuantity} embalagem(ns) em estoque. Embalagem com ${formatNumber(item.packageQuantity)} ${getMeasureLabel(item.measureUnit)}.`;
 }
+
 
 function getProductInitial(item) {
   const sourceText = item.category === CATEGORY_NEEDLES ? item.lineType || item.name : item.name;
@@ -1398,22 +1449,22 @@ function getMeasureLabel(measureUnit) {
     [MEASURE_UNIT]: "unidade",
     [MEASURE_ML]: "ml",
     [MEASURE_GRAM]: "g",
-    [MEASURE_METER]: "m",
-    [MEASURE_SHEET]: "folha"
+    [MEASURE_METER]: "m"
   };
   return labels[measureUnit] || measureUnit || "unidade";
 }
+
 
 function getMeasureSuffix(measureUnit) {
   const suffixes = {
     [MEASURE_UNIT]: "un",
     [MEASURE_ML]: "ml",
     [MEASURE_GRAM]: "g",
-    [MEASURE_METER]: "m",
-    [MEASURE_SHEET]: "fl"
+    [MEASURE_METER]: "m"
   };
   return suffixes[measureUnit] || "";
 }
+
 
 function normalizeMeasureUnit(unitValue, fallbackUnit = MEASURE_UNIT) {
   const normalizedValue = sanitizeText(unitValue).toLowerCase();
@@ -1430,12 +1481,11 @@ function normalizeMeasureUnit(unitValue, fallbackUnit = MEASURE_UNIT) {
     g: MEASURE_GRAM,
     metro: MEASURE_METER,
     metros: MEASURE_METER,
-    m: MEASURE_METER,
-    folha: MEASURE_SHEET,
-    folhas: MEASURE_SHEET
+    m: MEASURE_METER
   };
   return unitMap[normalizedValue] || fallbackUnit;
 }
+
 
 function normalizeCategory(categoryValue) {
   const normalizedValue = sanitizeText(categoryValue).toLowerCase();
@@ -1446,12 +1496,18 @@ function normalizeCategory(categoryValue) {
     agulha: CATEGORY_NEEDLES,
     agulhas: CATEGORY_NEEDLES,
     "agulhas e cartuchos": CATEGORY_NEEDLES,
-    tinta: CATEGORY_LIQUIDS,
-    tintas: CATEGORY_LIQUIDS,
-    liquidos: CATEGORY_LIQUIDS,
-    líquidos: CATEGORY_LIQUIDS,
-    "líquidos e pastosos": CATEGORY_LIQUIDS,
-    "liquidos e pastosos": CATEGORY_LIQUIDS,
+    tinta: CATEGORY_INKS,
+    tintas: CATEGORY_INKS,
+    "líquidos": CATEGORY_INKS,
+    liquidos: CATEGORY_INKS,
+    "líquidos e pastosos": CATEGORY_INKS,
+    "liquidos e pastosos": CATEGORY_INKS,
+    pastoso: CATEGORY_PASTES,
+    pastosos: CATEGORY_PASTES,
+    vaselina: CATEGORY_PASTES,
+    transfer: CATEGORY_PASTES,
+    pomada: CATEGORY_PASTES,
+    pomadas: CATEGORY_PASTES,
     biossegurança: CATEGORY_DISPOSABLES,
     biosseguranca: CATEGORY_DISPOSABLES,
     descartável: CATEGORY_DISPOSABLES,
@@ -1460,18 +1516,22 @@ function normalizeCategory(categoryValue) {
     descartaveis: CATEGORY_DISPOSABLES,
     "biossegurança e descartáveis": CATEGORY_DISPOSABLES,
     "biosseguranca e descartaveis": CATEGORY_DISPOSABLES,
+    "unidade avulsa direta": CATEGORY_DISPOSABLES,
+    avulso: CATEGORY_DISPOSABLES,
+    avulsa: CATEGORY_DISPOSABLES,
+    outros: CATEGORY_DISPOSABLES,
     "materiais de área/extensão": CATEGORY_LINEAR,
     "materiais de area/extensao": CATEGORY_LINEAR,
     "materiais de área": CATEGORY_LINEAR,
     "materiais de area": CATEGORY_LINEAR,
+    "materiais de extensão": CATEGORY_LINEAR,
+    "materiais de extensao": CATEGORY_LINEAR,
     rolo: CATEGORY_LINEAR,
-    "unidade avulsa direta": CATEGORY_DIRECT_UNIT,
-    avulso: CATEGORY_DIRECT_UNIT,
-    avulsa: CATEGORY_DIRECT_UNIT,
-    outros: CATEGORY_DIRECT_UNIT
+    rolos: CATEGORY_LINEAR
   };
   return categoryMap[normalizedValue] || CATEGORY_NEEDLES;
 }
+
 
 function normalizeNumber(value) {
   if (typeof value === "number" && Number.isFinite(value)) {
