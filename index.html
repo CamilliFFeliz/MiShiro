@@ -37,6 +37,15 @@
       </button>
     </nav>
 
+    <section class="sidebar-tools" aria-label="Ferramentas de backup">
+      <span>Backup</span>
+      <button class="sidebar-tool-button" id="exportInventoryBackupButton" type="button">Exportar JSON</button>
+      <button class="sidebar-tool-button" id="importInventoryBackupButton" type="button">Importar JSON</button>
+      <button class="sidebar-tool-button is-danger" id="restoreReferenceStockButton" type="button">Restaurar Estoque Base</button>
+      <input id="inventoryBackupFileInput" type="file" accept="application/json,.json" hidden />
+      <p class="sidebar-status" id="backupStatus" aria-live="polite"></p>
+    </section>
+
     <div class="sidebar-footer">
       <span>LocalStorage</span>
       <strong>Dados salvos no navegador</strong>

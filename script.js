@@ -21,6 +21,11 @@ const MEASURE_METER = "m";
 const INTEGER_STEP = 1;
 const DECIMAL_STEP = 0.5;
 const MAX_IMAGE_SIZE_BYTES = 1800000;
+const BACKUP_APP_NAME = "CalculadoraTattoo";
+const BACKUP_SCHEMA = "calculadora-tattoo-inventory-backup";
+const BACKUP_VERSION = 1;
+const BACKUP_FILE_PREFIX = "backup_estoque";
+const REFERENCE_STOCK_CREATED_AT = "2026-05-26T00:00:00.000Z";
 const SCREEN_META = {
   home: { title: "Início", eyebrow: "Visão geral" },
   inventory: { title: "Estoque", eyebrow: "Banco local" },
@@ -121,76 +126,185 @@ const CATEGORY_ORDER = [
   CATEGORY_DISPOSABLES,
   CATEGORY_LINEAR
 ];
-const DEFAULT_INVENTORY_ITEMS = [
+const DEFAULT_REFERENCE_STOCK = [
   {
-    id: "item-needle-rl0310",
-    category: CATEGORY_NEEDLES,
-    name: "White Head RL 0310",
-    brand: "White Head",
-    lineType: "RL",
-    numbering: "0310",
-    purchaseMode: PURCHASE_MODE_BOX,
-    packageQuantity: 20,
-    packagePrice: 300,
-    stockQuantity: 2,
-    measureUnit: MEASURE_UNIT,
-    calculationType: CALCULATION_UNIT_BOX,
-    createdAt: "2026-01-01T00:00:00.000Z",
-    updatedAt: "2026-01-01T00:00:00.000Z"
-  },
-  {
-    id: "item-ink-black",
+    id: "reference-sabonete-liquido",
     category: CATEGORY_INKS,
-    name: "Tinta preta linha",
-    brand: "Dynamic",
-    color: "Preto",
-    packageQuantity: 30,
-    packagePrice: 100,
-    stockQuantity: 3,
+    name: "Sabonete Líquido",
+    brand: "",
+    color: "",
+    packageQuantity: 400,
+    packagePrice: 37,
+    stockQuantity: 1,
     measureUnit: MEASURE_ML,
     calculationType: CALCULATION_FRACTIONAL,
-    createdAt: "2026-01-01T00:00:00.000Z",
-    updatedAt: "2026-01-01T00:00:00.000Z"
+    createdAt: REFERENCE_STOCK_CREATED_AT,
+    updatedAt: REFERENCE_STOCK_CREATED_AT
   },
   {
-    id: "item-paste-vaseline",
+    id: "reference-bandagem",
+    category: CATEGORY_LINEAR,
+    name: "Bandagem",
+    brand: "",
+    packageQuantity: 4.5,
+    packagePrice: 10,
+    stockQuantity: 1,
+    measureUnit: MEASURE_METER,
+    calculationType: CALCULATION_FRACTIONAL,
+    createdAt: REFERENCE_STOCK_CREATED_AT,
+    updatedAt: REFERENCE_STOCK_CREATED_AT
+  },
+  {
+    id: "reference-lamina",
+    category: CATEGORY_DISPOSABLES,
+    name: "Lâmina",
+    brand: "",
+    purchaseMode: PURCHASE_MODE_SINGLE,
+    packageQuantity: 1,
+    packagePrice: 7,
+    stockQuantity: 1,
+    measureUnit: MEASURE_UNIT,
+    calculationType: CALCULATION_UNIT_BOX,
+    createdAt: REFERENCE_STOCK_CREATED_AT,
+    updatedAt: REFERENCE_STOCK_CREATED_AT
+  },
+  {
+    id: "reference-batoque",
+    category: CATEGORY_DISPOSABLES,
+    name: "Batoque",
+    brand: "",
+    purchaseMode: PURCHASE_MODE_BOX,
+    packageQuantity: 50,
+    packagePrice: 30,
+    stockQuantity: 1,
+    measureUnit: MEASURE_UNIT,
+    calculationType: CALCULATION_UNIT_BOX,
+    createdAt: REFERENCE_STOCK_CREATED_AT,
+    updatedAt: REFERENCE_STOCK_CREATED_AT
+  },
+  {
+    id: "reference-vaselina",
     category: CATEGORY_PASTES,
-    name: "Vaselina sólida",
-    brand: "Studio Care",
-    packageQuantity: 500,
-    packagePrice: 35,
-    stockQuantity: 2,
+    name: "Vaselina",
+    brand: "",
+    packageQuantity: 150,
+    packagePrice: 30,
+    stockQuantity: 1,
     measureUnit: MEASURE_GRAM,
     calculationType: CALCULATION_FRACTIONAL,
-    createdAt: "2026-01-01T00:00:00.000Z",
-    updatedAt: "2026-01-01T00:00:00.000Z"
+    createdAt: REFERENCE_STOCK_CREATED_AT,
+    updatedAt: REFERENCE_STOCK_CREATED_AT
   },
   {
-    id: "item-disposable-stencil",
+    id: "reference-transfer",
+    category: CATEGORY_INKS,
+    name: "Transfer",
+    brand: "",
+    color: "",
+    packageQuantity: 30,
+    packagePrice: 28,
+    stockQuantity: 1,
+    measureUnit: MEASURE_ML,
+    calculationType: CALCULATION_FRACTIONAL,
+    createdAt: REFERENCE_STOCK_CREATED_AT,
+    updatedAt: REFERENCE_STOCK_CREATED_AT
+  },
+  {
+    id: "reference-folha-estencil",
     category: CATEGORY_DISPOSABLES,
-    name: "Folha de estêncil",
-    brand: "Spirit",
+    name: "Folha Estêncil",
+    brand: "",
     purchaseMode: PURCHASE_MODE_SINGLE,
     packageQuantity: 1,
     packagePrice: 4.5,
-    stockQuantity: 15,
+    stockQuantity: 1,
     measureUnit: MEASURE_UNIT,
     calculationType: CALCULATION_UNIT_BOX,
-    createdAt: "2026-01-01T00:00:00.000Z",
-    updatedAt: "2026-01-01T00:00:00.000Z"
+    createdAt: REFERENCE_STOCK_CREATED_AT,
+    updatedAt: REFERENCE_STOCK_CREATED_AT
   },
   {
-    id: "item-linear-film",
+    id: "reference-papel-toalha",
+    category: CATEGORY_DISPOSABLES,
+    name: "Papel Toalha",
+    brand: "",
+    purchaseMode: PURCHASE_MODE_BOX,
+    packageQuantity: 200,
+    packagePrice: 12,
+    stockQuantity: 1,
+    measureUnit: MEASURE_UNIT,
+    calculationType: CALCULATION_UNIT_BOX,
+    createdAt: REFERENCE_STOCK_CREATED_AT,
+    updatedAt: REFERENCE_STOCK_CREATED_AT
+  },
+  {
+    id: "reference-mascara",
+    category: CATEGORY_DISPOSABLES,
+    name: "Máscara",
+    brand: "",
+    purchaseMode: PURCHASE_MODE_BOX,
+    packageQuantity: 100,
+    packagePrice: 25,
+    stockQuantity: 1,
+    measureUnit: MEASURE_UNIT,
+    calculationType: CALCULATION_UNIT_BOX,
+    createdAt: REFERENCE_STOCK_CREATED_AT,
+    updatedAt: REFERENCE_STOCK_CREATED_AT
+  },
+  {
+    id: "reference-plastico-filme",
     category: CATEGORY_LINEAR,
-    name: "Plástico filme",
-    brand: "Premium Wrap",
-    packageQuantity: 30,
-    packagePrice: 24,
-    stockQuantity: 2,
+    name: "Plástico Filme",
+    brand: "",
+    packageQuantity: 70,
+    packagePrice: 15,
+    stockQuantity: 1,
     measureUnit: MEASURE_METER,
     calculationType: CALCULATION_FRACTIONAL,
-    createdAt: "2026-01-01T00:00:00.000Z",
-    updatedAt: "2026-01-01T00:00:00.000Z"
+    createdAt: REFERENCE_STOCK_CREATED_AT,
+    updatedAt: REFERENCE_STOCK_CREATED_AT
+  },
+  {
+    id: "reference-palito-descartavel",
+    category: CATEGORY_DISPOSABLES,
+    name: "Palito Descartável",
+    brand: "",
+    purchaseMode: PURCHASE_MODE_BOX,
+    packageQuantity: 100,
+    packagePrice: 6,
+    stockQuantity: 1,
+    measureUnit: MEASURE_UNIT,
+    calculationType: CALCULATION_UNIT_BOX,
+    createdAt: REFERENCE_STOCK_CREATED_AT,
+    updatedAt: REFERENCE_STOCK_CREATED_AT
+  },
+  {
+    id: "reference-luvas",
+    category: CATEGORY_DISPOSABLES,
+    name: "Luvas",
+    brand: "",
+    purchaseMode: PURCHASE_MODE_BOX,
+    packageQuantity: 100,
+    packagePrice: 30,
+    stockQuantity: 1,
+    measureUnit: MEASURE_UNIT,
+    calculationType: CALCULATION_UNIT_BOX,
+    createdAt: REFERENCE_STOCK_CREATED_AT,
+    updatedAt: REFERENCE_STOCK_CREATED_AT
+  },
+  {
+    id: "reference-tinta-preto-linha",
+    category: CATEGORY_INKS,
+    name: "Tinta Preto Linha",
+    brand: "",
+    color: "Preto Linha",
+    packageQuantity: 20,
+    packagePrice: 50,
+    stockQuantity: 1,
+    measureUnit: MEASURE_ML,
+    calculationType: CALCULATION_FRACTIONAL,
+    createdAt: REFERENCE_STOCK_CREATED_AT,
+    updatedAt: REFERENCE_STOCK_CREATED_AT
   }
 ];
 const DEFAULT_BUDGET = {
@@ -213,6 +327,7 @@ let inventorySearchTerm = "";
 let budgetSearchTerm = "";
 let selectedFormCategory = CATEGORY_NEEDLES;
 let editingItemId = null;
+let backupStatusTimeoutId = 0;
 
 function initializeApp() {
   bindDomReferences();
@@ -265,6 +380,11 @@ function bindDomReferences() {
   dom.stockPickerList = document.querySelector("#stockPickerList");
   dom.cartList = document.querySelector("#cartList");
   dom.invoiceDocument = document.querySelector("#invoiceDocument");
+  dom.exportInventoryBackupButton = document.querySelector("#exportInventoryBackupButton");
+  dom.importInventoryBackupButton = document.querySelector("#importInventoryBackupButton");
+  dom.inventoryBackupFileInput = document.querySelector("#inventoryBackupFileInput");
+  dom.restoreReferenceStockButton = document.querySelector("#restoreReferenceStockButton");
+  dom.backupStatus = document.querySelector("#backupStatus");
 }
 
 function bindEvents() {
@@ -316,20 +436,34 @@ function bindEvents() {
   dom.stockPickerList.addEventListener("change", handlePickerQuantityChange);
   dom.cartList.addEventListener("click", handleCartClick);
   dom.cartList.addEventListener("change", handleCartQuantityChange);
+  dom.exportInventoryBackupButton.addEventListener("click", exportInventoryToJSON);
+  dom.importInventoryBackupButton.addEventListener("click", () => dom.inventoryBackupFileInput.click());
+  dom.inventoryBackupFileInput.addEventListener("change", handleInventoryBackupFileChange);
+  dom.restoreReferenceStockButton.addEventListener("click", restoreReferenceStock);
 }
 
 function loadAppState() {
   const savedState = localStorage.getItem(STORAGE_KEY) || getLegacyState();
 
   if (!savedState) {
-    return createInitialState();
+    return persistInitialState(createInitialState());
   }
 
   try {
     return normalizeAppState(JSON.parse(savedState));
   } catch {
-    return createInitialState();
+    return persistInitialState(createInitialState());
   }
+}
+
+function persistInitialState(initialState) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(initialState));
+  } catch {
+    return initialState;
+  }
+
+  return initialState;
 }
 
 function getLegacyState() {
@@ -339,14 +473,14 @@ function getLegacyState() {
 
 function createInitialState() {
   return {
-    inventoryItems: DEFAULT_INVENTORY_ITEMS.map((item) => ({ ...item })),
+    inventoryItems: createReferenceStockItems(),
     budgets: [{ ...DEFAULT_BUDGET, items: [] }],
     activeBudgetId: DEFAULT_BUDGET.id
   };
 }
 
 function normalizeAppState(rawState) {
-  const inventorySource = Array.isArray(rawState.inventoryItems) ? rawState.inventoryItems : DEFAULT_INVENTORY_ITEMS;
+  const inventorySource = Array.isArray(rawState.inventoryItems) ? rawState.inventoryItems : DEFAULT_REFERENCE_STOCK;
   const budgetsSource = Array.isArray(rawState.budgets) && rawState.budgets.length > 0 ? rawState.budgets : [DEFAULT_BUDGET];
   const budgets = budgetsSource.map(normalizeBudget);
   const activeBudgetId = budgets.some((budget) => budget.id === rawState.activeBudgetId) ? rawState.activeBudgetId : budgets[0].id;
@@ -497,6 +631,243 @@ function normalizeBudgetItem(item) {
     inventoryItemId: item.inventoryItemId,
     quantityUsed: normalizeNumber(item.quantityUsed)
   };
+}
+
+function createReferenceStockItems() {
+  return DEFAULT_REFERENCE_STOCK.map((item) => normalizeInventoryItem({ ...item }));
+}
+
+/**
+ * Converts the current inventory collection into the official backup payload.
+ * @param {Array<object>} inventoryItems - Inventory items currently persisted by the app.
+ * @returns {{appName: string, schema: string, version: number, exportedAt: string, itemCount: number, inventoryItems: Array<object>}} Structured JSON-safe backup payload.
+ */
+function createInventoryBackupPayload(inventoryItems) {
+  const normalizedItems = inventoryItems.map((item) => createSerializableInventoryItem(item));
+
+  return {
+    appName: BACKUP_APP_NAME,
+    schema: BACKUP_SCHEMA,
+    version: BACKUP_VERSION,
+    exportedAt: new Date().toISOString(),
+    itemCount: normalizedItems.length,
+    inventoryItems: normalizedItems
+  };
+}
+
+/**
+ * Converts an inventory item into the canonical JSON-safe backup shape.
+ * @param {object} item - Inventory item saved by the app.
+ * @returns {object} Serializable inventory item with normalized calculation fields.
+ */
+function createSerializableInventoryItem(item) {
+  const normalizedItem = normalizeInventoryItem(item);
+
+  return {
+    id: normalizedItem.id,
+    category: normalizedItem.category,
+    name: normalizedItem.name,
+    brand: normalizedItem.brand,
+    lineType: normalizedItem.lineType,
+    numbering: normalizedItem.numbering,
+    color: normalizedItem.color,
+    purchaseMode: normalizedItem.purchaseMode,
+    packageQuantity: normalizedItem.packageQuantity,
+    packagePrice: normalizedItem.packagePrice,
+    stockQuantity: normalizedItem.stockQuantity,
+    unitPrice: normalizedItem.unitPrice,
+    measureUnit: normalizedItem.measureUnit,
+    calculationType: normalizedItem.calculationType,
+    createdAt: normalizedItem.createdAt,
+    updatedAt: normalizedItem.updatedAt
+  };
+}
+
+/**
+ * Parses and validates an uploaded CalculadoraTattoo inventory backup.
+ * @param {string} rawBackupData - Raw JSON text loaded through the File API.
+ * @returns {Array<object>} Normalized inventory items ready to persist.
+ * @throws {Error} Throws when the file does not match the official backup schema.
+ */
+function parseInventoryBackupPayload(rawBackupData) {
+  const parsedPayload = JSON.parse(rawBackupData);
+
+  if (!isValidInventoryBackupPayload(parsedPayload)) {
+    throw new Error("Invalid inventory backup.");
+  }
+
+  return parsedPayload.inventoryItems.map((item) => normalizeInventoryItem(item));
+}
+
+function isValidInventoryBackupPayload(payload) {
+  if (!payload || typeof payload !== "object") {
+    return false;
+  }
+
+  const hasValidHeader = payload.appName === BACKUP_APP_NAME
+    && payload.schema === BACKUP_SCHEMA
+    && payload.version === BACKUP_VERSION
+    && Array.isArray(payload.inventoryItems);
+
+  if (!hasValidHeader) {
+    return false;
+  }
+
+  if (Number.isFinite(payload.itemCount) && payload.itemCount !== payload.inventoryItems.length) {
+    return false;
+  }
+
+  return payload.inventoryItems.every(isValidBackupInventoryItem);
+}
+
+function isValidBackupInventoryItem(item) {
+  if (!item || typeof item !== "object") {
+    return false;
+  }
+
+  const category = sanitizeText(item.category);
+  const hasSupportedCategory = getBusinessCategories().includes(category);
+  const hasRequiredNumbers = normalizeNumber(item.packageQuantity) > 0
+    && normalizeNumber(item.packagePrice) > 0
+    && normalizeNumber(item.stockQuantity) > 0;
+
+  if (!hasSupportedCategory || !sanitizeText(item.name) || !hasRequiredNumbers) {
+    return false;
+  }
+
+  if ([CATEGORY_NEEDLES, CATEGORY_DISPOSABLES].includes(category)) {
+    return [PURCHASE_MODE_BOX, PURCHASE_MODE_SINGLE].includes(sanitizeText(item.purchaseMode));
+  }
+
+  return [MEASURE_ML, MEASURE_GRAM, MEASURE_METER].includes(sanitizeText(item.measureUnit));
+}
+
+/**
+ * Exports all current inventory items as a validated JSON backup file.
+ * @returns {void}
+ */
+function exportInventoryToJSON() {
+  const backupPayload = createInventoryBackupPayload(appState.inventoryItems);
+  const backupContent = JSON.stringify(backupPayload, null, 2);
+  const backupFileName = `${BACKUP_FILE_PREFIX}_${formatBackupTimestamp(new Date())}.json`;
+  downloadTextFile(backupFileName, backupContent, "application/json");
+  showBackupStatus(`${backupPayload.itemCount} ${backupPayload.itemCount === 1 ? "item exportado" : "itens exportados"}.`);
+}
+
+/**
+ * Imports an official CalculadoraTattoo inventory backup file from the File API.
+ * @param {File} backupFile - JSON file selected by the user.
+ * @returns {Promise<Array<object>>} Promise resolved with normalized inventory items.
+ */
+function importInventoryFromJSON(backupFile) {
+  return new Promise((resolve, reject) => {
+    if (!backupFile || !backupFile.name.toLowerCase().endsWith(".json")) {
+      reject(new Error("Invalid backup file."));
+      return;
+    }
+
+    const fileReader = new FileReader();
+    fileReader.addEventListener("load", () => {
+      try {
+        resolve(parseInventoryBackupPayload(String(fileReader.result || "")));
+      } catch (error) {
+        reject(error);
+      }
+    });
+    fileReader.addEventListener("error", () => reject(new Error("Backup reading failed.")));
+    fileReader.readAsText(backupFile);
+  });
+}
+
+function handleInventoryBackupFileChange(event) {
+  const backupFile = event.target.files?.[0];
+
+  if (!backupFile) {
+    return;
+  }
+
+  importInventoryFromJSON(backupFile)
+    .then((inventoryItems) => {
+      applyImportedInventoryItems(inventoryItems);
+      showBackupStatus(`${inventoryItems.length} ${inventoryItems.length === 1 ? "item importado" : "itens importados"}.`);
+    })
+    .catch(() => {
+      showBackupStatus("Backup invalido ou incompatível.");
+    })
+    .finally(() => {
+      event.target.value = "";
+    });
+}
+
+function applyImportedInventoryItems(inventoryItems) {
+  appState.inventoryItems = inventoryItems.map((item) => normalizeInventoryItem(item));
+  synchronizeBudgetsWithInventory();
+  activeInventoryCategory = CATEGORY_ALL;
+  activeBudgetCategory = CATEGORY_ALL;
+  inventorySearchTerm = "";
+  budgetSearchTerm = "";
+  dom.inventorySearchInput.value = "";
+  dom.budgetSearchInput.value = "";
+  saveAppState();
+  renderApp();
+}
+
+function restoreReferenceStock() {
+  const shouldRestore = window.confirm("Restaurar o estoque base vai substituir o estoque atual. Deseja continuar?");
+
+  if (!shouldRestore) {
+    return;
+  }
+
+  applyImportedInventoryItems(createReferenceStockItems());
+  showBackupStatus(`${DEFAULT_REFERENCE_STOCK.length} itens restaurados.`);
+  closeSidebar();
+}
+
+function synchronizeBudgetsWithInventory() {
+  const availableInventoryIds = new Set(appState.inventoryItems.map((item) => item.id));
+  appState.budgets = appState.budgets.map((budget) => ({
+    ...budget,
+    items: budget.items.filter((cartItem) => availableInventoryIds.has(cartItem.inventoryItemId))
+  }));
+}
+
+function downloadTextFile(fileName, content, mimeType) {
+  const fileBlob = new Blob([content], { type: `${mimeType};charset=utf-8` });
+  const fileUrl = URL.createObjectURL(fileBlob);
+  const downloadLink = document.createElement("a");
+  downloadLink.href = fileUrl;
+  downloadLink.download = fileName;
+  downloadLink.rel = "noopener";
+  document.body.append(downloadLink);
+  downloadLink.click();
+  downloadLink.remove();
+  URL.revokeObjectURL(fileUrl);
+}
+
+function formatBackupTimestamp(date) {
+  const dateParts = [
+    date.getFullYear(),
+    date.getMonth() + 1,
+    date.getDate(),
+    date.getHours(),
+    date.getMinutes(),
+    date.getSeconds()
+  ];
+
+  return dateParts.map((datePart) => String(datePart).padStart(2, "0")).join("_");
+}
+
+function showBackupStatus(message) {
+  if (!dom.backupStatus) {
+    return;
+  }
+
+  window.clearTimeout(backupStatusTimeoutId);
+  dom.backupStatus.textContent = message;
+  backupStatusTimeoutId = window.setTimeout(() => {
+    dom.backupStatus.textContent = "";
+  }, 4200);
 }
 
 function saveAppState() {
@@ -1498,6 +1869,8 @@ function normalizeCategory(categoryValue) {
     "agulhas e cartuchos": CATEGORY_NEEDLES,
     tinta: CATEGORY_INKS,
     tintas: CATEGORY_INKS,
+    "tintas/líquidos": CATEGORY_INKS,
+    "tintas/liquidos": CATEGORY_INKS,
     "líquidos": CATEGORY_INKS,
     liquidos: CATEGORY_INKS,
     "líquidos e pastosos": CATEGORY_INKS,
@@ -1516,6 +1889,8 @@ function normalizeCategory(categoryValue) {
     descartaveis: CATEGORY_DISPOSABLES,
     "biossegurança e descartáveis": CATEGORY_DISPOSABLES,
     "biosseguranca e descartaveis": CATEGORY_DISPOSABLES,
+    "biossegurança/descartáveis": CATEGORY_DISPOSABLES,
+    "biosseguranca/descartaveis": CATEGORY_DISPOSABLES,
     "unidade avulsa direta": CATEGORY_DISPOSABLES,
     avulso: CATEGORY_DISPOSABLES,
     avulsa: CATEGORY_DISPOSABLES,
@@ -1526,6 +1901,7 @@ function normalizeCategory(categoryValue) {
     "materiais de area": CATEGORY_LINEAR,
     "materiais de extensão": CATEGORY_LINEAR,
     "materiais de extensao": CATEGORY_LINEAR,
+    "materiais extensão": CATEGORY_LINEAR,
     rolo: CATEGORY_LINEAR,
     rolos: CATEGORY_LINEAR
   };
