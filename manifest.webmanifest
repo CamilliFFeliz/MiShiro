@@ -1,12 +1,49 @@
 {
+  "id": "./index.html",
   "name": "CalculadoraTattoo",
   "short_name": "TattooCalc",
-  "description": "PWA para estoque e orçamento de estúdios de tatuagem.",
+  "description": "PWA offline para gestão de estoque, orçamentos e relatórios financeiros de estúdios de tatuagem.",
+  "lang": "pt-BR",
+  "dir": "ltr",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
+  "display_override": ["standalone", "minimal-ui", "browser"],
+  "orientation": "portrait-primary",
   "background_color": "#0F0A18",
   "theme_color": "#2D0B40",
+  "categories": ["business", "productivity", "finance"],
+  "prefer_related_applications": false,
+  "shortcuts": [
+    {
+      "name": "Abrir estoque",
+      "short_name": "Estoque",
+      "description": "Abrir o aplicativo para gerenciar insumos.",
+      "url": "./index.html",
+      "icons": [
+        {
+          "src": "icons/icon.svg",
+          "sizes": "any",
+          "type": "image/svg+xml",
+          "purpose": "any maskable"
+        }
+      ]
+    },
+    {
+      "name": "Criar orçamento",
+      "short_name": "Orçamento",
+      "description": "Abrir o aplicativo para montar um orçamento.",
+      "url": "./index.html",
+      "icons": [
+        {
+          "src": "icons/icon.svg",
+          "sizes": "any",
+          "type": "image/svg+xml",
+          "purpose": "any maskable"
+        }
+      ]
+    }
+  ],
   "icons": [
     {
       "src": "icons/icon.svg",

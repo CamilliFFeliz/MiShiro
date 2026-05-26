@@ -5,8 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#2D0B40" />
   <meta name="description" content="CalculadoraTattoo: PWA para gestão de estoque e orçamento de estúdios de tatuagem." />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="CalculadoraTattoo" />
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="icon" href="icons/icon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="icons/icon.svg" />
   <link rel="stylesheet" href="style.css" />
   <title>CalculadoraTattoo</title>
 </head>
@@ -26,6 +31,10 @@
       <button class="nav-link is-active" type="button" data-screen-target="home">
         <span aria-hidden="true">⌂</span>
         Início
+      </button>
+      <button class="nav-link" type="button" data-screen-target="reports">
+        <span aria-hidden="true">%</span>
+        Relatórios
       </button>
       <button class="nav-link" type="button" data-screen-target="inventory">
         <span aria-hidden="true">▦</span>
@@ -74,6 +83,7 @@
             <div class="action-row">
               <button class="primary-button" type="button" data-home-action="inventory">Cadastrar estoque</button>
               <button class="secondary-button" type="button" data-home-action="budget">Criar orçamento</button>
+              <button class="ghost-button" type="button" data-home-action="reports">Ver relatórios</button>
             </div>
           </section>
 
@@ -122,6 +132,44 @@
             <strong>Cliente + referência</strong>
             <p>Exporta nome do cliente, imagem pequena, insumos e mão de obra.</p>
           </article>
+        </section>
+      </section>
+
+      <section class="screen-panel" id="reportsScreen" data-screen="reports" aria-labelledby="reportsTitle">
+        <div class="section-header">
+          <div>
+            <span>Visão financeira do estúdio</span>
+            <h2 id="reportsTitle">Relatórios</h2>
+          </div>
+          <strong class="counter-pill" id="reportsInventoryCounter">0 de 0</strong>
+        </div>
+
+        <section class="dashboard-grid" aria-label="Indicadores principais">
+          <article class="report-card report-card-feature">
+            <span>Investimento total em estoque</span>
+            <strong id="dashboardTotalInvestedValue">R$ 0,00</strong>
+            <p>Somatório financeiro do estoque cadastrado, considerando preço da embalagem e quantidade em estoque.</p>
+          </article>
+          <article class="report-card">
+            <span>Categoria com maior investimento</span>
+            <strong id="dashboardTopCategoryName">Sem dados</strong>
+            <p id="dashboardTopCategoryValue">R$ 0,00 alocado nesta categoria.</p>
+          </article>
+          <article class="report-card">
+            <span>Orçamentos gerados</span>
+            <strong id="dashboardBudgetCount">0</strong>
+            <p id="dashboardBudgetInsight">Nenhum histórico de orçamento preenchido ainda.</p>
+          </article>
+        </section>
+
+        <section class="report-chart-card glass-panel" aria-labelledby="categoryChartTitle">
+          <div class="section-mini-header">
+            <div>
+              <span>Distribuição por categoria</span>
+              <h3 id="categoryChartTitle">Investimento do estoque</h3>
+            </div>
+          </div>
+          <div class="report-chart" id="dashboardCategoryChart"></div>
         </section>
       </section>
 

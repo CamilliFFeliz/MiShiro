@@ -28,6 +28,7 @@ const BACKUP_FILE_PREFIX = "backup_estoque";
 const REFERENCE_STOCK_CREATED_AT = "2026-05-26T00:00:00.000Z";
 const SCREEN_META = {
   home: { title: "Início", eyebrow: "Visão geral" },
+  reports: { title: "Relatórios", eyebrow: "Indicadores" },
   inventory: { title: "Estoque", eyebrow: "Banco local" },
   budget: { title: "Orçamento", eyebrow: "Ficha do cliente" }
 };
@@ -393,6 +394,13 @@ function bindDomReferences() {
   dom.inventoryBackupFileInput = document.querySelector("#inventoryBackupFileInput");
   dom.restoreReferenceStockButton = document.querySelector("#restoreReferenceStockButton");
   dom.backupStatus = document.querySelector("#backupStatus");
+  dom.reportsInventoryCounter = document.querySelector("#reportsInventoryCounter");
+  dom.dashboardTotalInvestedValue = document.querySelector("#dashboardTotalInvestedValue");
+  dom.dashboardTopCategoryName = document.querySelector("#dashboardTopCategoryName");
+  dom.dashboardTopCategoryValue = document.querySelector("#dashboardTopCategoryValue");
+  dom.dashboardBudgetCount = document.querySelector("#dashboardBudgetCount");
+  dom.dashboardBudgetInsight = document.querySelector("#dashboardBudgetInsight");
+  dom.dashboardCategoryChart = document.querySelector("#dashboardCategoryChart");
 }
 
 function bindEvents() {
@@ -907,6 +915,7 @@ function renderApp() {
   renderBudgetFilters();
   renderInventory();
   renderBudget();
+  renderDashboard();
 }
 
 function renderActiveScreen() {
@@ -1068,6 +1077,45 @@ function renderInventory() {
   dom.inventoryGrid.innerHTML = filteredItems.map(createInventoryCardHtml).join("");
 }
 
+function renderDashboard() {
+  const dashboardMetrics = calculateDashboardMetrics();
+  const topCategory = dashboardMetrics.categoryInvestments[0];
+  dom.reportsInventoryCounter.textContent = formatCounter(appState.inventoryItems.length, appState.inventoryItems.length);
+  dom.dashboardTotalInvestedValue.textContent = formatCurrency(dashboardMetrics.totalInventoryInvestment);
+  dom.dashboardTopCategoryName.textContent = topCategory ? topCategory.category : "Sem dados";
+  dom.dashboardTopCategoryValue.textContent = topCategory
+    ? `${formatCurrency(topCategory.totalValue)} alocado nesta categoria.`
+    : "R$ 0,00 alocado nesta categoria.";
+  dom.dashboardBudgetCount.textContent = formatNumber(dashboardMetrics.generatedBudgetCount);
+  dom.dashboardBudgetInsight.textContent = dashboardMetrics.generatedBudgetCount > 0
+    ? `${formatNumber(dashboardMetrics.generatedBudgetCount)} ${dashboardMetrics.generatedBudgetCount === 1 ? "orçamento preenchido" : "orçamentos preenchidos"} no histórico local.`
+    : "Nenhum histórico de orçamento preenchido ainda.";
+  dom.dashboardCategoryChart.innerHTML = createDashboardCategoryChartHtml(dashboardMetrics.categoryInvestments);
+}
+
+function createDashboardCategoryChartHtml(categoryInvestments) {
+  if (categoryInvestments.length === 0) {
+    return createEmptyStateHtml("Nenhum investimento em estoque para exibir.");
+  }
+
+  const highestValue = Math.max(...categoryInvestments.map((categoryInvestment) => categoryInvestment.totalValue), 1);
+
+  return categoryInvestments.map((categoryInvestment) => {
+    const percentageValue = Math.round((categoryInvestment.totalValue / highestValue) * 100);
+    return `
+      <article class="chart-row">
+        <div class="chart-row-heading">
+          <strong>${escapeHtml(categoryInvestment.category)}</strong>
+          <span>${formatCurrency(categoryInvestment.totalValue)}</span>
+        </div>
+        <div class="chart-track" aria-hidden="true">
+          <span style="width: ${percentageValue}%"></span>
+        </div>
+      </article>
+    `;
+  }).join("");
+}
+
 function createInventoryCardHtml(item) {
   const unitCost = calculateUnitCost(item);
   const totalValue = calculateTotalInventoryValue(item);
@@ -1214,6 +1262,7 @@ function setActiveScreen(screenName) {
 
   activeScreen = screenName;
   renderActiveScreen();
+  renderDashboard();
   closeSidebar();
 }
 
@@ -1782,6 +1831,41 @@ function calculateBudgetTotals(budget) {
     laborCost,
     totalCost: materialCost + laborCost
   };
+}
+
+function calculateDashboardMetrics() {
+  const categoryInvestmentMap = appState.inventoryItems.reduce((investmentMap, item) => {
+    const currentValue = investmentMap.get(item.category) || 0;
+    investmentMap.set(item.category, currentValue + calculateTotalInventoryValue(item));
+    return investmentMap;
+  }, new Map());
+  const categoryInvestments = Array.from(categoryInvestmentMap, ([category, totalValue]) => ({
+    category,
+    totalValue
+  }))
+    .filter((categoryInvestment) => categoryInvestment.totalValue > 0)
+    .sort((firstCategory, secondCategory) => secondCategory.totalValue - firstCategory.totalValue);
+  const totalInventoryInvestment = categoryInvestments.reduce((totalValue, categoryInvestment) => totalValue + categoryInvestment.totalValue, 0);
+
+  return {
+    totalInventoryInvestment,
+    categoryInvestments,
+    generatedBudgetCount: countGeneratedBudgets()
+  };
+}
+
+function countGeneratedBudgets() {
+  return appState.budgets.filter(isGeneratedBudget).length;
+}
+
+function isGeneratedBudget(budget) {
+  const budgetName = sanitizeText(budget.name);
+  return Boolean(sanitizeText(budget.clientName))
+    || Boolean(budgetName && budgetName !== DEFAULT_BUDGET.name)
+    || normalizeNumber(budget.hourlyRate) > 0
+    || normalizeNumber(budget.sessionDuration) > 0
+    || Boolean(sanitizeText(budget.referenceImage))
+    || (Array.isArray(budget.items) && budget.items.length > 0);
 }
 
 function getItemSpecification(item) {
