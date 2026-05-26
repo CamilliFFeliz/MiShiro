@@ -1,4 +1,4 @@
-const CACHE_NAME = "calculadora-tattoo-v3.0.0";
+const CACHE_NAME = "calculadora-tattoo-v4.1.0";
 const APP_ASSETS = [
   "./",
   "./index.html",

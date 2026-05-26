@@ -12,6 +12,8 @@ const CATEGORY_DIRECT_UNIT = "Unidade Avulsa Direta";
 const CALCULATION_UNIT_BOX = "unitBox";
 const CALCULATION_FRACTIONAL = "fractional";
 const CALCULATION_DIRECT_UNIT = "directUnit";
+const PURCHASE_MODE_BOX = "box";
+const PURCHASE_MODE_SINGLE = "single";
 const MEASURE_UNIT = "un";
 const MEASURE_ML = "ml";
 const MEASURE_GRAM = "g";
@@ -36,15 +38,20 @@ const NUMBER_FORMATTER = new Intl.NumberFormat("pt-BR", {
 const CATEGORY_DEFINITIONS = {
   [CATEGORY_NEEDLES]: {
     label: CATEGORY_NEEDLES,
-    helper: "Compra em caixa, uso por unidade.",
+    helper: "Compra por caixa ou unidade avulsa, uso sempre inteiro.",
     calculationType: CALCULATION_UNIT_BOX,
     defaultMeasure: MEASURE_UNIT,
     fields: [
       { key: "brand", label: "Marca", type: "text", placeholder: "Ex: White Head", required: true },
       { key: "lineType", label: "Linha/Tipo", type: "text", placeholder: "Ex: RL, RS, MG", required: true },
       { key: "numbering", label: "Numeração", type: "text", placeholder: "Ex: 0310, 0712", required: true },
-      { key: "packageQuantity", label: "Qtd na caixa", type: "number", inputMode: "numeric", placeholder: "20", required: true },
-      { key: "packagePrice", label: "Preço da caixa", type: "currency", inputMode: "decimal", placeholder: "300,00", required: true }
+      { key: "purchaseMode", label: "Formato de compra", type: "select", required: true, options: [
+        { value: PURCHASE_MODE_BOX, label: "Por Caixa" },
+        { value: PURCHASE_MODE_SINGLE, label: "Por Unidade Avulsa" }
+      ] },
+      { key: "packageQuantity", label: "Quantidade na caixa", type: "number", inputMode: "numeric", placeholder: "20", required: true, visibleWhen: { key: "purchaseMode", value: PURCHASE_MODE_BOX } },
+      { key: "packagePrice", label: "Preço da caixa", type: "currency", inputMode: "decimal", placeholder: "300,00", required: true, visibleWhen: { key: "purchaseMode", value: PURCHASE_MODE_BOX } },
+      { key: "singleUnitPrice", label: "Preço unitário pago", type: "currency", inputMode: "decimal", placeholder: "15,00", required: true, visibleWhen: { key: "purchaseMode", value: PURCHASE_MODE_SINGLE } }
     ]
   },
   [CATEGORY_LIQUIDS]: {
@@ -111,6 +118,7 @@ const DEFAULT_INVENTORY_ITEMS = [
     brand: "White Head",
     lineType: "RL",
     numbering: "0310",
+    purchaseMode: PURCHASE_MODE_BOX,
     packageQuantity: 20,
     packagePrice: 300,
     measureUnit: MEASURE_UNIT,
@@ -257,7 +265,7 @@ function bindEvents() {
   dom.closeItemModalButton.addEventListener("click", () => closeModal(dom.itemModal));
   dom.categoryChoiceGrid.addEventListener("click", handleCategoryChoiceClick);
   dom.dynamicFieldsGrid.addEventListener("input", updateUnitCostPreview);
-  dom.dynamicFieldsGrid.addEventListener("change", updateUnitCostPreview);
+  dom.dynamicFieldsGrid.addEventListener("change", handleDynamicFieldsChange);
   dom.itemForm.addEventListener("submit", handleItemFormSubmit);
   dom.inventorySearchInput.addEventListener("input", (event) => {
     inventorySearchTerm = event.target.value;
@@ -337,9 +345,10 @@ function normalizeAppState(rawState) {
 function normalizeInventoryItem(item) {
   const category = normalizeCategory(item.category);
   const categoryDefinition = CATEGORY_DEFINITIONS[category];
+  const purchaseMode = getNormalizedPurchaseMode(item, category);
   const measureUnit = normalizeMeasureUnit(item.measureUnit || item.unitMeasure || item.unitLabel || item.tipoUnidade, categoryDefinition.defaultMeasure);
-  const packageQuantity = getNormalizedPackageQuantity(item, category);
-  const packagePrice = getNormalizedPackagePrice(item, category);
+  const packageQuantity = getNormalizedPackageQuantity(item, category, purchaseMode);
+  const packagePrice = getNormalizedPackagePrice(item, category, purchaseMode);
   const normalizedName = getNormalizedItemName(item, category);
 
   return {
@@ -350,6 +359,7 @@ function normalizeInventoryItem(item) {
     lineType: sanitizeText(item.lineType || item.cartridgeType || item.tipo),
     numbering: sanitizeText(item.numbering || item.cartridgeNumber || item.numeracao || item.numbering),
     color: sanitizeText(item.color || item.colorName || item.coloration || item.coloracao),
+    purchaseMode,
     packageQuantity,
     packagePrice,
     unitPrice: category === CATEGORY_DIRECT_UNIT ? packagePrice : calculateRawUnitCost(packagePrice, packageQuantity),
@@ -371,8 +381,28 @@ function getNormalizedItemName(item, category) {
   return sanitizeText(item.name || item.nome || item.description || item.descricao) || "Novo item";
 }
 
-function getNormalizedPackageQuantity(item, category) {
-  if (category === CATEGORY_DIRECT_UNIT) {
+function getNormalizedPurchaseMode(item, category) {
+  if (category !== CATEGORY_NEEDLES) {
+    return "";
+  }
+
+  const rawPurchaseMode = sanitizeText(item.purchaseMode).toLowerCase();
+  const isSingle = rawPurchaseMode === PURCHASE_MODE_SINGLE || rawPurchaseMode === "unit" || rawPurchaseMode === "single" || rawPurchaseMode.includes("avul");
+  const isBox = rawPurchaseMode === PURCHASE_MODE_BOX || rawPurchaseMode === "caixa" || rawPurchaseMode.includes("box");
+
+  if (isSingle) {
+    return PURCHASE_MODE_SINGLE;
+  }
+
+  if (isBox) {
+    return PURCHASE_MODE_BOX;
+  }
+
+  return normalizeNumber(item.packageQuantity || item.quantity || item.quantidade) <= 1 ? PURCHASE_MODE_SINGLE : PURCHASE_MODE_BOX;
+}
+
+function getNormalizedPackageQuantity(item, category, purchaseMode = "") {
+  if (category === CATEGORY_DIRECT_UNIT || purchaseMode === PURCHASE_MODE_SINGLE) {
     return 1;
   }
 
@@ -380,9 +410,9 @@ function getNormalizedPackageQuantity(item, category) {
   return value > 0 ? value : 1;
 }
 
-function getNormalizedPackagePrice(item, category) {
-  if (category === CATEGORY_DIRECT_UNIT) {
-    const unitPrice = normalizeNumber(item.unitPrice || item.packagePrice || item.purchasePrice || item.valor);
+function getNormalizedPackagePrice(item, category, purchaseMode = "") {
+  if (category === CATEGORY_DIRECT_UNIT || purchaseMode === PURCHASE_MODE_SINGLE) {
+    const unitPrice = normalizeNumber(item.singleUnitPrice || item.unitPrice || item.packagePrice || item.purchasePrice || item.valor || item.price);
     return unitPrice > 0 ? unitPrice : 0;
   }
 
@@ -395,7 +425,7 @@ function getNormalizedPackagePrice(item, category) {
   const legacyPurchasePrice = normalizeNumber(item.purchasePrice || item.valor || item.price);
 
   if (category === CATEGORY_NEEDLES && legacyPurchasePrice > 0 && !item.packagePrice) {
-    return legacyPurchasePrice * getNormalizedPackageQuantity(item, category);
+    return legacyPurchasePrice * getNormalizedPackageQuantity(item, category, purchaseMode);
   }
 
   return legacyPurchasePrice > 0 ? legacyPurchasePrice : 0;
@@ -464,15 +494,49 @@ function renderCategoryChoices() {
 
 function renderDynamicForm(item = null) {
   const categoryDefinition = CATEGORY_DEFINITIONS[selectedFormCategory];
+  const formData = readDynamicFormData();
+  const renderItem = item || createVirtualItemFromFormData(formData);
   dom.dynamicFormTitle.textContent = `${categoryDefinition.label}: ficha específica`;
-  dom.dynamicFieldsGrid.innerHTML = categoryDefinition.fields.map((field) => createDynamicFieldHtml(field, item)).join("");
+  dom.dynamicFieldsGrid.innerHTML = categoryDefinition.fields
+    .filter((field) => isFieldVisible(field, renderItem, formData))
+    .map((field) => createDynamicFieldHtml(field, renderItem))
+    .join("");
   updateUnitCostPreview();
+}
+
+function createVirtualItemFromFormData(formData) {
+  return {
+    ...formData,
+    measureUnit: formData.measureUnit,
+    purchaseMode: formData.purchaseMode || PURCHASE_MODE_BOX
+  };
+}
+
+function isFieldVisible(field, item, formData) {
+  if (!field.visibleWhen) {
+    return true;
+  }
+
+  const currentValue = sanitizeText(formData[field.visibleWhen.key] || item?.[field.visibleWhen.key] || PURCHASE_MODE_BOX);
+  return currentValue === field.visibleWhen.value;
 }
 
 function createDynamicFieldHtml(field, item) {
   const value = getFieldValueForRender(field, item);
   const requiredAttribute = field.required ? "required" : "";
   const inputMode = field.inputMode ? `inputmode="${escapeHtml(field.inputMode)}"` : "";
+
+  if (field.type === "select") {
+    const selectedValue = sanitizeText(value || field.options[0]?.value);
+    return `
+      <label class="form-field">
+        <span>${escapeHtml(field.label)}</span>
+        <select data-item-field="${escapeHtml(field.key)}" ${requiredAttribute}>
+          ${field.options.map((option) => `<option value="${escapeHtml(option.value)}" ${option.value === selectedValue ? "selected" : ""}>${escapeHtml(option.label)}</option>`).join("")}
+        </select>
+      </label>
+    `;
+  }
 
   if (field.type === "measure") {
     const selectedUnit = item?.measureUnit || CATEGORY_DEFINITIONS[selectedFormCategory].defaultMeasure;
@@ -510,6 +574,14 @@ function getFieldValueForRender(field, item) {
     return formatEditableNumber(calculateUnitCost(item));
   }
 
+  if (field.key === "singleUnitPrice") {
+    return item.singleUnitPrice ? formatEditableNumber(item.singleUnitPrice) : formatEditableNumber(calculateUnitCost(item));
+  }
+
+  if (field.key === "purchaseMode") {
+    return item.purchaseMode || PURCHASE_MODE_BOX;
+  }
+
   if (field.key === "packageQuantity") {
     return formatEditableNumber(item.packageQuantity);
   }
@@ -535,7 +607,7 @@ function renderFilterGroup(container, activeCategory, dataAttributeName) {
     return `
       <button class="filter-chip ${isActive ? "is-active" : ""}" type="button" data-${dataAttributeName}="${escapeHtml(categoryName)}">
         <span>${escapeHtml(categoryName)}</span>
-        <strong>${formatCounter(categoryCount, getCounterTotal(categoryName))}</strong>
+        <strong>${formatCompactCount(categoryCount)}</strong>
       </button>
     `;
   }).join("");
@@ -543,7 +615,7 @@ function renderFilterGroup(container, activeCategory, dataAttributeName) {
 
 function renderInventory() {
   const filteredItems = getFilteredInventoryItems(inventorySearchTerm, activeInventoryCategory);
-  dom.inventoryCounter.textContent = formatCounter(filteredItems.length, appState.inventoryItems.length);
+  dom.inventoryCounter.textContent = formatItemsCounter(filteredItems.length, appState.inventoryItems.length);
 
   if (filteredItems.length === 0) {
     dom.inventoryGrid.innerHTML = createEmptyStateHtml("Nenhum item encontrado no estoque.");
@@ -557,7 +629,8 @@ function createInventoryCardHtml(item) {
   const unitCost = calculateUnitCost(item);
   const totalValue = calculateTotalInventoryValue(item);
   const specification = getItemSpecification(item);
-  const featuredMetric = item.category === CATEGORY_NEEDLES
+  const shouldShowNeedleValue = item.category === CATEGORY_NEEDLES && item.purchaseMode === PURCHASE_MODE_SINGLE;
+  const featuredMetric = item.category === CATEGORY_NEEDLES && !shouldShowNeedleValue
     ? `<div class="stock-metric is-featured"><span>Tipo + numeração</span><strong>${escapeHtml(specification)}</strong></div>`
     : `<div class="stock-metric is-featured"><span>Valor financeiro total</span><strong>${formatCurrency(totalValue)}</strong></div>`;
 
@@ -602,7 +675,7 @@ function renderBudget() {
   dom.materialTotalValue.textContent = formatCurrency(budgetTotals.materialCost);
   dom.laborTotalValue.textContent = formatCurrency(budgetTotals.laborCost);
   dom.budgetTotalValue.textContent = formatCurrency(budgetTotals.totalCost);
-  dom.budgetCounter.textContent = formatCounter(activeBudget.items.length, activeBudget.items.length);
+  dom.budgetCounter.textContent = formatItemsCounter(activeBudget.items.length, activeBudget.items.length);
   renderReferencePreview();
   renderStockPicker();
   renderCart();
@@ -712,6 +785,15 @@ function openSidebar() {
 function closeSidebar() {
   dom.sidebar.classList.remove("is-open");
   dom.drawerBackdrop.hidden = true;
+}
+
+function handleDynamicFieldsChange(event) {
+  if (event.target.matches('[data-item-field="purchaseMode"]')) {
+    renderDynamicForm();
+    return;
+  }
+
+  updateUnitCostPreview();
 }
 
 function handleCategoryChoiceClick(event) {
@@ -894,8 +976,14 @@ function buildInventoryItemFromForm() {
   const categoryDefinition = CATEGORY_DEFINITIONS[selectedFormCategory];
   const fieldData = readDynamicFormData();
   const existingItem = editingItemId ? findInventoryItem(editingItemId) : null;
-  const packageQuantity = selectedFormCategory === CATEGORY_DIRECT_UNIT ? 1 : normalizeNumber(fieldData.packageQuantity);
-  const packagePrice = selectedFormCategory === CATEGORY_DIRECT_UNIT ? normalizeNumber(fieldData.unitPrice) : normalizeNumber(fieldData.packagePrice);
+  const purchaseMode = selectedFormCategory === CATEGORY_NEEDLES ? sanitizeText(fieldData.purchaseMode || PURCHASE_MODE_BOX) : "";
+  const isSingleNeedle = selectedFormCategory === CATEGORY_NEEDLES && purchaseMode === PURCHASE_MODE_SINGLE;
+  const packageQuantity = selectedFormCategory === CATEGORY_DIRECT_UNIT || isSingleNeedle ? 1 : normalizeNumber(fieldData.packageQuantity);
+  const packagePrice = selectedFormCategory === CATEGORY_DIRECT_UNIT
+    ? normalizeNumber(fieldData.unitPrice)
+    : isSingleNeedle
+      ? normalizeNumber(fieldData.singleUnitPrice)
+      : normalizeNumber(fieldData.packagePrice);
   const measureUnit = normalizeMeasureUnit(fieldData.measureUnit, categoryDefinition.defaultMeasure);
 
   if (packageQuantity <= 0 || packagePrice <= 0 || !validateRequiredFields(categoryDefinition.fields, fieldData)) {
@@ -910,6 +998,7 @@ function buildInventoryItemFromForm() {
     lineType: sanitizeText(fieldData.lineType),
     numbering: sanitizeText(fieldData.numbering),
     color: sanitizeText(fieldData.color),
+    purchaseMode,
     packageQuantity,
     packagePrice,
     unitPrice: selectedFormCategory === CATEGORY_DIRECT_UNIT ? packagePrice : calculateRawUnitCost(packagePrice, packageQuantity),
@@ -931,7 +1020,10 @@ function readDynamicFormData() {
 }
 
 function validateRequiredFields(fields, fieldData) {
-  return fields.every((field) => !field.required || sanitizeText(fieldData[field.key] || fieldData.unitPrice));
+  const virtualItem = createVirtualItemFromFormData(fieldData);
+  return fields
+    .filter((field) => isFieldVisible(field, virtualItem, fieldData))
+    .every((field) => !field.required || sanitizeText(fieldData[field.key] || fieldData.unitPrice));
 }
 
 function buildItemName(categoryName, fieldData) {
@@ -945,8 +1037,14 @@ function buildItemName(categoryName, fieldData) {
 function updateUnitCostPreview() {
   const fieldData = readDynamicFormData();
   const categoryDefinition = CATEGORY_DEFINITIONS[selectedFormCategory];
-  const packageQuantity = selectedFormCategory === CATEGORY_DIRECT_UNIT ? 1 : normalizeNumber(fieldData.packageQuantity);
-  const packagePrice = selectedFormCategory === CATEGORY_DIRECT_UNIT ? normalizeNumber(fieldData.unitPrice) : normalizeNumber(fieldData.packagePrice);
+  const purchaseMode = selectedFormCategory === CATEGORY_NEEDLES ? sanitizeText(fieldData.purchaseMode || PURCHASE_MODE_BOX) : "";
+  const isSingleNeedle = selectedFormCategory === CATEGORY_NEEDLES && purchaseMode === PURCHASE_MODE_SINGLE;
+  const packageQuantity = selectedFormCategory === CATEGORY_DIRECT_UNIT || isSingleNeedle ? 1 : normalizeNumber(fieldData.packageQuantity);
+  const packagePrice = selectedFormCategory === CATEGORY_DIRECT_UNIT
+    ? normalizeNumber(fieldData.unitPrice)
+    : isSingleNeedle
+      ? normalizeNumber(fieldData.singleUnitPrice)
+      : normalizeNumber(fieldData.packagePrice);
   const measureUnit = normalizeMeasureUnit(fieldData.measureUnit, categoryDefinition.defaultMeasure);
   const unitCost = calculateRawUnitCost(packagePrice, packageQuantity);
   const previewLabel = getPreviewLabel(selectedFormCategory, measureUnit);
@@ -1271,6 +1369,10 @@ function getItemSubtitle(item) {
 }
 
 function getCalculationDescription(item) {
+  if (item.category === CATEGORY_NEEDLES && item.purchaseMode === PURCHASE_MODE_SINGLE) {
+    return "Compra avulsa: preço informado já é o custo por cartucho.";
+  }
+
   if (item.category === CATEGORY_NEEDLES) {
     return `Caixa com ${formatNumber(item.packageQuantity)} unidades. Custo calculado por cartucho.`;
   }
@@ -1416,6 +1518,21 @@ function formatEditableNumber(value) {
 
 function formatCounter(currentValue, totalValue) {
   return `${normalizeNumber(currentValue)} de ${normalizeNumber(totalValue)}`;
+}
+
+function formatCompactCount(value) {
+  return String(normalizeNumber(value));
+}
+
+function formatItemsCounter(currentValue, totalValue) {
+  const current = normalizeNumber(currentValue);
+  const total = normalizeNumber(totalValue);
+
+  if (current === total) {
+    return `${total} ${total === 1 ? "item" : "itens"}`;
+  }
+
+  return `${current} ${current === 1 ? "item" : "itens"} filtrado${current === 1 ? "" : "s"}`;
 }
 
 function createEmptyStateHtml(message) {

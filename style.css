@@ -1254,3 +1254,253 @@ img {
     margin-top: 18px;
   }
 }
+
+/* Mobile-first refinement: estoque toolbar e filtros sem sobreposição */
+.section-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 14px;
+}
+
+.header-actions {
+  justify-content: flex-end;
+  min-width: 0;
+}
+
+.toolbar-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.toolbar-grid .secondary-button {
+  min-width: 112px;
+}
+
+.chip-row {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 10px;
+  margin: 14px 0 22px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 2px 2px 8px;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.chip-row::-webkit-scrollbar {
+  display: none;
+}
+
+.filter-chip {
+  flex: 0 0 auto;
+  white-space: nowrap;
+  min-width: max-content;
+  max-width: 88vw;
+}
+
+.filter-chip span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.filter-chip strong {
+  min-width: 28px;
+  min-height: 24px;
+  padding: 0 8px;
+}
+
+.budget-picker-card .section-mini-header {
+  align-items: start;
+}
+
+.picker-list {
+  max-height: min(680px, 62vh);
+  overflow: auto;
+  padding-right: 4px;
+  scrollbar-width: thin;
+}
+
+.picker-card {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.picker-actions {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  min-width: 0;
+}
+
+.picker-actions .primary-button {
+  min-width: 108px;
+}
+
+.cart-line {
+  grid-template-columns: minmax(0, 1fr) minmax(180px, 240px) auto auto;
+}
+
+.form-step-panel,
+.budget-form-card,
+.budget-picker-card,
+.cart-card,
+.inventory-card {
+  background:
+    linear-gradient(145deg, rgba(30, 21, 40, 0.9), rgba(30, 21, 40, 0.66)),
+    rgba(30, 21, 40, 0.78);
+}
+
+@media (max-width: 540px) {
+  :root {
+    --radius-xl: 24px;
+    --radius-lg: 18px;
+    --radius-md: 14px;
+  }
+
+  .content-shell {
+    padding: 16px 12px 28px;
+  }
+
+  .topbar {
+    gap: 10px;
+    padding: 14px 12px;
+  }
+
+  .topbar > div {
+    min-width: 0;
+  }
+
+  .topbar h1 {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .section-header {
+    grid-template-columns: 1fr;
+    align-items: start;
+    gap: 12px;
+    margin-bottom: 18px;
+  }
+
+  .header-actions {
+    width: 100%;
+    display: grid;
+    grid-template-columns: minmax(0, auto) minmax(138px, 1fr);
+    gap: 10px;
+  }
+
+  .counter-pill {
+    min-width: 0;
+    padding: 0 12px;
+    font-size: 0.86rem;
+  }
+
+  .toolbar-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .toolbar-grid .secondary-button {
+    width: 100%;
+  }
+
+  .chip-row {
+    margin-top: 12px;
+    padding-bottom: 10px;
+  }
+
+  .filter-chip {
+    max-width: 82vw;
+    padding-left: 14px;
+  }
+
+  .inventory-grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .inventory-card {
+    min-height: 0;
+    padding: 18px;
+  }
+
+  .inventory-title-row {
+    grid-template-columns: 52px 1fr;
+  }
+
+  .product-avatar {
+    width: 52px;
+    height: 52px;
+    border-radius: 18px;
+  }
+
+  .hero-card h2 {
+    font-size: clamp(1.9rem, 12vw, 3.2rem);
+  }
+
+  .budget-layout {
+    gap: 14px;
+  }
+
+  .budget-form-card,
+  .budget-picker-card,
+  .cart-card,
+  .hero-card,
+  .flow-card {
+    padding: 18px;
+  }
+
+  .section-mini-header {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .picker-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .picker-actions .primary-button {
+    width: 100%;
+  }
+
+  .quantity-stepper {
+    grid-template-columns: 44px minmax(86px, 1fr) 44px;
+  }
+
+  .cart-line {
+    grid-template-columns: 1fr;
+  }
+
+  .line-subtotal {
+    justify-self: start;
+  }
+
+  .image-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+    width: 100%;
+  }
+}
+
+@media (max-width: 360px) {
+  .content-shell {
+    padding-inline: 10px;
+  }
+
+  .primary-button,
+  .secondary-button,
+  .ghost-button {
+    padding-inline: 14px;
+  }
+
+  .filter-chip {
+    gap: 8px;
+    padding-inline: 12px 10px;
+  }
+}
