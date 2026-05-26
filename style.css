@@ -108,7 +108,8 @@ select,
 .cart-card,
 .drawer,
 .drawer-backdrop,
-.modal-card {
+.modal-card,
+.category-form-panel {
   transition:
     background var(--transition-fast),
     border-color var(--transition-fast),
@@ -268,6 +269,7 @@ button:active {
 .cart-quantity-field span,
 .budget-total-box span,
 .unit-cost-preview span,
+.category-form-header span,
 .import-feedback,
 .helper-text {
   color: var(--text-soft);
@@ -472,6 +474,7 @@ button:active {
 .budget-summary-card,
 .cart-section,
 .modal-card,
+.category-form-panel,
 .empty-state {
   position: relative;
   overflow: hidden;
@@ -488,7 +491,8 @@ button:active {
 .cart-card::before,
 .budget-summary-card::before,
 .cart-section::before,
-.modal-card::before {
+.modal-card::before,
+.category-form-panel::before {
   position: absolute;
   inset: 0 0 auto;
   height: 3px;
@@ -690,6 +694,31 @@ button:active {
   line-height: 1.35;
 }
 
+.product-title small {
+  color: var(--text-muted);
+  font-size: 0.76rem;
+  font-weight: 820;
+  line-height: 1.25;
+}
+
+.product-meta-line {
+  display: inline-flex;
+  width: fit-content;
+  max-width: 100%;
+  min-height: 28px;
+  align-items: center;
+  overflow: hidden;
+  border: 1px solid rgba(225, 190, 231, 0.28);
+  border-radius: var(--radius-pill);
+  background: rgba(225, 190, 231, 0.1);
+  color: var(--color-purple-light);
+  padding: 0 10px;
+  font-size: 0.78rem;
+  font-weight: 950;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .product-details-grid {
   align-items: stretch;
 }
@@ -816,6 +845,30 @@ button:active {
   gap: 14px;
   margin-bottom: 16px;
   padding: 15px;
+}
+
+.category-form-panel {
+  display: grid;
+  gap: 14px;
+  padding: 14px;
+  background:
+    linear-gradient(135deg, rgba(225, 190, 231, 0.1), rgba(106, 27, 154, 0.28)),
+    rgba(18, 18, 18, 0.48);
+}
+
+.category-form-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid var(--border-subtle);
+  padding-bottom: 12px;
+}
+
+.category-form-header strong {
+  color: var(--color-white);
+  font-size: 0.96rem;
+  font-weight: 950;
 }
 
 .budget-total-box,
@@ -1003,7 +1056,9 @@ button:active {
   width: 794px;
   min-height: 1123px;
   padding: 48px;
-  background: var(--color-white);
+  background:
+    linear-gradient(180deg, rgba(45, 11, 64, 0.08), rgba(255, 255, 255, 0) 32%),
+    var(--color-white);
   color: var(--color-black);
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
@@ -1014,7 +1069,10 @@ button:active {
   gap: 22px;
   align-items: center;
   padding: 24px;
-  background: var(--color-purple-dark);
+  border-radius: 22px;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.13), rgba(255, 255, 255, 0)),
+    var(--color-purple-dark);
   color: var(--color-white);
 }
 
@@ -1023,9 +1081,10 @@ button:active {
   width: 72px;
   height: 72px;
   place-items: center;
+  border-radius: 20px;
   background: var(--color-white);
   color: var(--color-purple-dark);
-  font-size: 12px;
+  font-size: 18px;
   font-weight: 950;
   text-transform: uppercase;
 }
@@ -1048,7 +1107,9 @@ button:active {
 .invoice-labor-panel,
 .invoice-total-panel {
   padding: 14px;
-  border: 1px solid var(--color-purple);
+  border: 1px solid rgba(106, 27, 154, 0.36);
+  border-radius: 16px;
+  background: rgba(45, 11, 64, 0.045);
 }
 
 .invoice-labor-panel,
@@ -1060,20 +1121,43 @@ button:active {
 
 .invoice-table {
   width: 100%;
-  border-collapse: collapse;
-  font-size: 12px;
+  margin-top: 18px;
+  overflow: hidden;
+  border-collapse: separate;
+  border-spacing: 0;
+  border: 1px solid rgba(106, 27, 154, 0.28);
+  border-radius: 18px;
+  font-size: 11px;
 }
 
 .invoice-table th,
 .invoice-table td {
-  padding: 10px;
-  border-bottom: 1px solid var(--color-purple);
+  padding: 11px;
+  border-bottom: 1px solid rgba(106, 27, 154, 0.2);
   text-align: left;
+  vertical-align: top;
 }
 
 .invoice-table th {
   background: var(--color-purple-dark);
   color: var(--color-white);
+  font-size: 10px;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.invoice-table tr:last-child td {
+  border-bottom: 0;
+}
+
+.invoice-table td strong,
+.invoice-table td span {
+  display: block;
+}
+
+.invoice-table td span {
+  margin-top: 4px;
+  color: rgba(18, 18, 18, 0.68);
 }
 
 @media (hover: hover) {
@@ -1117,7 +1201,8 @@ button:active {
 
   .budget-total-box,
   .budget-breakdown-grid,
-  .budget-summary-card .primary-button {
+  .budget-summary-card .primary-button,
+  .category-form-panel {
     grid-column: 1 / -1;
   }
 }

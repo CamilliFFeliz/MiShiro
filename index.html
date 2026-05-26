@@ -149,51 +149,54 @@
       </div>
 
       <label class="form-field">
-        <span>Nome do item</span>
-        <input id="itemNameInput" type="text" placeholder="Ex: Tinta preta" required />
+        <span>Nome</span>
+        <input id="itemNameInput" type="text" placeholder="Ex: Cartucho Black Line" required />
       </label>
 
       <label class="form-field">
         <span>Categoria</span>
         <select id="itemCategoryInput" required>
-          <option value="Cartuchos">Cartuchos</option>
-          <option value="Tintas">Tintas</option>
+          <option value="Cartucho">Cartucho</option>
+          <option value="Tinta">Tinta</option>
           <option value="Biossegurança">Biossegurança</option>
-          <option value="Descartáveis">Descartáveis</option>
+          <option value="Descartável">Descartável</option>
           <option value="Outros">Outros</option>
         </select>
       </label>
 
+      <section class="category-form-panel" aria-live="polite">
+        <div class="category-form-header">
+          <span id="categoryFormKicker">Ficha dinâmica</span>
+          <strong id="categoryFormTitle">Cartucho</strong>
+        </div>
+        <div class="form-grid" id="categoryDynamicFields"></div>
+      </section>
+
       <div class="form-grid">
         <label class="form-field">
-          <span>Quantidade da Embalagem</span>
-          <input id="packageQuantityInput" type="text" inputmode="decimal" placeholder="30" required />
-        </label>
-
-        <label class="form-field">
-          <span>Unidade de Medida</span>
+          <span>Tipo Unidade</span>
           <select id="unitMeasureInput" required>
-            <option value="ml">ml</option>
             <option value="unid">unid</option>
+            <option value="ml">ml</option>
             <option value="gramas">gramas</option>
             <option value="mg">mg</option>
             <option value="folhas">folhas</option>
             <option value="metros">metros</option>
           </select>
         </label>
-      </div>
 
-      <div class="form-grid">
         <label class="form-field">
-          <span>Preço de Compra</span>
+          <span>Valor</span>
           <input id="purchasePriceInput" type="text" inputmode="decimal" placeholder="100,00" required />
         </label>
-
-        <label class="form-field">
-          <span>Estoque Atual</span>
-          <input id="currentStockInput" type="text" inputmode="decimal" placeholder="30" required />
-        </label>
       </div>
+
+      <label class="form-field">
+        <span>Quantidade</span>
+        <input id="packageQuantityInput" type="text" inputmode="decimal" placeholder="30" required />
+      </label>
+
+      <input id="currentStockInput" type="hidden" />
 
       <section class="unit-cost-preview" aria-live="polite">
         <span>Custo da unidade fracionada</span>
@@ -219,7 +222,7 @@
         <input id="csvFileInput" type="file" accept=".csv,text/csv" required />
       </label>
 
-      <p class="helper-text">Colunas aceitas: nome, categoria, quantidade, unidade, preço, estoque.</p>
+      <p class="helper-text">Colunas aceitas: nome, categoria, quantidade, unidade, preço, estoque, marca, descrição, tipo, numeração, coloração.</p>
       <div class="import-feedback" id="importFeedback">0 de 0</div>
       <button class="primary-button" type="submit">Importar</button>
     </form>

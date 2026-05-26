@@ -8,20 +8,126 @@ const NUMBER_FORMATTER = new Intl.NumberFormat("pt-BR", {
 });
 const DESKTOP_MEDIA_QUERY = window.matchMedia("(min-width: 1024px)");
 const CATEGORY_ALL_VALUE = "Todos";
+const CATEGORY_CARTUCHO = "Cartucho";
+const CATEGORY_TINTA = "Tinta";
+const CATEGORY_BIOSSEGURANCA = "Biossegurança";
+const CATEGORY_DESCARTAVEL = "Descartável";
+const CATEGORY_OUTROS = "Outros";
 const BASE_INVENTORY_CATEGORIES = [
   CATEGORY_ALL_VALUE,
-  "Cartuchos",
-  "Tintas",
-  "Biossegurança",
-  "Descartáveis",
-  "Outros"
+  CATEGORY_CARTUCHO,
+  CATEGORY_TINTA,
+  CATEGORY_BIOSSEGURANCA,
+  CATEGORY_DESCARTAVEL,
+  CATEGORY_OUTROS
 ];
+const ITEM_CATEGORY_SCHEMAS = {
+  [CATEGORY_CARTUCHO]: {
+    title: "Cartucho",
+    kicker: "Ficha de cartucho",
+    fields: [
+      {
+        id: "itemBrandInput",
+        key: "brand",
+        label: "Marca",
+        placeholder: "Ex: Electric Ink"
+      },
+      {
+        id: "cartridgeTypeInput",
+        key: "cartridgeType",
+        label: "Tipo",
+        placeholder: "Ex: RL"
+      },
+      {
+        id: "cartridgeNumberInput",
+        key: "cartridgeNumber",
+        label: "Numeração",
+        placeholder: "Ex: 0310"
+      }
+    ]
+  },
+  [CATEGORY_BIOSSEGURANCA]: {
+    title: "Biossegurança",
+    kicker: "Ficha de biossegurança",
+    fields: [
+      {
+        id: "itemBrandInput",
+        key: "brand",
+        label: "Marca",
+        placeholder: "Ex: Supermax"
+      },
+      {
+        id: "itemDescriptionInput",
+        key: "description",
+        label: "Descrição",
+        placeholder: "Ex: Luva nitrílica preta"
+      }
+    ]
+  },
+  [CATEGORY_DESCARTAVEL]: {
+    title: "Descartável",
+    kicker: "Ficha de descartável",
+    fields: [
+      {
+        id: "itemBrandInput",
+        key: "brand",
+        label: "Marca",
+        placeholder: "Ex: Spirit"
+      },
+      {
+        id: "itemDescriptionInput",
+        key: "description",
+        label: "Descrição",
+        placeholder: "Ex: Folha stencil premium"
+      }
+    ]
+  },
+  [CATEGORY_TINTA]: {
+    title: "Tinta",
+    kicker: "Ficha de tinta",
+    fields: [
+      {
+        id: "itemBrandInput",
+        key: "brand",
+        label: "Marca",
+        placeholder: "Ex: Dynamic"
+      },
+      {
+        id: "itemColorInput",
+        key: "colorName",
+        label: "Coloração",
+        placeholder: "Ex: Preto linha"
+      }
+    ]
+  },
+  [CATEGORY_OUTROS]: {
+    title: "Outros",
+    kicker: "Ficha complementar",
+    fields: [
+      {
+        id: "itemBrandInput",
+        key: "brand",
+        label: "Marca",
+        placeholder: "Ex: Marca do insumo"
+      },
+      {
+        id: "itemDescriptionInput",
+        key: "description",
+        label: "Descrição",
+        placeholder: "Ex: Detalhe do item"
+      }
+    ]
+  }
+};
 
 const DEFAULT_INVENTORY_ITEMS = [
   {
     id: "item-cartucho-rl0310",
-    name: "Cartucho White Head RL0310",
-    category: "Cartuchos",
+    name: "Cartucho White Head",
+    category: CATEGORY_CARTUCHO,
+    brand: "White Head",
+    cartridgeType: "RL",
+    cartridgeNumber: "0310",
     unitMeasure: "unid",
     packageQuantity: 20,
     purchasePrice: 300,
@@ -30,7 +136,9 @@ const DEFAULT_INVENTORY_ITEMS = [
   {
     id: "item-tinta-preta",
     name: "Tinta preta linha",
-    category: "Tintas",
+    category: CATEGORY_TINTA,
+    brand: "Dynamic",
+    colorName: "Preto linha",
     unitMeasure: "ml",
     packageQuantity: 30,
     purchasePrice: 100,
@@ -39,7 +147,9 @@ const DEFAULT_INVENTORY_ITEMS = [
   {
     id: "item-luvas",
     name: "Luvas nitrílicas",
-    category: "Biossegurança",
+    category: CATEGORY_BIOSSEGURANCA,
+    brand: "Supermax",
+    description: "Luva nitrílica preta sem pó",
     unitMeasure: "unid",
     packageQuantity: 100,
     purchasePrice: 50,
@@ -48,7 +158,9 @@ const DEFAULT_INVENTORY_ITEMS = [
   {
     id: "item-stencil",
     name: "Folha stencil",
-    category: "Descartáveis",
+    category: CATEGORY_DESCARTAVEL,
+    brand: "Spirit",
+    description: "Folha para transferência de stencil",
     unitMeasure: "folhas",
     packageQuantity: 1,
     purchasePrice: 4.5,
@@ -94,6 +206,9 @@ function bindElementReferences() {
   elementReferences.budgetTotalValue = document.querySelector("#budgetTotalValue");
   elementReferences.cartList = document.querySelector("#cartList");
   elementReferences.categoryFilterList = document.querySelector("#categoryFilterList");
+  elementReferences.categoryDynamicFields = document.querySelector("#categoryDynamicFields");
+  elementReferences.categoryFormKicker = document.querySelector("#categoryFormKicker");
+  elementReferences.categoryFormTitle = document.querySelector("#categoryFormTitle");
   elementReferences.closeImportModalButton = document.querySelector("#closeImportModalButton");
   elementReferences.closeItemModalButton = document.querySelector("#closeItemModalButton");
   elementReferences.createBudgetButton = document.querySelector("#createBudgetButton");
@@ -142,7 +257,7 @@ function bindEventListeners() {
   elementReferences.drawerBackdrop.addEventListener("click", closeDrawer);
   elementReferences.closeItemModalButton.addEventListener("click", () => closeModal(elementReferences.itemModal));
   elementReferences.closeImportModalButton.addEventListener("click", () => closeModal(elementReferences.importModal));
-  elementReferences.openItemModalButton.addEventListener("click", openItemModal);
+  elementReferences.openItemModalButton.addEventListener("click", () => openItemModal());
 
   elementReferences.drawerLinks.forEach((drawerLink) => {
     drawerLink.addEventListener("click", () => handleDrawerAction(drawerLink.dataset.drawerAction));
@@ -159,6 +274,8 @@ function bindEventListeners() {
     renderInventory();
   });
 
+  elementReferences.itemCategoryInput.addEventListener("change", handleItemCategoryChange);
+
   elementReferences.categoryFilterList.addEventListener("click", (event) => {
     const categoryButton = event.target.closest("[data-category-filter]");
 
@@ -169,24 +286,7 @@ function bindEventListeners() {
     setActiveInventoryCategory(categoryButton.dataset.categoryFilter);
   });
 
-  elementReferences.inventoryGrid.addEventListener("click", (event) => {
-    const editButton = event.target.closest("[data-edit-inventory-item]");
-    const deleteButton = event.target.closest("[data-delete-inventory-item]");
-    const inventoryCard = event.target.closest("[data-inventory-item-id]");
-
-    if (!inventoryCard) {
-      return;
-    }
-
-    if (editButton) {
-      openItemModal(inventoryCard.dataset.inventoryItemId);
-      return;
-    }
-
-    if (deleteButton) {
-      deleteInventoryItem(inventoryCard.dataset.inventoryItemId);
-    }
-  });
+  elementReferences.inventoryGrid.addEventListener("click", handleInventoryGridClick);
 
   elementReferences.budgetSearchInput.addEventListener("input", (event) => {
     budgetSearchTerm = event.target.value;
@@ -257,6 +357,54 @@ function bindEventListeners() {
 
   elementReferences.exportInvoiceButton.addEventListener("click", exportInvoicePdf);
   elementReferences.createBudgetButton.addEventListener("click", createNewBudget);
+}
+
+/**
+ * Atualiza a ficha dinamica e a unidade sugerida ao trocar a categoria no modal.
+ * @returns {void}
+ */
+function handleItemCategoryChange() {
+  const selectedCategory = normalizeCategory(elementReferences.itemCategoryInput.value);
+  elementReferences.unitMeasureInput.value = getDefaultUnitMeasureForCategory(selectedCategory);
+  renderItemCategoryFields(selectedCategory);
+  updateUnitCostPreview();
+}
+
+/**
+ * Trata cliques do CRUD por delegacao no container da lista de estoque.
+ * @param {MouseEvent} event Evento de clique capturado no grid pai.
+ * @returns {void}
+ */
+function handleInventoryGridClick(event) {
+  const actionButton = event.target.closest("[data-inventory-action]");
+
+  if (!actionButton || !elementReferences.inventoryGrid.contains(actionButton)) {
+    return;
+  }
+
+  event.preventDefault();
+
+  const inventoryCard = actionButton.closest("[data-inventory-item-id]");
+  const inventoryItemId = actionButton.dataset.inventoryItemId || inventoryCard?.dataset.inventoryItemId;
+
+  if (!inventoryItemId) {
+    return;
+  }
+
+  const optionsMenu = actionButton.closest("details");
+
+  if (optionsMenu) {
+    optionsMenu.open = false;
+  }
+
+  if (actionButton.dataset.inventoryAction === "edit") {
+    openItemModal(inventoryItemId);
+    return;
+  }
+
+  if (actionButton.dataset.inventoryAction === "delete") {
+    deleteInventoryItem(inventoryItemId);
+  }
 }
 
 /**
@@ -343,18 +491,27 @@ function normalizeApplicationState(rawState) {
  * @returns {object} Item de estoque normalizado.
  */
 function normalizeInventoryItem(item) {
+  const normalizedCategory = normalizeCategory(item.category);
+  const packageQuantity = normalizeNumber(item.packageQuantity);
+  const currentStock = normalizeNumber(item.currentStock);
+
   return {
     id: item.id || createEntityId("item"),
     name: String(item.name || "Novo item"),
-    category: String(item.category || "Outros"),
-    unitMeasure: normalizeUnitMeasure(item.unitMeasure || item.unitLabel || "unid"),
-    packageQuantity: normalizeNumber(item.packageQuantity),
-    purchasePrice: normalizeNumber(item.purchasePrice || item.packagePrice),
-    currentStock: normalizeNumber(item.currentStock),
-    createdAt: item.createdAt || new Date().toISOString()
+    category: normalizedCategory,
+    brand: String(item.brand || item.marca || ""),
+    description: String(item.description || item.descricao || ""),
+    cartridgeType: String(item.cartridgeType || item.tipo || ""),
+    cartridgeNumber: String(item.cartridgeNumber || item.numbering || item.numeracao || ""),
+    colorName: String(item.colorName || item.coloration || item.coloracao || ""),
+    unitMeasure: normalizeUnitMeasure(item.unitMeasure || item.unitLabel || item.tipoUnidade || "unid"),
+    packageQuantity,
+    purchasePrice: normalizeNumber(item.purchasePrice || item.packagePrice || item.valor),
+    currentStock: currentStock > 0 ? currentStock : packageQuantity,
+    createdAt: item.createdAt || new Date().toISOString(),
+    updatedAt: item.updatedAt || item.createdAt || new Date().toISOString()
   };
 }
-
 /**
  * Normaliza um orcamento salvo ou importado.
  * @param {object} budget Orcamento bruto.
@@ -400,6 +557,7 @@ function renderApplication() {
   renderCategoryFilters();
   renderInventory();
   renderBudget();
+  renderItemCategoryFields(elementReferences.itemCategoryInput.value);
   updateUnitCostPreview();
 }
 
@@ -461,6 +619,34 @@ function renderCategoryFilters() {
 }
 
 /**
+ * Renderiza os campos especificos da categoria selecionada no modal.
+ * @param {string} categoryName Categoria selecionada.
+ * @returns {void}
+ */
+function renderItemCategoryFields(categoryName) {
+  const normalizedCategory = normalizeCategory(categoryName);
+  const schema = ITEM_CATEGORY_SCHEMAS[normalizedCategory] || ITEM_CATEGORY_SCHEMAS[CATEGORY_OUTROS];
+
+  elementReferences.categoryFormKicker.textContent = schema.kicker;
+  elementReferences.categoryFormTitle.textContent = schema.title;
+  elementReferences.categoryDynamicFields.innerHTML = schema.fields.map(createDynamicFieldHtml).join("");
+}
+
+/**
+ * Cria o HTML de um campo dinamico do cadastro de item.
+ * @param {{id: string, label: string, placeholder: string}} fieldDefinition Definicao do campo.
+ * @returns {string} HTML seguro do campo.
+ */
+function createDynamicFieldHtml(fieldDefinition) {
+  return `
+    <label class="form-field">
+      <span>${escapeHtml(fieldDefinition.label)}</span>
+      <input id="${escapeHtml(fieldDefinition.id)}" type="text" placeholder="${escapeHtml(fieldDefinition.placeholder)}" data-dynamic-item-field />
+    </label>
+  `;
+}
+
+/**
  * Cria o HTML de um card premium de estoque.
  * @param {object} item Item de estoque normalizado.
  * @returns {string} HTML seguro do card.
@@ -470,6 +656,9 @@ function createInventoryCardHtml(item) {
   const stockPercentage = calculateStockPercentage(item);
   const stockStatus = getStockStatus(stockPercentage);
   const productInitial = getProductInitial(item.name);
+  const itemMetaLabel = getInventoryItemMetaLabel(item);
+  const brandLabel = getInventoryItemBrandLabel(item);
+  const stockCounterTotal = Math.max(normalizeNumber(item.currentStock), normalizeNumber(item.packageQuantity));
 
   return `
     <article class="inventory-card ${stockStatus.className}" data-inventory-item-id="${escapeHtml(item.id)}">
@@ -481,8 +670,8 @@ function createInventoryCardHtml(item) {
         <details class="product-options">
           <summary aria-label="Abrir opções do item">⋯</summary>
           <div class="product-options-menu">
-            <button type="button" data-edit-inventory-item>Editar</button>
-            <button type="button" data-delete-inventory-item>Excluir</button>
+            <button type="button" data-inventory-action="edit" data-inventory-item-id="${escapeHtml(item.id)}">Editar</button>
+            <button type="button" data-inventory-action="delete" data-inventory-item-id="${escapeHtml(item.id)}">Excluir</button>
           </div>
         </details>
       </div>
@@ -491,7 +680,9 @@ function createInventoryCardHtml(item) {
         <div class="product-mark" aria-hidden="true">${escapeHtml(productInitial)}</div>
         <div class="product-title">
           <h3>${escapeHtml(item.name)}</h3>
-          <span>${formatNumber(item.packageQuantity)} ${escapeHtml(item.unitMeasure)} por embalagem</span>
+          <span>${escapeHtml(brandLabel)}</span>
+          <strong class="product-meta-line">${escapeHtml(itemMetaLabel)}</strong>
+          <small>${formatNumber(item.packageQuantity)} ${escapeHtml(item.unitMeasure)} por embalagem</small>
         </div>
       </div>
 
@@ -502,7 +693,7 @@ function createInventoryCardHtml(item) {
         </div>
         <div class="unit-price">
           <span>Estoque</span>
-          <strong>${formatNumber(item.currentStock)}</strong>
+          <strong>${formatCounter(item.currentStock, stockCounterTotal)}</strong>
         </div>
       </div>
 
@@ -518,7 +709,6 @@ function createInventoryCardHtml(item) {
     </article>
   `;
 }
-
 /**
  * Renderiza os dados resumidos do orcamento ativo.
  * @returns {void}
@@ -562,6 +752,7 @@ function renderStockPicker() {
     const unitCost = calculateUnitCost(item);
     const productInitial = getProductInitial(item.name);
     const stockStatus = getStockStatus(calculateStockPercentage(item));
+    const itemMetaLabel = getInventoryItemMetaLabel(item);
 
     return `
     <article class="picker-card ${stockStatus.className}" data-inventory-item-id="${escapeHtml(item.id)}">
@@ -569,7 +760,8 @@ function renderStockPicker() {
         <div class="product-mark product-mark-small" aria-hidden="true">${escapeHtml(productInitial)}</div>
         <div>
           <h3>${escapeHtml(item.name)}</h3>
-          <span>${escapeHtml(item.category)} · ${formatCurrency(unitCost)}/${escapeHtml(item.unitMeasure)}</span>
+          <span>${escapeHtml(item.category)} · ${escapeHtml(itemMetaLabel)}</span>
+          <span>${formatCurrency(unitCost)}/${escapeHtml(item.unitMeasure)}</span>
         </div>
       </div>
 
@@ -597,7 +789,7 @@ function renderCart() {
       inventoryItem: findInventoryItemById(cartItem.inventoryItemId)
     }))
     .filter((entry) => entry.inventoryItem);
-  elementReferences.budgetItemCounter.textContent = formatCounter(visibleItems.length, applicationState.inventoryItems.length);
+  elementReferences.budgetItemCounter.textContent = formatCounter(visibleItems.length, activeBudget.items.length);
 
   if (visibleItems.length === 0) {
     elementReferences.cartList.innerHTML = createEmptyStateHtml("Nenhum item no orçamento.");
@@ -607,13 +799,14 @@ function renderCart() {
   elementReferences.cartList.innerHTML = visibleItems.map(({ cartItem, inventoryItem }) => {
     const unitCost = calculateUnitCost(inventoryItem);
     const subtotal = calculateLineSubtotal(inventoryItem, cartItem.quantityUsed);
+    const itemMetaLabel = getInventoryItemMetaLabel(inventoryItem);
 
     return `
       <article class="cart-card" data-cart-item-id="${escapeHtml(cartItem.id)}">
         <div class="cart-card-header">
           <div>
             <h3>${escapeHtml(inventoryItem.name)}</h3>
-            <span>${escapeHtml(inventoryItem.category)} · ${escapeHtml(inventoryItem.unitMeasure)}</span>
+            <span>${escapeHtml(inventoryItem.category)} · ${escapeHtml(itemMetaLabel)} · ${escapeHtml(inventoryItem.unitMeasure)}</span>
           </div>
           <strong>${formatCurrency(subtotal)}</strong>
         </div>
@@ -706,7 +899,10 @@ function openItemModal(inventoryItemId) {
 function resetItemFormForCreation() {
   editingInventoryItemId = null;
   elementReferences.itemForm.reset();
-  elementReferences.unitMeasureInput.value = "ml";
+  elementReferences.itemCategoryInput.value = CATEGORY_CARTUCHO;
+  elementReferences.unitMeasureInput.value = "unid";
+  elementReferences.currentStockInput.value = "";
+  renderItemCategoryFields(elementReferences.itemCategoryInput.value);
   elementReferences.itemModalKicker.textContent = "Novo insumo";
   elementReferences.itemModalTitle.textContent = "Adicionar item";
   elementReferences.itemSubmitButton.textContent = "Salvar item";
@@ -722,6 +918,8 @@ function populateItemFormForEditing(inventoryItem) {
   ensureCategoryOptionExists(inventoryItem.category);
   elementReferences.itemNameInput.value = inventoryItem.name;
   elementReferences.itemCategoryInput.value = inventoryItem.category;
+  renderItemCategoryFields(inventoryItem.category);
+  populateDynamicItemFields(inventoryItem);
   elementReferences.packageQuantityInput.value = formatEditableNumber(inventoryItem.packageQuantity);
   elementReferences.unitMeasureInput.value = inventoryItem.unitMeasure;
   elementReferences.purchasePriceInput.value = formatEditableNumber(inventoryItem.purchasePrice);
@@ -730,24 +928,75 @@ function populateItemFormForEditing(inventoryItem) {
   elementReferences.itemModalTitle.textContent = "Atualizar item";
   elementReferences.itemSubmitButton.textContent = "Salvar alterações";
 }
-
 /**
  * Garante que uma categoria existente no estoque apareca no select de edicao.
  * @param {string} categoryName Categoria que precisa estar disponivel.
  * @returns {void}
  */
 function ensureCategoryOptionExists(categoryName) {
+  const normalizedCategory = normalizeCategory(categoryName);
   const categoryExists = [...elementReferences.itemCategoryInput.options]
-    .some((optionElement) => optionElement.value === categoryName);
+    .some((optionElement) => optionElement.value === normalizedCategory);
 
   if (categoryExists) {
     return;
   }
 
   const categoryOption = document.createElement("option");
-  categoryOption.value = categoryName;
-  categoryOption.textContent = categoryName;
+  categoryOption.value = normalizedCategory;
+  categoryOption.textContent = normalizedCategory;
   elementReferences.itemCategoryInput.append(categoryOption);
+}
+
+/**
+ * Preenche os campos dinamicos do modal conforme os metadados do item.
+ * @param {object} inventoryItem Item usado na edicao.
+ * @returns {void}
+ */
+function populateDynamicItemFields(inventoryItem) {
+  setDynamicFieldValue("itemBrandInput", inventoryItem.brand);
+  setDynamicFieldValue("itemDescriptionInput", inventoryItem.description);
+  setDynamicFieldValue("cartridgeTypeInput", inventoryItem.cartridgeType);
+  setDynamicFieldValue("cartridgeNumberInput", inventoryItem.cartridgeNumber);
+  setDynamicFieldValue("itemColorInput", inventoryItem.colorName);
+}
+
+/**
+ * Define o valor de um campo dinamico se ele existir na ficha atual.
+ * @param {string} fieldId Identificador do campo.
+ * @param {string} value Valor a ser aplicado.
+ * @returns {void}
+ */
+function setDynamicFieldValue(fieldId, value) {
+  const fieldElement = elementReferences.itemForm.querySelector(`#${fieldId}`);
+
+  if (fieldElement) {
+    fieldElement.value = value || "";
+  }
+}
+
+/**
+ * Obtem valor de um campo dinamico, retornando texto vazio quando ele nao existe.
+ * @param {string} fieldId Identificador do campo.
+ * @returns {string} Valor normalizado para persistencia.
+ */
+function getDynamicFieldValue(fieldId) {
+  const fieldElement = elementReferences.itemForm.querySelector(`#${fieldId}`);
+  return fieldElement ? fieldElement.value.trim() : "";
+}
+
+/**
+ * Monta metadados especificos da ficha dinamica selecionada.
+ * @returns {{brand: string, description: string, cartridgeType: string, cartridgeNumber: string, colorName: string}} Metadados do item.
+ */
+function getDynamicMetadataFromForm() {
+  return {
+    brand: getDynamicFieldValue("itemBrandInput"),
+    description: getDynamicFieldValue("itemDescriptionInput"),
+    cartridgeType: getDynamicFieldValue("cartridgeTypeInput").toUpperCase(),
+    cartridgeNumber: getDynamicFieldValue("cartridgeNumberInput"),
+    colorName: getDynamicFieldValue("itemColorInput")
+  };
 }
 
 /**
@@ -793,15 +1042,22 @@ function closeModal(modalElement) {
  * @returns {void}
  */
 function saveInventoryItemFromForm() {
+  const selectedCategory = normalizeCategory(elementReferences.itemCategoryInput.value);
+  const packageQuantity = normalizeNumber(elementReferences.packageQuantityInput.value);
+  const hiddenCurrentStock = normalizeNumber(elementReferences.currentStockInput.value);
+  const existingItem = editingInventoryItemId ? findInventoryItemById(editingInventoryItemId) : null;
+  const dynamicMetadata = getDynamicMetadataFromForm();
   const inventoryItem = {
     id: editingInventoryItemId || createEntityId("item"),
     name: elementReferences.itemNameInput.value.trim(),
-    category: elementReferences.itemCategoryInput.value,
+    category: selectedCategory,
+    ...dynamicMetadata,
     unitMeasure: normalizeUnitMeasure(elementReferences.unitMeasureInput.value),
-    packageQuantity: normalizeNumber(elementReferences.packageQuantityInput.value),
+    packageQuantity,
     purchasePrice: normalizeNumber(elementReferences.purchasePriceInput.value),
-    currentStock: normalizeNumber(elementReferences.currentStockInput.value),
-    createdAt: new Date().toISOString()
+    currentStock: hiddenCurrentStock > 0 ? hiddenCurrentStock : packageQuantity,
+    createdAt: existingItem?.createdAt || new Date().toISOString(),
+    updatedAt: new Date().toISOString()
   };
 
   if (!inventoryItem.name || inventoryItem.packageQuantity <= 0 || inventoryItem.purchasePrice <= 0) {
@@ -821,7 +1077,6 @@ function saveInventoryItemFromForm() {
   renderCategoryFilters();
   renderApplication();
 }
-
 /**
  * Atualiza um insumo existente no estado local.
  * @param {object} updatedItem Item de estoque com dados atualizados.
@@ -1040,20 +1295,26 @@ function parseCsvInventory(csvText) {
   return dataRows.map((row) => {
     const itemName = row[0] || "Item importado";
     const packageQuantity = normalizeNumber(row[2] || row[1]);
+    const currentStock = normalizeNumber(row[5] || packageQuantity);
 
     return {
       id: createEntityId("item"),
       name: itemName,
-      category: row[1] || "Outros",
+      category: normalizeCategory(row[1] || CATEGORY_OUTROS),
       packageQuantity,
       unitMeasure: normalizeUnitMeasure(row[3] || "unid"),
       purchasePrice: normalizeNumber(row[4]),
-      currentStock: normalizeNumber(row[5] || packageQuantity),
-      createdAt: new Date().toISOString()
+      currentStock: currentStock > 0 ? currentStock : packageQuantity,
+      brand: row[6] || "",
+      description: row[7] || "",
+      cartridgeType: String(row[8] || "").toUpperCase(),
+      cartridgeNumber: row[9] || "",
+      colorName: row[10] || "",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
     };
   }).filter((item) => item.packageQuantity > 0);
 }
-
 /**
  * Quebra o conteudo CSV em linhas e celulas simples.
  * @param {string} csvText Conteudo bruto do CSV.
@@ -1097,19 +1358,29 @@ function exportInvoicePdf() {
 function renderInvoiceDocument() {
   const activeBudget = getActiveBudget();
   const totals = calculateBudgetTotals(activeBudget);
-  const itemRows = activeBudget.items.map((cartItem) => {
-    const inventoryItem = findInventoryItemById(cartItem.inventoryItemId);
-
-    if (!inventoryItem) {
-      return "";
-    }
+  const materialEntries = activeBudget.items
+    .map((cartItem) => ({
+      cartItem,
+      inventoryItem: findInventoryItemById(cartItem.inventoryItemId)
+    }))
+    .filter((entry) => entry.inventoryItem);
+  const itemRows = materialEntries.map(({ cartItem, inventoryItem }) => {
+    const unitCost = calculateUnitCost(inventoryItem);
+    const lineSubtotal = calculateLineSubtotal(inventoryItem, cartItem.quantityUsed);
+    const specification = getInventoryItemMetaLabel(inventoryItem);
+    const brandLabel = getInventoryItemBrandLabel(inventoryItem);
 
     return `
       <tr>
-        <td>${escapeHtml(inventoryItem.name)}</td>
+        <td>
+          <strong>${escapeHtml(inventoryItem.name)}</strong>
+          <span>${escapeHtml(brandLabel)}</span>
+        </td>
+        <td>${escapeHtml(inventoryItem.category)}</td>
+        <td>${escapeHtml(specification)}</td>
         <td>${formatNumber(cartItem.quantityUsed)} ${escapeHtml(inventoryItem.unitMeasure)}</td>
-        <td>${formatCurrency(calculateUnitCost(inventoryItem))}</td>
-        <td>${formatCurrency(calculateLineSubtotal(inventoryItem, cartItem.quantityUsed))}</td>
+        <td>${formatCurrency(unitCost)}</td>
+        <td>${formatCurrency(lineSubtotal)}</td>
       </tr>
     `;
   }).join("");
@@ -1117,11 +1388,11 @@ function renderInvoiceDocument() {
   elementReferences.invoiceDocument.innerHTML = `
     <article class="invoice-template">
       <header class="invoice-header">
-        <div class="invoice-logo-space">Logo</div>
+        <div class="invoice-logo-space">CT</div>
         <div>
-          <span>Invoice</span>
+          <span>Orçamento premium</span>
           <h2>${escapeHtml(activeBudget.name)}</h2>
-          <p>CalculadoraTattoo</p>
+          <p>CalculadoraTattoo · Gestão de estúdio</p>
         </div>
       </header>
 
@@ -1132,10 +1403,10 @@ function renderInvoiceDocument() {
         </div>
         <div>
           <span>Materiais</span>
-          <strong>${formatCounter(activeBudget.items.length, activeBudget.items.length)}</strong>
+          <strong>${formatCounter(materialEntries.length, activeBudget.items.length)}</strong>
         </div>
         <div>
-          <span>Insumos</span>
+          <span>Insumos fracionados</span>
           <strong>${formatCurrency(totals.materialCost)}</strong>
         </div>
         <div>
@@ -1157,24 +1428,25 @@ function renderInvoiceDocument() {
         <thead>
           <tr>
             <th>Insumo</th>
-            <th>Quantidade</th>
-            <th>Unidade</th>
+            <th>Categoria</th>
+            <th>Especificação</th>
+            <th>Uso</th>
+            <th>Custo unitário</th>
             <th>Subtotal</th>
           </tr>
         </thead>
-        <tbody>${itemRows || "<tr><td colspan=\"4\">Nenhum item selecionado.</td></tr>"}</tbody>
+        <tbody>${itemRows || "<tr><td colspan=\"6\">Nenhum item selecionado.</td></tr>"}</tbody>
       </table>
 
       <section class="invoice-total-panel">
         <span>Resumo financeiro</span>
-        <strong>Insumos: ${formatCurrency(totals.materialCost)}</strong>
+        <strong>Insumos fracionados: ${formatCurrency(totals.materialCost)}</strong>
         <strong>Mão de obra: ${formatCurrency(totals.laborCost)}</strong>
         <strong>Total do orçamento: ${formatCurrency(totals.totalCost)}</strong>
       </section>
     </article>
   `;
 }
-
 /**
  * Calcula o custo unitario de um insumo.
  * @param {object} item Item com preco de compra e quantidade por embalagem.
@@ -1271,6 +1543,37 @@ function getStockStatus(stockPercentage) {
 }
 
 /**
+ * Retorna o texto principal da especificacao por categoria.
+ * @param {object} item Item de estoque.
+ * @returns {string} Metadado relevante para exibicao.
+ */
+function getInventoryItemMetaLabel(item) {
+  if (item.category === CATEGORY_CARTUCHO) {
+    const cartridgeLabel = [item.cartridgeType, item.cartridgeNumber].filter(Boolean).join(" ").trim();
+    return cartridgeLabel || "Cartucho sem numeração";
+  }
+
+  if (item.category === CATEGORY_TINTA) {
+    return item.colorName || "Coloração não informada";
+  }
+
+  if (item.category === CATEGORY_BIOSSEGURANCA || item.category === CATEGORY_DESCARTAVEL) {
+    return item.description || "Descrição não informada";
+  }
+
+  return item.description || item.colorName || "Especificação não informada";
+}
+
+/**
+ * Retorna o texto de marca padronizado para cards e PDF.
+ * @param {object} item Item de estoque.
+ * @returns {string} Texto de marca.
+ */
+function getInventoryItemBrandLabel(item) {
+  return item.brand ? `Marca: ${item.brand}` : "Marca não informada";
+}
+
+/**
  * Extrai a inicial usada como marcador visual do produto.
  * @param {string} name Nome do produto.
  * @returns {string} Inicial em caixa alta.
@@ -1307,7 +1610,7 @@ function getFilteredInventoryItems(searchTerm, categoryName = CATEGORY_ALL_VALUE
   const normalizedSearchTerm = normalizeSearchText(searchTerm);
 
   return applicationState.inventoryItems.filter((item) => {
-    const searchableText = normalizeSearchText(`${item.name} ${item.category} ${item.unitMeasure}`);
+    const searchableText = normalizeSearchText(`${item.name} ${item.category} ${item.unitMeasure} ${item.brand} ${item.description} ${item.cartridgeType} ${item.cartridgeNumber} ${item.colorName}`);
     const matchesSearch = !normalizedSearchTerm || searchableText.includes(normalizedSearchTerm);
     const matchesCategory = categoryName === CATEGORY_ALL_VALUE || item.category === categoryName;
     return matchesSearch && matchesCategory;
@@ -1334,6 +1637,46 @@ function countInventoryItemsByCategory(categoryName) {
   }
 
   return applicationState.inventoryItems.filter((item) => item.category === categoryName).length;
+}
+
+/**
+ * Define a unidade inicial mais comum para cada categoria.
+ * @param {string} categoryName Categoria normalizada.
+ * @returns {string} Unidade sugerida.
+ */
+function getDefaultUnitMeasureForCategory(categoryName) {
+  if (categoryName === CATEGORY_TINTA) {
+    return "ml";
+  }
+
+  return "unid";
+}
+
+/**
+ * Normaliza categorias antigas e novas para manter compatibilidade com localStorage.
+ * @param {string} categoryName Categoria bruta.
+ * @returns {string} Categoria oficial do app.
+ */
+function normalizeCategory(categoryName) {
+  const normalizedCategory = normalizeSearchText(categoryName).replace(/[^a-z0-9]/g, "");
+
+  if (["cartucho", "cartuchos"].includes(normalizedCategory)) {
+    return CATEGORY_CARTUCHO;
+  }
+
+  if (["tinta", "tintas"].includes(normalizedCategory)) {
+    return CATEGORY_TINTA;
+  }
+
+  if (["biosseguranca", "bioseguranca"].includes(normalizedCategory)) {
+    return CATEGORY_BIOSSEGURANCA;
+  }
+
+  if (["descartavel", "descartaveis"].includes(normalizedCategory)) {
+    return CATEGORY_DESCARTAVEL;
+  }
+
+  return CATEGORY_OUTROS;
 }
 
 /**
