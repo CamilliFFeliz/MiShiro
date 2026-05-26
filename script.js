@@ -129,7 +129,7 @@ const CATEGORY_ORDER = [
 const DEFAULT_REFERENCE_STOCK = [
   {
     id: "reference-sabonete-liquido",
-    category: CATEGORY_INKS,
+    category: CATEGORY_PASTES,
     name: "Sabonete Líquido",
     brand: "",
     color: "",
@@ -197,7 +197,7 @@ const DEFAULT_REFERENCE_STOCK = [
   },
   {
     id: "reference-transfer",
-    category: CATEGORY_INKS,
+    category: CATEGORY_PASTES,
     name: "Transfer",
     brand: "",
     color: "",
@@ -307,6 +307,14 @@ const DEFAULT_REFERENCE_STOCK = [
     updatedAt: REFERENCE_STOCK_CREATED_AT
   }
 ];
+const REFERENCE_PASTE_ITEM_IDS = new Set([
+  "reference-sabonete-liquido",
+  "reference-transfer"
+]);
+const REFERENCE_PASTE_ITEM_NAMES = new Set([
+  "sabonete liquido",
+  "transfer"
+]);
 const DEFAULT_BUDGET = {
   id: "budget-default",
   name: "Novo orçamento",
@@ -493,7 +501,7 @@ function normalizeAppState(rawState) {
 }
 
 function normalizeInventoryItem(item) {
-  const category = normalizeCategory(item.category);
+  const category = getCorrectedInventoryCategory(item);
   const categoryDefinition = CATEGORY_DEFINITIONS[category];
   const purchaseMode = getNormalizedPurchaseMode(item, category);
   const measureUnit = getNormalizedMeasureUnit(item, category, categoryDefinition.defaultMeasure);
@@ -520,6 +528,23 @@ function normalizeInventoryItem(item) {
     createdAt: item.createdAt || new Date().toISOString(),
     updatedAt: item.updatedAt || item.createdAt || new Date().toISOString()
   };
+}
+
+/**
+ * Applies targeted category corrections for reference stock created by older app builds.
+ * @param {object} item - Raw inventory item before normalization.
+ * @returns {string} Supported inventory category.
+ */
+function getCorrectedInventoryCategory(item) {
+  const category = normalizeCategory(item.category);
+  const itemId = sanitizeText(item.id);
+  const itemName = normalizeSearch(item.name || item.nome || item.description || item.descricao);
+
+  if (REFERENCE_PASTE_ITEM_IDS.has(itemId) || (category === CATEGORY_INKS && REFERENCE_PASTE_ITEM_NAMES.has(itemName))) {
+    return CATEGORY_PASTES;
+  }
+
+  return category;
 }
 
 
