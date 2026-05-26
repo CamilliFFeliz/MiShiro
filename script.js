@@ -298,21 +298,26 @@ function renderInventory() {
 function createInventoryCardHtml(item) {
   const unitCost = calculateUnitCost(item);
   const stockPercentage = calculateStockPercentage(item);
+  const stockStatus = getStockStatus(stockPercentage);
+  const productInitial = getProductInitial(item.name);
 
   return `
-    <article class="inventory-card" data-inventory-item-id="${escapeHtml(item.id)}">
+    <article class="inventory-card ${stockStatus.className}" data-inventory-item-id="${escapeHtml(item.id)}">
       <div class="product-topline">
         <span class="category-pill">${escapeHtml(item.category)}</span>
         <span class="unit-tag">por ${escapeHtml(item.unitMeasure)}</span>
       </div>
 
-      <div class="product-title">
-        <h3>${escapeHtml(item.name)}</h3>
-        <span>${formatNumber(item.packageQuantity)} ${escapeHtml(item.unitMeasure)} por embalagem</span>
+      <div class="product-card-hero">
+        <div class="product-mark" aria-hidden="true">${escapeHtml(productInitial)}</div>
+        <div class="product-title">
+          <h3>${escapeHtml(item.name)}</h3>
+          <span>${formatNumber(item.packageQuantity)} ${escapeHtml(item.unitMeasure)} por embalagem</span>
+        </div>
       </div>
 
-      <div class="product-footer">
-        <div class="unit-price">
+      <div class="product-details-grid">
+        <div class="unit-price is-featured">
           <span>Unidade fracionada</span>
           <strong>${formatCurrency(unitCost)}</strong>
         </div>
@@ -324,7 +329,7 @@ function createInventoryCardHtml(item) {
 
       <div class="stock-meter">
         <div class="stock-meter-text">
-          <span>Nível do estoque</span>
+          <span>${stockStatus.label}</span>
           <strong>${formatNumber(stockPercentage)}%</strong>
         </div>
         <span class="stock-meter-track">
@@ -353,19 +358,31 @@ function renderStockPicker() {
     return;
   }
 
-  elementReferences.stockPickerList.innerHTML = filteredItems.map((item) => `
-    <article class="picker-card" data-inventory-item-id="${escapeHtml(item.id)}">
-      <div>
-        <h3>${escapeHtml(item.name)}</h3>
-        <span>${escapeHtml(item.category)} · ${formatCurrency(calculateUnitCost(item))}/${escapeHtml(item.unitMeasure)}</span>
+  elementReferences.stockPickerList.innerHTML = filteredItems.map((item) => {
+    const unitCost = calculateUnitCost(item);
+    const productInitial = getProductInitial(item.name);
+    const stockStatus = getStockStatus(calculateStockPercentage(item));
+
+    return `
+    <article class="picker-card ${stockStatus.className}" data-inventory-item-id="${escapeHtml(item.id)}">
+      <div class="picker-card-main">
+        <div class="product-mark product-mark-small" aria-hidden="true">${escapeHtml(productInitial)}</div>
+        <div>
+          <h3>${escapeHtml(item.name)}</h3>
+          <span>${escapeHtml(item.category)} · ${formatCurrency(unitCost)}/${escapeHtml(item.unitMeasure)}</span>
+        </div>
       </div>
 
       <div class="picker-action-row">
-        <input data-picker-quantity type="text" inputmode="decimal" placeholder="${escapeHtml(item.unitMeasure)}" />
+        <label class="compact-field">
+          <span>Usar</span>
+          <input data-picker-quantity type="text" inputmode="decimal" placeholder="${escapeHtml(item.unitMeasure)}" />
+        </label>
         <button class="primary-button" type="button" data-add-inventory-item>Adicionar</button>
       </div>
     </article>
-  `).join("");
+    `;
+  }).join("");
 }
 
 function renderCart() {
@@ -388,17 +405,24 @@ function renderCart() {
 
     return `
       <article class="cart-card" data-cart-item-id="${escapeHtml(cartItem.id)}">
-        <div>
-          <h3>${escapeHtml(inventoryItem.name)}</h3>
-          <span>${formatCurrency(unitCost)} x ${formatNumber(cartItem.quantityUsed)} ${escapeHtml(inventoryItem.unitMeasure)}</span>
-        </div>
-
-        <input class="cart-quantity-input" data-cart-quantity type="text" inputmode="decimal" value="${escapeHtml(formatEditableNumber(cartItem.quantityUsed))}" />
-
-        <div class="cart-line">
-          <span>Subtotal</span>
+        <div class="cart-card-header">
+          <div>
+            <h3>${escapeHtml(inventoryItem.name)}</h3>
+            <span>${escapeHtml(inventoryItem.category)} · ${escapeHtml(inventoryItem.unitMeasure)}</span>
+          </div>
           <strong>${formatCurrency(subtotal)}</strong>
         </div>
+
+        <div class="cart-calculation">
+          <span>${formatCurrency(unitCost)}</span>
+          <span>x</span>
+          <span>${formatNumber(cartItem.quantityUsed)} ${escapeHtml(inventoryItem.unitMeasure)}</span>
+        </div>
+
+        <label class="cart-quantity-field">
+          <span>Quantidade usada</span>
+          <input class="cart-quantity-input" data-cart-quantity type="text" inputmode="decimal" value="${escapeHtml(formatEditableNumber(cartItem.quantityUsed))}" />
+        </label>
 
         <button class="danger-button" type="button" data-remove-cart-item>Remover</button>
       </article>
@@ -710,6 +734,32 @@ function calculateStockPercentage(item) {
   }
 
   return Math.max(0, Math.min(100, (normalizeNumber(item.currentStock) / packageQuantity) * 100));
+}
+
+function getStockStatus(stockPercentage) {
+  if (stockPercentage <= 15) {
+    return {
+      className: "is-stock-critical",
+      label: "Estoque crítico"
+    };
+  }
+
+  if (stockPercentage <= 35) {
+    return {
+      className: "is-stock-low",
+      label: "Reposição sugerida"
+    };
+  }
+
+  return {
+    className: "is-stock-healthy",
+    label: "Estoque saudável"
+  };
+}
+
+function getProductInitial(name) {
+  const normalizedName = String(name || "I").trim();
+  return normalizedName.charAt(0).toUpperCase() || "I";
 }
 
 function getActiveBudget() {
