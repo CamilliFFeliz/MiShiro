@@ -6,6 +6,7 @@ const CURRENCY_FORMATTER = new Intl.NumberFormat("pt-BR", {
 const NUMBER_FORMATTER = new Intl.NumberFormat("pt-BR", {
   maximumFractionDigits: 2
 });
+const DESKTOP_MEDIA_QUERY = window.matchMedia("(min-width: 1024px)");
 
 const DEFAULT_INVENTORY_ITEMS = [
   {
@@ -58,13 +59,22 @@ let activeScreen = "inventory";
 let inventorySearchTerm = "";
 let budgetSearchTerm = "";
 
+/**
+ * Inicializa a aplicacao, conecta eventos e renderiza a primeira tela.
+ * @returns {void}
+ */
 function initializeApplication() {
   bindElementReferences();
   bindEventListeners();
+  syncDrawerForViewport();
   renderApplication();
   registerServiceWorker();
 }
 
+/**
+ * Armazena referencias dos elementos principais da interface.
+ * @returns {void}
+ */
 function bindElementReferences() {
   elementReferences.budgetNameInput = document.querySelector("#budgetNameInput");
   elementReferences.budgetSearchInput = document.querySelector("#budgetSearchInput");
@@ -78,10 +88,13 @@ function bindElementReferences() {
   elementReferences.csvFileInput = document.querySelector("#csvFileInput");
   elementReferences.drawer = document.querySelector("#drawer");
   elementReferences.drawerBackdrop = document.querySelector("#drawerBackdrop");
+  elementReferences.drawerLinks = document.querySelectorAll("[data-drawer-action]");
   elementReferences.exportInvoiceButton = document.querySelector("#exportInvoiceButton");
+  elementReferences.budgetItemCounter = document.querySelector("#budgetItemCounter");
   elementReferences.importFeedback = document.querySelector("#importFeedback");
   elementReferences.importForm = document.querySelector("#importForm");
   elementReferences.importModal = document.querySelector("#importModal");
+  elementReferences.inventoryCounter = document.querySelector("#inventoryCounter");
   elementReferences.inventoryGrid = document.querySelector("#inventoryGrid");
   elementReferences.inventorySearchInput = document.querySelector("#inventorySearchInput");
   elementReferences.invoiceDocument = document.querySelector("#invoiceDocument");
@@ -99,6 +112,10 @@ function bindElementReferences() {
   elementReferences.unitMeasureInput = document.querySelector("#unitMeasureInput");
 }
 
+/**
+ * Conecta os eventos de navegacao, formularios e listas dinamicas.
+ * @returns {void}
+ */
 function bindEventListeners() {
   elementReferences.openDrawerButton.addEventListener("click", openDrawer);
   elementReferences.drawerBackdrop.addEventListener("click", closeDrawer);
@@ -106,9 +123,15 @@ function bindEventListeners() {
   elementReferences.closeImportModalButton.addEventListener("click", () => closeModal(elementReferences.importModal));
   elementReferences.openItemModalButton.addEventListener("click", openItemModal);
 
-  document.querySelectorAll("[data-drawer-action]").forEach((drawerLink) => {
+  elementReferences.drawerLinks.forEach((drawerLink) => {
     drawerLink.addEventListener("click", () => handleDrawerAction(drawerLink.dataset.drawerAction));
   });
+
+  if (typeof DESKTOP_MEDIA_QUERY.addEventListener === "function") {
+    DESKTOP_MEDIA_QUERY.addEventListener("change", syncDrawerForViewport);
+  } else {
+    DESKTOP_MEDIA_QUERY.addListener(syncDrawerForViewport);
+  }
 
   elementReferences.inventorySearchInput.addEventListener("input", (event) => {
     inventorySearchTerm = event.target.value;
@@ -179,6 +202,11 @@ function bindEventListeners() {
   elementReferences.createBudgetButton.addEventListener("click", createNewBudget);
 }
 
+/**
+ * Executa a acao selecionada no menu lateral.
+ * @param {string} actionName Nome semantico da acao do drawer.
+ * @returns {void}
+ */
 function handleDrawerAction(actionName) {
   if (actionName === "inventory" || actionName === "budgets") {
     setActiveScreen(actionName);
@@ -192,9 +220,17 @@ function handleDrawerAction(actionName) {
     exportBackup();
   }
 
-  closeDrawer();
+  if (!DESKTOP_MEDIA_QUERY.matches) {
+    closeDrawer();
+  } else {
+    syncDrawerForViewport();
+  }
 }
 
+/**
+ * Carrega o estado persistido no localStorage.
+ * @returns {{inventoryItems: Array<object>, budgets: Array<object>, activeBudgetId: string}} Estado normalizado da aplicacao.
+ */
 function loadApplicationState() {
   const savedState = localStorage.getItem(STORAGE_KEY);
 
@@ -209,6 +245,10 @@ function loadApplicationState() {
   }
 }
 
+/**
+ * Cria o estado padrao usado na primeira visita.
+ * @returns {{inventoryItems: Array<object>, budgets: Array<object>, activeBudgetId: string}} Estado inicial.
+ */
 function createInitialState() {
   return {
     inventoryItems: DEFAULT_INVENTORY_ITEMS.map((item) => ({ ...item })),
@@ -217,6 +257,11 @@ function createInitialState() {
   };
 }
 
+/**
+ * Normaliza um estado bruto vindo do localStorage.
+ * @param {object} rawState Estado sem garantias de formato.
+ * @returns {{inventoryItems: Array<object>, budgets: Array<object>, activeBudgetId: string}} Estado validado.
+ */
 function normalizeApplicationState(rawState) {
   const inventoryItems = Array.isArray(rawState.inventoryItems)
     ? rawState.inventoryItems.map(normalizeInventoryItem)
@@ -235,6 +280,11 @@ function normalizeApplicationState(rawState) {
   };
 }
 
+/**
+ * Normaliza um item de estoque para o formato atual do app.
+ * @param {object} item Item bruto de estoque.
+ * @returns {object} Item de estoque normalizado.
+ */
 function normalizeInventoryItem(item) {
   return {
     id: item.id || createEntityId("item"),
@@ -248,6 +298,11 @@ function normalizeInventoryItem(item) {
   };
 }
 
+/**
+ * Normaliza um orcamento salvo ou importado.
+ * @param {object} budget Orcamento bruto.
+ * @returns {object} Orcamento normalizado.
+ */
 function normalizeBudget(budget) {
   return {
     id: budget.id || createEntityId("budget"),
@@ -256,6 +311,11 @@ function normalizeBudget(budget) {
   };
 }
 
+/**
+ * Normaliza um item selecionado dentro do orcamento.
+ * @param {object} item Item bruto do carrinho/orcamento.
+ * @returns {object} Item de orcamento normalizado.
+ */
 function normalizeBudgetItem(item) {
   return {
     id: item.id || createEntityId("cart"),
@@ -264,10 +324,18 @@ function normalizeBudgetItem(item) {
   };
 }
 
+/**
+ * Persiste o estado atual no localStorage.
+ * @returns {void}
+ */
 function saveApplicationState() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(applicationState));
 }
 
+/**
+ * Renderiza todas as areas dependentes do estado.
+ * @returns {void}
+ */
 function renderApplication() {
   renderActiveScreen();
   renderInventory();
@@ -275,17 +343,30 @@ function renderApplication() {
   updateUnitCostPreview();
 }
 
+/**
+ * Alterna a tela ativa e sincroniza titulo, FAB e menu lateral.
+ * @returns {void}
+ */
 function renderActiveScreen() {
   elementReferences.screens.forEach((screenElement) => {
     screenElement.classList.toggle("is-active", screenElement.dataset.screen === activeScreen);
+  });
+
+  elementReferences.drawerLinks.forEach((drawerLink) => {
+    drawerLink.classList.toggle("is-active", drawerLink.dataset.drawerAction === activeScreen);
   });
 
   elementReferences.currentPageTitle.textContent = activeScreen === "inventory" ? "Estoque" : "Orçamentos";
   elementReferences.openItemModalButton.hidden = activeScreen !== "inventory";
 }
 
+/**
+ * Renderiza a vitrine de estoque com base na busca atual.
+ * @returns {void}
+ */
 function renderInventory() {
   const filteredItems = getFilteredInventoryItems(inventorySearchTerm);
+  elementReferences.inventoryCounter.textContent = formatCounter(filteredItems.length, applicationState.inventoryItems.length);
 
   if (filteredItems.length === 0) {
     elementReferences.inventoryGrid.innerHTML = createEmptyStateHtml("Nenhum insumo encontrado.");
@@ -295,6 +376,11 @@ function renderInventory() {
   elementReferences.inventoryGrid.innerHTML = filteredItems.map(createInventoryCardHtml).join("");
 }
 
+/**
+ * Cria o HTML de um card premium de estoque.
+ * @param {object} item Item de estoque normalizado.
+ * @returns {string} HTML seguro do card.
+ */
 function createInventoryCardHtml(item) {
   const unitCost = calculateUnitCost(item);
   const stockPercentage = calculateStockPercentage(item);
@@ -340,6 +426,10 @@ function createInventoryCardHtml(item) {
   `;
 }
 
+/**
+ * Renderiza os dados resumidos do orcamento ativo.
+ * @returns {void}
+ */
 function renderBudget() {
   const activeBudget = getActiveBudget();
   const totals = calculateBudgetTotals(activeBudget);
@@ -350,6 +440,10 @@ function renderBudget() {
   renderCart();
 }
 
+/**
+ * Renderiza os itens de estoque disponiveis para adicionar ao orcamento.
+ * @returns {void}
+ */
 function renderStockPicker() {
   const filteredItems = getFilteredInventoryItems(budgetSearchTerm);
 
@@ -385,6 +479,10 @@ function renderStockPicker() {
   }).join("");
 }
 
+/**
+ * Renderiza os itens ja adicionados ao orcamento ativo.
+ * @returns {void}
+ */
 function renderCart() {
   const activeBudget = getActiveBudget();
   const visibleItems = activeBudget.items
@@ -393,6 +491,7 @@ function renderCart() {
       inventoryItem: findInventoryItemById(cartItem.inventoryItemId)
     }))
     .filter((entry) => entry.inventoryItem);
+  elementReferences.budgetItemCounter.textContent = formatCounter(visibleItems.length, applicationState.inventoryItems.length);
 
   if (visibleItems.length === 0) {
     elementReferences.cartList.innerHTML = createEmptyStateHtml("Nenhum item no orçamento.");
@@ -430,23 +529,55 @@ function renderCart() {
   }).join("");
 }
 
+/**
+ * Abre o menu lateral em telas moveis.
+ * @returns {void}
+ */
 function openDrawer() {
   elementReferences.drawer.classList.add("is-open");
   elementReferences.drawer.setAttribute("aria-hidden", "false");
   elementReferences.drawerBackdrop.hidden = false;
 }
 
+/**
+ * Fecha o menu lateral em telas moveis.
+ * @returns {void}
+ */
 function closeDrawer() {
   elementReferences.drawer.classList.remove("is-open");
   elementReferences.drawer.setAttribute("aria-hidden", "true");
   elementReferences.drawerBackdrop.hidden = true;
 }
 
+/**
+ * Sincroniza o estado acessivel do drawer conforme o tamanho da tela.
+ * @returns {void}
+ */
+function syncDrawerForViewport() {
+  if (DESKTOP_MEDIA_QUERY.matches) {
+    elementReferences.drawer.classList.remove("is-open");
+    elementReferences.drawer.setAttribute("aria-hidden", "false");
+    elementReferences.drawerBackdrop.hidden = true;
+    return;
+  }
+
+  elementReferences.drawer.setAttribute("aria-hidden", elementReferences.drawer.classList.contains("is-open") ? "false" : "true");
+}
+
+/**
+ * Define a tela ativa da SPA.
+ * @param {string} screenName Nome da tela alvo.
+ * @returns {void}
+ */
 function setActiveScreen(screenName) {
   activeScreen = screenName;
   renderActiveScreen();
 }
 
+/**
+ * Abre o modal de cadastro de insumo.
+ * @returns {void}
+ */
 function openItemModal() {
   elementReferences.itemForm.reset();
   elementReferences.unitMeasureInput.value = "ml";
@@ -455,12 +586,21 @@ function openItemModal() {
   elementReferences.itemNameInput.focus();
 }
 
+/**
+ * Abre o modal de importacao CSV.
+ * @returns {void}
+ */
 function openImportModal() {
   elementReferences.importForm.reset();
-  elementReferences.importFeedback.textContent = "Aguardando arquivo";
+  elementReferences.importFeedback.textContent = formatCounter(0, 0);
   openModal(elementReferences.importModal);
 }
 
+/**
+ * Abre um dialog, com fallback para navegadores sem showModal.
+ * @param {HTMLDialogElement} modalElement Dialog que sera aberto.
+ * @returns {void}
+ */
 function openModal(modalElement) {
   if (typeof modalElement.showModal === "function") {
     modalElement.showModal();
@@ -470,6 +610,11 @@ function openModal(modalElement) {
   modalElement.setAttribute("open", "");
 }
 
+/**
+ * Fecha um dialog, com fallback para navegadores sem close.
+ * @param {HTMLDialogElement} modalElement Dialog que sera fechado.
+ * @returns {void}
+ */
 function closeModal(modalElement) {
   if (typeof modalElement.close === "function" && modalElement.open) {
     modalElement.close();
@@ -479,6 +624,10 @@ function closeModal(modalElement) {
   modalElement.removeAttribute("open");
 }
 
+/**
+ * Salva um novo insumo a partir dos campos do formulario.
+ * @returns {void}
+ */
 function saveInventoryItemFromForm() {
   const newItem = {
     id: createEntityId("item"),
@@ -502,6 +651,10 @@ function saveInventoryItemFromForm() {
   renderApplication();
 }
 
+/**
+ * Atualiza o preview do custo unitario no formulario de estoque.
+ * @returns {void}
+ */
 function updateUnitCostPreview() {
   const previewItem = {
     packageQuantity: elementReferences.packageQuantityInput.value,
@@ -511,6 +664,12 @@ function updateUnitCostPreview() {
   elementReferences.unitCostPreview.textContent = formatCurrency(calculateUnitCost(previewItem));
 }
 
+/**
+ * Adiciona um item de estoque ao orcamento ativo.
+ * @param {string} inventoryItemId Identificador do item de estoque.
+ * @param {string|number} rawQuantity Quantidade informada pelo usuario.
+ * @returns {void}
+ */
 function addItemToBudget(inventoryItemId, rawQuantity) {
   const inventoryItem = findInventoryItemById(inventoryItemId);
   const quantityUsed = normalizeNumber(rawQuantity);
@@ -536,6 +695,12 @@ function addItemToBudget(inventoryItemId, rawQuantity) {
   renderBudget();
 }
 
+/**
+ * Atualiza a quantidade usada de um item do orcamento.
+ * @param {string} cartItemId Identificador do item no orcamento.
+ * @param {string|number} rawQuantity Quantidade digitada.
+ * @returns {void}
+ */
 function updateBudgetItemQuantity(cartItemId, rawQuantity) {
   const activeBudget = getActiveBudget();
   const cartItem = activeBudget.items.find((item) => item.id === cartItemId);
@@ -549,6 +714,11 @@ function updateBudgetItemQuantity(cartItemId, rawQuantity) {
   renderBudget();
 }
 
+/**
+ * Remove um item do orcamento ativo.
+ * @param {string} cartItemId Identificador do item no orcamento.
+ * @returns {void}
+ */
 function removeBudgetItem(cartItemId) {
   const activeBudget = getActiveBudget();
   activeBudget.items = activeBudget.items.filter((item) => item.id !== cartItemId);
@@ -556,6 +726,10 @@ function removeBudgetItem(cartItemId) {
   renderBudget();
 }
 
+/**
+ * Cria um novo orcamento vazio e o define como ativo.
+ * @returns {void}
+ */
 function createNewBudget() {
   const newBudget = {
     id: createEntityId("budget"),
@@ -569,6 +743,10 @@ function createNewBudget() {
   renderBudget();
 }
 
+/**
+ * Le um arquivo CSV local e adiciona os itens importados ao estoque.
+ * @returns {void}
+ */
 function importInventoryFromCsv() {
   const selectedFile = elementReferences.csvFileInput.files[0];
 
@@ -578,17 +756,39 @@ function importInventoryFromCsv() {
 
   const fileReader = new FileReader();
 
+  elementReferences.importFeedback.textContent = formatCounter(0, 0);
+
+  fileReader.onprogress = handleCsvReadProgress;
+
   fileReader.onload = () => {
     const importedItems = parseCsvInventory(String(fileReader.result || ""));
     applicationState.inventoryItems = [...importedItems, ...applicationState.inventoryItems];
     saveApplicationState();
-    elementReferences.importFeedback.textContent = `${importedItems.length} itens importados`;
+    elementReferences.importFeedback.textContent = `${formatCounter(importedItems.length, importedItems.length)} itens importados`;
     renderApplication();
   };
 
   fileReader.readAsText(selectedFile, "utf-8");
 }
 
+/**
+ * Atualiza o feedback de progresso da leitura do CSV.
+ * @param {ProgressEvent<FileReader>} event Evento de progresso da File API.
+ * @returns {void}
+ */
+function handleCsvReadProgress(event) {
+  if (!event.lengthComputable) {
+    return;
+  }
+
+  elementReferences.importFeedback.textContent = `${formatCounter(event.loaded, event.total)} bytes`;
+}
+
+/**
+ * Converte texto CSV em itens de estoque normalizados.
+ * @param {string} csvText Conteudo bruto do arquivo CSV.
+ * @returns {Array<object>} Lista de itens importaveis.
+ */
 function parseCsvInventory(csvText) {
   const rows = parseCsvRows(csvText).filter((row) => row.some(Boolean));
   const headerRow = rows[0] || [];
@@ -612,6 +812,11 @@ function parseCsvInventory(csvText) {
   }).filter((item) => item.packageQuantity > 0);
 }
 
+/**
+ * Quebra o conteudo CSV em linhas e celulas simples.
+ * @param {string} csvText Conteudo bruto do CSV.
+ * @returns {Array<Array<string>>} Linhas e colunas do CSV.
+ */
 function parseCsvRows(csvText) {
   const delimiter = csvText.includes(";") ? ";" : ",";
   return csvText
@@ -619,6 +824,10 @@ function parseCsvRows(csvText) {
     .map((line) => line.split(delimiter).map((cell) => cell.trim().replace(/^"|"$/g, "")));
 }
 
+/**
+ * Exporta o estado atual como arquivo JSON de backup.
+ * @returns {void}
+ */
 function exportBackup() {
   const backupBlob = new Blob([JSON.stringify(applicationState, null, 2)], { type: "application/json" });
   const downloadUrl = URL.createObjectURL(backupBlob);
@@ -630,11 +839,19 @@ function exportBackup() {
   URL.revokeObjectURL(downloadUrl);
 }
 
+/**
+ * Prepara o template de invoice e aciona a impressao/PDF do navegador.
+ * @returns {void}
+ */
 function exportInvoicePdf() {
   renderInvoiceDocument();
   window.print();
 }
 
+/**
+ * Renderiza o documento oculto usado na exportacao em PDF.
+ * @returns {void}
+ */
 function renderInvoiceDocument() {
   const activeBudget = getActiveBudget();
   const totals = calculateBudgetTotals(activeBudget);
@@ -673,7 +890,7 @@ function renderInvoiceDocument() {
         </div>
         <div>
           <span>Itens</span>
-          <strong>${activeBudget.items.length}</strong>
+          <strong>${formatCounter(activeBudget.items.length, activeBudget.items.length)}</strong>
         </div>
         <div>
           <span>Total</span>
@@ -700,6 +917,11 @@ function renderInvoiceDocument() {
   `;
 }
 
+/**
+ * Calcula o custo unitario de um insumo.
+ * @param {object} item Item com preco de compra e quantidade por embalagem.
+ * @returns {number} Custo por unidade fracionada.
+ */
 function calculateUnitCost(item) {
   const packageQuantity = normalizeNumber(item.packageQuantity);
   const purchasePrice = normalizeNumber(item.purchasePrice);
@@ -711,10 +933,21 @@ function calculateUnitCost(item) {
   return purchasePrice / packageQuantity;
 }
 
+/**
+ * Calcula o subtotal de uma linha do orcamento.
+ * @param {object} item Item de estoque usado.
+ * @param {string|number} quantityUsed Quantidade usada no orcamento.
+ * @returns {number} Subtotal da linha.
+ */
 function calculateLineSubtotal(item, quantityUsed) {
   return calculateUnitCost(item) * normalizeNumber(quantityUsed);
 }
 
+/**
+ * Calcula os totais agregados do orcamento.
+ * @param {object} budget Orcamento ativo.
+ * @returns {{totalCost: number}} Totais calculados.
+ */
 function calculateBudgetTotals(budget) {
   const totalCost = budget.items.reduce((total, cartItem) => {
     const inventoryItem = findInventoryItemById(cartItem.inventoryItemId);
@@ -726,6 +959,11 @@ function calculateBudgetTotals(budget) {
   };
 }
 
+/**
+ * Calcula o percentual de estoque em relacao a uma embalagem completa.
+ * @param {object} item Item de estoque.
+ * @returns {number} Percentual limitado entre 0 e 100.
+ */
 function calculateStockPercentage(item) {
   const packageQuantity = normalizeNumber(item.packageQuantity);
 
@@ -736,6 +974,11 @@ function calculateStockPercentage(item) {
   return Math.max(0, Math.min(100, (normalizeNumber(item.currentStock) / packageQuantity) * 100));
 }
 
+/**
+ * Define a classe visual e o texto de status do estoque.
+ * @param {number} stockPercentage Percentual de estoque disponivel.
+ * @returns {{className: string, label: string}} Status visual do estoque.
+ */
 function getStockStatus(stockPercentage) {
   if (stockPercentage <= 15) {
     return {
@@ -757,19 +1000,38 @@ function getStockStatus(stockPercentage) {
   };
 }
 
+/**
+ * Extrai a inicial usada como marcador visual do produto.
+ * @param {string} name Nome do produto.
+ * @returns {string} Inicial em caixa alta.
+ */
 function getProductInitial(name) {
   const normalizedName = String(name || "I").trim();
   return normalizedName.charAt(0).toUpperCase() || "I";
 }
 
+/**
+ * Retorna o orcamento ativo do estado.
+ * @returns {object} Orcamento ativo.
+ */
 function getActiveBudget() {
   return applicationState.budgets.find((budget) => budget.id === applicationState.activeBudgetId) || applicationState.budgets[0];
 }
 
+/**
+ * Busca um item de estoque pelo identificador.
+ * @param {string} itemId Identificador do item.
+ * @returns {object|undefined} Item encontrado.
+ */
 function findInventoryItemById(itemId) {
   return applicationState.inventoryItems.find((item) => item.id === itemId);
 }
 
+/**
+ * Filtra itens de estoque por texto de busca.
+ * @param {string} searchTerm Termo digitado pelo usuario.
+ * @returns {Array<object>} Itens filtrados.
+ */
 function getFilteredInventoryItems(searchTerm) {
   const normalizedSearchTerm = normalizeSearchText(searchTerm);
 
@@ -779,6 +1041,11 @@ function getFilteredInventoryItems(searchTerm) {
   });
 }
 
+/**
+ * Normaliza unidades de medida aceitas pela interface.
+ * @param {string} unitMeasure Unidade digitada ou selecionada.
+ * @returns {string} Unidade normalizada.
+ */
 function normalizeUnitMeasure(unitMeasure) {
   const normalizedUnit = normalizeSearchText(unitMeasure).replace(/[^a-z0-9]/g, "");
 
@@ -805,6 +1072,11 @@ function normalizeUnitMeasure(unitMeasure) {
   return "unid";
 }
 
+/**
+ * Converte textos monetarios ou decimais em numero positivo.
+ * @param {string|number|null|undefined} value Valor bruto.
+ * @returns {number} Numero normalizado.
+ */
 function normalizeNumber(value) {
   const numericText = String(value == null ? "" : value)
     .trim()
@@ -826,6 +1098,11 @@ function normalizeNumber(value) {
   return Number.isFinite(parsedValue) && parsedValue >= 0 ? parsedValue : 0;
 }
 
+/**
+ * Normaliza texto para buscas sem acento e em caixa baixa.
+ * @param {string} value Texto bruto.
+ * @returns {string} Texto normalizado.
+ */
 function normalizeSearchText(value) {
   return String(value || "")
     .normalize("NFD")
@@ -834,6 +1111,11 @@ function normalizeSearchText(value) {
     .trim();
 }
 
+/**
+ * Cria identificadores unicos para entidades do app.
+ * @param {string} prefix Prefixo semantico da entidade.
+ * @returns {string} Identificador unico.
+ */
 function createEntityId(prefix) {
   if (window.crypto && typeof window.crypto.randomUUID === "function") {
     return `${prefix}-${window.crypto.randomUUID()}`;
@@ -842,18 +1124,48 @@ function createEntityId(prefix) {
   return `${prefix}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }
 
+/**
+ * Formata valores monetarios em reais.
+ * @param {number} value Valor numerico.
+ * @returns {string} Valor formatado em BRL.
+ */
 function formatCurrency(value) {
   return CURRENCY_FORMATTER.format(Number.isFinite(value) ? value : 0);
 }
 
+/**
+ * Formata numeros para exibicao curta.
+ * @param {number} value Valor numerico.
+ * @returns {string} Numero formatado.
+ */
 function formatNumber(value) {
   return NUMBER_FORMATTER.format(Number.isFinite(value) ? value : 0);
 }
 
+/**
+ * Formata contadores no padrao obrigatorio Atual de Total.
+ * @param {string|number} currentValue Valor atual.
+ * @param {string|number} totalValue Valor total.
+ * @returns {string} Contador no formato Atual de Total.
+ */
+function formatCounter(currentValue, totalValue) {
+  return `${formatNumber(normalizeNumber(currentValue))} de ${formatNumber(normalizeNumber(totalValue))}`;
+}
+
+/**
+ * Formata um numero para edicao em campos pt-BR.
+ * @param {string|number} value Valor bruto.
+ * @returns {string} Valor editavel.
+ */
 function formatEditableNumber(value) {
   return String(normalizeNumber(value)).replace(".", ",");
 }
 
+/**
+ * Escapa texto antes de inserir HTML dinamico.
+ * @param {unknown} value Valor bruto.
+ * @returns {string} Texto seguro para HTML.
+ */
 function escapeHtml(value) {
   return String(value == null ? "" : value)
     .replace(/&/g, "&amp;")
@@ -863,10 +1175,19 @@ function escapeHtml(value) {
     .replace(/'/g, "&#039;");
 }
 
+/**
+ * Cria o HTML de estado vazio.
+ * @param {string} message Mensagem exibida.
+ * @returns {string} HTML do estado vazio.
+ */
 function createEmptyStateHtml(message) {
   return `<article class="empty-state">${escapeHtml(message)}</article>`;
 }
 
+/**
+ * Registra o service worker de forma silenciosa.
+ * @returns {void}
+ */
 function registerServiceWorker() {
   if (!("serviceWorker" in navigator)) {
     return;

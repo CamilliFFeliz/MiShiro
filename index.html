@@ -47,9 +47,12 @@
 
     <main class="app-content">
       <section class="screen-panel is-active" id="inventoryScreen" data-screen="inventory" aria-labelledby="inventoryTitle">
-        <div class="screen-intro">
-          <span>Vitrine de insumos</span>
-          <h2 id="inventoryTitle">Estoque</h2>
+        <div class="screen-intro screen-intro-row">
+          <div>
+            <span>Vitrine de insumos</span>
+            <h2 id="inventoryTitle">Estoque</h2>
+          </div>
+          <strong class="screen-counter" id="inventoryCounter">0 de 0</strong>
         </div>
 
         <label class="search-field">
@@ -61,9 +64,12 @@
       </section>
 
       <section class="screen-panel" id="budgetsScreen" data-screen="budgets" aria-labelledby="budgetsTitle">
-        <div class="screen-intro">
-          <span>Carrinho de compras</span>
-          <h2 id="budgetsTitle">Orçamentos</h2>
+        <div class="screen-intro screen-intro-row">
+          <div>
+            <span>Carrinho de compras</span>
+            <h2 id="budgetsTitle">Orçamentos</h2>
+          </div>
+          <strong class="screen-counter" id="budgetItemCounter">0 de 0</strong>
         </div>
 
         <section class="budget-summary-card">
@@ -191,7 +197,7 @@
       </label>
 
       <p class="helper-text">Colunas aceitas: nome, categoria, quantidade, unidade, preço, estoque.</p>
-      <div class="import-feedback" id="importFeedback">Aguardando arquivo</div>
+      <div class="import-feedback" id="importFeedback">0 de 0</div>
       <button class="primary-button" type="submit">Importar</button>
     </form>
   </dialog>
