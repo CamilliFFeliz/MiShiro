@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#2D0B40" />
-  <meta name="description" content="CalculadoraTattoo: estoque e orçamentos para tatuadores." />
+  <meta name="description" content="CalculadoraTattoo: PWA para gestão de estoque e orçamento de estúdios de tatuagem." />
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="icon" href="icons/icon.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="style.css" />
@@ -13,332 +13,262 @@
 <body>
   <div class="drawer-backdrop" id="drawerBackdrop" hidden></div>
 
-  <aside class="drawer" id="drawer" aria-hidden="true" aria-label="Menu lateral">
-    <div class="drawer-brand">
-      <strong>CalculadoraTattoo</strong>
-      <span>PWA para estúdio</span>
+  <aside class="sidebar" id="sidebar" aria-label="Menu lateral principal">
+    <div class="brand-block">
+      <div class="brand-mark" aria-hidden="true">CT</div>
+      <div>
+        <strong>CalculadoraTattoo</strong>
+        <span>Gestão premium para estúdios</span>
+      </div>
     </div>
 
-    <nav class="drawer-navigation" aria-label="Navegação principal">
-      <button class="drawer-link" type="button" data-drawer-action="home">
+    <nav class="sidebar-nav" aria-label="Navegação">
+      <button class="nav-link is-active" type="button" data-screen-target="home">
         <span aria-hidden="true">⌂</span>
         Início
       </button>
-      <button class="drawer-link" type="button" data-drawer-action="inventory">
+      <button class="nav-link" type="button" data-screen-target="inventory">
         <span aria-hidden="true">▦</span>
         Estoque
       </button>
-      <button class="drawer-link" type="button" data-drawer-action="budgets">
+      <button class="nav-link" type="button" data-screen-target="budget">
         <span aria-hidden="true">R$</span>
-        Orçamentos
-      </button>
-      <button class="drawer-link" type="button" data-drawer-action="import">
-        <span aria-hidden="true">CSV</span>
-        Importar Planilha
-      </button>
-      <button class="drawer-link" type="button" data-drawer-action="backup">
-        <span aria-hidden="true">↓</span>
-        Backup
+        Orçamento
       </button>
     </nav>
+
+    <div class="sidebar-footer">
+      <span>LocalStorage</span>
+      <strong>Dados salvos no navegador</strong>
+    </div>
   </aside>
 
   <div class="app-shell">
-    <header class="app-header">
-      <button class="header-menu-button" id="openDrawerButton" type="button" aria-label="Abrir menu">☰</button>
-      <h1 id="currentPageTitle">Início</h1>
+    <header class="topbar">
+      <button class="icon-button mobile-menu-button" id="openSidebarButton" type="button" aria-label="Abrir menu lateral">☰</button>
+      <div>
+        <span id="pageEyebrow">Visão geral</span>
+        <h1 id="pageTitle">Início</h1>
+      </div>
+      <button class="primary-button compact-only" id="quickNewItemButton" type="button">Novo item</button>
     </header>
 
-    <main class="app-content">
+    <main class="content-shell">
       <section class="screen-panel is-active" id="homeScreen" data-screen="home" aria-labelledby="homeTitle">
-        <section class="home-hero-panel">
-          <div class="home-hero-copy">
-            <span class="eyebrow-label">Gestão inteligente para estúdios</span>
-            <h2 id="homeTitle">Calcule cada sessão com precisão antes de passar o valor ao cliente.</h2>
+        <div class="hero-grid">
+          <section class="hero-card glass-panel">
+            <span class="eyebrow">Motor financeiro para tatuagem</span>
+            <h2 id="homeTitle">Orçamentos mais claros, estoque mais realista e cálculo por tipo de insumo.</h2>
             <p>
-              Cadastre seus insumos, informe valores reais de compra e monte orçamentos somando materiais usados com mão de obra. Cartuchos são tratados como unidade fixa; tintas e demais materiais continuam com custo fracionado.
+              Cadastre materiais conforme a forma real de compra: caixa, frasco, rolo ou unidade avulsa. Depois monte a ficha do cliente com insumos usados, mão de obra e imagem de referência para exportar um orçamento visualmente profissional.
             </p>
-            <div class="home-action-row">
-              <button class="primary-button" type="button" data-home-action="inventory">Cadastrar insumos</button>
-              <button class="secondary-button" type="button" data-home-action="budgets">Montar orçamento</button>
+            <div class="action-row">
+              <button class="primary-button" type="button" data-home-action="inventory">Cadastrar estoque</button>
+              <button class="secondary-button" type="button" data-home-action="budget">Criar orçamento</button>
             </div>
-          </div>
+          </section>
 
-          <div class="home-preview-card" aria-label="Resumo de funcionamento">
-            <div class="home-preview-header">
-              <span>Fluxo do app</span>
-              <strong>3 passos</strong>
+          <aside class="flow-card glass-panel" aria-label="Como funciona">
+            <div class="flow-header">
+              <span>Fluxo recomendado</span>
+              <strong>3 etapas</strong>
             </div>
-            <div class="home-step-list">
-              <article>
-                <strong>1</strong>
-                <div>
-                  <h3>Cadastre o estoque</h3>
-                  <p>Informe categoria, marca, valor e quantidade conforme o tipo de material.</p>
-                </div>
-              </article>
-              <article>
-                <strong>2</strong>
-                <div>
-                  <h3>Monte o projeto</h3>
-                  <p>Escolha os insumos usados e registre horas de sessão + valor por hora.</p>
-                </div>
-              </article>
-              <article>
-                <strong>3</strong>
-                <div>
-                  <h3>Gere o PDF</h3>
-                  <p>O orçamento sai discriminado com materiais, mão de obra e total final.</p>
-                </div>
-              </article>
-            </div>
-          </div>
-        </section>
+            <article>
+              <strong>01</strong>
+              <div>
+                <h3>Escolha a categoria</h3>
+                <p>O cadastro muda conforme cartucho, líquido, descartável, rolo ou unidade avulsa.</p>
+              </div>
+            </article>
+            <article>
+              <strong>02</strong>
+              <div>
+                <h3>Informe o preço real</h3>
+                <p>O app calcula custo por unidade, ml, g, metro ou folha.</p>
+              </div>
+            </article>
+            <article>
+              <strong>03</strong>
+              <div>
+                <h3>Monte o orçamento</h3>
+                <p>Some insumos utilizados, duração da sessão, valor por hora e referência visual.</p>
+              </div>
+            </article>
+          </aside>
+        </div>
 
-        <section class="home-feature-grid" aria-label="Recursos principais">
-          <article class="home-feature-card">
+        <section class="feature-grid" aria-label="Recursos do aplicativo">
+          <article class="feature-card">
             <span>Cartuchos</span>
-            <strong>Preço unitário real</strong>
-            <p>Um RL 0310 de R$ 15,00 continua valendo R$ 15,00 por unidade, mesmo se houver 5 no estoque.</p>
+            <strong>Custo por unidade da caixa</strong>
+            <p>Preço da caixa dividido pela quantidade. No orçamento, uso sempre inteiro.</p>
           </article>
-          <article class="home-feature-card">
-            <span>Tintas e fracionáveis</span>
-            <strong>Custo proporcional</strong>
-            <p>Valor da embalagem dividido pela quantidade total para chegar ao custo por ml, grama, folha ou unidade.</p>
+          <article class="feature-card">
+            <span>Líquidos e pastosos</span>
+            <strong>Precisão decimal</strong>
+            <p>Permite 1.5 ml, 2.5 g e digitação livre com passo de 0.5.</p>
           </article>
-          <article class="home-feature-card">
-            <span>Orçamentos</span>
-            <strong>Materiais + mão de obra</strong>
-            <p>Some insumos utilizados com horas trabalhadas para chegar a um valor mais profissional.</p>
+          <article class="feature-card">
+            <span>PDF premium</span>
+            <strong>Cliente + referência</strong>
+            <p>Exporta nome do cliente, imagem pequena, insumos e mão de obra.</p>
           </article>
         </section>
       </section>
 
       <section class="screen-panel" id="inventoryScreen" data-screen="inventory" aria-labelledby="inventoryTitle">
-        <div class="screen-intro screen-intro-row">
+        <div class="section-header">
           <div>
-            <span>Vitrine de insumos</span>
+            <span>Banco local de insumos</span>
             <h2 id="inventoryTitle">Estoque</h2>
           </div>
-          <strong class="screen-counter" id="inventoryCounter">0 insumos</strong>
+          <div class="header-actions">
+            <strong class="counter-pill" id="inventoryCounter">0 de 0</strong>
+            <button class="primary-button" id="openItemModalButton" type="button">Novo item</button>
+          </div>
         </div>
 
-        <label class="search-field">
-          <span>Buscar no estoque</span>
-          <input id="inventorySearchInput" type="search" placeholder="Ex: tinta, luva, cartucho" />
-        </label>
+        <div class="toolbar-grid">
+          <label class="search-field">
+            <span>Pesquisar no estoque</span>
+            <input id="inventorySearchInput" type="search" placeholder="Marca, categoria, numeração, cor ou nome" />
+          </label>
+          <button class="secondary-button" id="clearInventorySearchButton" type="button">Limpar</button>
+        </div>
 
-        <section class="filter-chip-row" id="categoryFilterList" aria-label="Filtrar estoque por categoria"></section>
-
-        <section class="inventory-grid" id="inventoryGrid" aria-label="Insumos cadastrados"></section>
+        <section class="chip-row" id="inventoryCategoryFilters" aria-label="Filtros de categoria do estoque"></section>
+        <section class="inventory-grid" id="inventoryGrid" aria-label="Itens cadastrados"></section>
       </section>
 
-      <section class="screen-panel" id="budgetsScreen" data-screen="budgets" aria-labelledby="budgetsTitle">
-        <div class="screen-intro screen-intro-row">
+      <section class="screen-panel" id="budgetScreen" data-screen="budget" aria-labelledby="budgetTitle">
+        <div class="section-header">
           <div>
-            <span>Projeto financeiro</span>
-            <h2 id="budgetsTitle">Orçamentos</h2>
+            <span>Ficha financeira do cliente</span>
+            <h2 id="budgetTitle">Orçamento</h2>
           </div>
-          <strong class="screen-counter" id="budgetItemCounter">0 itens</strong>
+          <strong class="counter-pill" id="budgetCounter">0 de 0</strong>
         </div>
 
-        <div class="budget-dashboard-grid">
-          <section class="budget-summary-card budget-calculator-card" aria-label="Calculadora do orçamento">
-            <div class="budget-identity-grid">
-              <label class="form-field budget-name-field">
+        <div class="budget-layout">
+          <section class="budget-form-card glass-panel" aria-label="Dados do orçamento">
+            <div class="form-grid two-columns">
+              <label class="form-field">
                 <span>Nome do orçamento</span>
-                <input id="budgetNameInput" type="text" placeholder="Fechamento braço" />
+                <input id="budgetNameInput" type="text" placeholder="Ex: Fechamento de braço" />
               </label>
-
-              <label class="form-field budget-client-field">
+              <label class="form-field">
                 <span>Nome do cliente</span>
                 <input id="clientNameInput" type="text" placeholder="Ex: Mariana Souza" />
               </label>
+              <label class="form-field">
+                <span>Valor da hora</span>
+                <input id="hourlyRateInput" type="text" inputmode="decimal" placeholder="150,00" />
+              </label>
+              <label class="form-field">
+                <span>Duração estimada</span>
+                <input id="sessionDurationInput" type="text" inputmode="decimal" placeholder="3" />
+              </label>
             </div>
 
-            <label class="form-field">
-              <span>Valor mão de obra por hora</span>
-              <input id="hourlyRateInput" type="text" inputmode="decimal" placeholder="150,00" />
-            </label>
-
-            <label class="form-field">
-              <span>Tempo estimado da sessão</span>
-              <input id="sessionHoursInput" type="text" inputmode="decimal" placeholder="3" />
-            </label>
-
-            <section class="tattoo-reference-panel" aria-label="Referência visual da tatuagem">
+            <section class="image-upload-card">
               <div>
-                <span>Imagem da tatuagem</span>
-                <strong>Referência para o PDF</strong>
-                <small>Adicione um JPG/PNG pequeno para sair junto no orçamento.</small>
+                <span>Imagem de referência</span>
+                <strong>Adicionar tatuagem ao PDF</strong>
+                <p>Use uma imagem leve em PNG, JPG ou WEBP. Ela será exibida em tamanho reduzido no orçamento.</p>
               </div>
-              <div class="tattoo-reference-actions">
-                <label class="secondary-button tattoo-image-button" for="tattooImageInput">Adicionar imagem</label>
-                <button class="ghost-button" id="removeTattooImageButton" type="button">Remover</button>
-                <input id="tattooImageInput" type="file" accept="image/png,image/jpeg,image/webp" hidden />
+              <div class="image-actions">
+                <label class="secondary-button" for="referenceImageInput">Escolher imagem</label>
+                <button class="ghost-button" id="removeReferenceImageButton" type="button">Remover</button>
+                <input id="referenceImageInput" type="file" accept="image/png,image/jpeg,image/webp" hidden />
               </div>
-              <figure class="tattoo-preview" id="tattooImagePreview" hidden></figure>
+              <figure class="reference-preview" id="referencePreview" hidden></figure>
             </section>
 
-            <div class="budget-breakdown-grid" aria-live="polite">
-              <div class="budget-breakdown-box">
+            <div class="total-grid" aria-live="polite">
+              <article>
                 <span>Insumos</span>
-                <strong id="materialCostValue">R$ 0,00</strong>
-              </div>
-              <div class="budget-breakdown-box">
+                <strong id="materialTotalValue">R$ 0,00</strong>
+              </article>
+              <article>
                 <span>Mão de obra</span>
-                <strong id="laborCostValue">R$ 0,00</strong>
+                <strong id="laborTotalValue">R$ 0,00</strong>
+              </article>
+              <article class="total-feature">
+                <span>Total</span>
+                <strong id="budgetTotalValue">R$ 0,00</strong>
+              </article>
+            </div>
+
+            <div class="action-row end-actions">
+              <button class="secondary-button" id="newBudgetButton" type="button">Novo orçamento</button>
+              <button class="primary-button" id="exportPdfButton" type="button">Exportar PDF</button>
+            </div>
+          </section>
+
+          <section class="budget-picker-card glass-panel" aria-labelledby="pickerTitle">
+            <div class="section-mini-header">
+              <div>
+                <span>Adicionar insumos</span>
+                <h3 id="pickerTitle">Buscar item</h3>
               </div>
+              <button class="secondary-button" id="clearBudgetSearchButton" type="button">Limpar</button>
             </div>
 
-            <div class="budget-total-box">
-              <span>Total do orçamento</span>
-              <strong id="budgetTotalValue">R$ 0,00</strong>
-            </div>
+            <label class="search-field inside-card">
+              <span>Pesquisar</span>
+              <input id="budgetSearchInput" type="search" placeholder="Ex: RL 0310, luva, preto, vaselina" />
+            </label>
 
-            <div class="budget-actions-row">
-              <button class="secondary-button" id="createBudgetButton" type="button">Novo orçamento</button>
-              <button class="primary-button" id="exportInvoiceButton" type="button">Gerar PDF</button>
-            </div>
-          </section>
-
-          <aside class="budget-guide-card" aria-label="Regras do cálculo">
-            <span>Como o app calcula</span>
-            <h3>Preço final = insumos usados + mão de obra</h3>
-            <p>Cartuchos entram pelo valor unitário real. Materiais fracionáveis entram pelo custo por unidade de medida. Use os botões de mais e menos para definir a quantidade usada no projeto; a mão de obra é calculada por horas multiplicadas pelo valor por hora.</p>
-            <div class="budget-formula-box">
-              <strong>Materiais</strong>
-              <span>+</span>
-              <strong>Horas × Valor/h</strong>
-              <span>=</span>
-              <strong>Total</strong>
-            </div>
-            <p class="budget-helper-copy">No carrinho, ajuste cada insumo pelos controles − e + antes de gerar o PDF.</p>
-          </aside>
-        </div>
-
-        <div class="budget-workspace-grid">
-          <section class="cart-section" aria-labelledby="stockPickerTitle">
-            <div class="section-heading">
-              <span>Adicionar ao orçamento</span>
-              <h3 id="stockPickerTitle">Buscar insumos</h3>
-            </div>
-
-            <div class="budget-search-shell">
-              <label class="search-field budget-search-field">
-                <span>Buscar item</span>
-                <input id="budgetSearchInput" type="search" placeholder="Digite nome, marca, cor, agulha ou categoria" />
-              </label>
-              <button class="secondary-button clear-budget-search-button" id="clearBudgetSearchButton" type="button">Limpar</button>
-            </div>
-
-            <section class="filter-chip-row budget-filter-chip-row" id="budgetCategoryFilterList" aria-label="Filtrar insumos do orçamento por categoria"></section>
-
-            <div class="stock-picker-list" id="stockPickerList"></div>
-          </section>
-
-          <section class="cart-section" aria-labelledby="cartTitle">
-            <div class="section-heading">
-              <span>Itens selecionados</span>
-              <h3 id="cartTitle">Carrinho do projeto</h3>
-            </div>
-
-            <div class="cart-list" id="cartList"></div>
+            <section class="chip-row compact-chip-row" id="budgetCategoryFilters" aria-label="Filtros de categoria para orçamento"></section>
+            <section class="picker-list" id="stockPickerList" aria-label="Itens disponíveis para orçamento"></section>
           </section>
         </div>
+
+        <section class="cart-card glass-panel" aria-labelledby="cartTitle">
+          <div class="section-mini-header">
+            <div>
+              <span>Itens usados</span>
+              <h3 id="cartTitle">Carrinho do orçamento</h3>
+            </div>
+          </div>
+          <section class="cart-list" id="cartList" aria-label="Itens adicionados ao orçamento"></section>
+        </section>
       </section>
     </main>
-
-    <button class="floating-action-button" id="openItemModalButton" type="button" aria-label="Adicionar novo item">+</button>
   </div>
 
   <dialog class="app-modal" id="itemModal" aria-labelledby="itemModalTitle">
     <form class="modal-card" id="itemForm" autocomplete="off">
       <div class="modal-header">
         <div>
-          <span id="itemModalKicker">Novo insumo</span>
-          <h2 id="itemModalTitle">Adicionar item</h2>
+          <span id="itemModalEyebrow">Novo item</span>
+          <h2 id="itemModalTitle">Cadastrar insumo</h2>
         </div>
-        <button class="icon-button" id="closeItemModalButton" type="button" aria-label="Fechar">×</button>
+        <button class="icon-button" id="closeItemModalButton" type="button" aria-label="Fechar modal">×</button>
       </div>
 
-      <label class="form-field">
-        <span>Nome</span>
-        <input id="itemNameInput" type="text" placeholder="Ex: Cartucho Black Line" required />
-      </label>
-
-      <label class="form-field">
-        <span>Categoria</span>
-        <select id="itemCategoryInput" required>
-          <option value="Cartucho">Cartucho</option>
-          <option value="Tinta">Tinta</option>
-          <option value="Biossegurança">Biossegurança</option>
-          <option value="Descartável">Descartável</option>
-          <option value="Outros">Outros</option>
-        </select>
-      </label>
-
-      <section class="category-form-panel" aria-live="polite">
-        <div class="category-form-header">
-          <span id="categoryFormKicker">Ficha dinâmica</span>
-          <strong id="categoryFormTitle">Cartucho</strong>
+      <section class="form-step-panel">
+        <div class="step-heading">
+          <strong>Etapa 1</strong>
+          <span>Escolha a categoria principal</span>
         </div>
-        <div class="form-grid" id="categoryDynamicFields"></div>
+        <div class="category-choice-grid" id="categoryChoiceGrid" aria-label="Categorias de cadastro"></div>
       </section>
 
-      <div class="form-grid">
-        <label class="form-field">
-          <span>Tipo Unidade</span>
-          <select id="unitMeasureInput" required>
-            <option value="unid">unid</option>
-            <option value="ml">ml</option>
-            <option value="gramas">gramas</option>
-            <option value="mg">mg</option>
-            <option value="folhas">folhas</option>
-            <option value="metros">metros</option>
-          </select>
-        </label>
-
-        <label class="form-field">
-          <span id="purchasePriceLabel">Valor</span>
-          <input id="purchasePriceInput" type="text" inputmode="decimal" placeholder="100,00" required />
-        </label>
-      </div>
-
-      <label class="form-field">
-        <span id="packageQuantityLabel">Quantidade</span>
-        <input id="packageQuantityInput" type="text" inputmode="decimal" placeholder="30" required />
-      </label>
-
-      <input id="currentStockInput" type="hidden" />
-
-      <section class="unit-cost-preview" aria-live="polite">
-        <span id="unitCostPreviewLabel">Custo da unidade fracionada</span>
-        <strong id="unitCostPreview">R$ 0,00</strong>
+      <section class="form-step-panel">
+        <div class="step-heading">
+          <strong>Etapa 2</strong>
+          <span id="dynamicFormTitle">Preencha a ficha do item</span>
+        </div>
+        <div class="dynamic-fields-grid" id="dynamicFieldsGrid"></div>
       </section>
 
-      <button class="primary-button" id="itemSubmitButton" type="submit">Salvar item</button>
-    </form>
-  </dialog>
+      <section class="unit-cost-preview" id="unitCostPreview" aria-live="polite">
+        <span>Prévia do cálculo</span>
+        <strong>R$ 0,00</strong>
+      </section>
 
-  <dialog class="app-modal" id="importModal" aria-labelledby="importModalTitle">
-    <form class="modal-card" id="importForm">
-      <div class="modal-header">
-        <div>
-          <span>CSV local</span>
-          <h2 id="importModalTitle">Importar Planilha</h2>
-        </div>
-        <button class="icon-button" id="closeImportModalButton" type="button" aria-label="Fechar">×</button>
-      </div>
-
-      <label class="form-field">
-        <span>Arquivo .csv</span>
-        <input id="csvFileInput" type="file" accept=".csv,text/csv" required />
-      </label>
-
-      <p class="helper-text">Colunas aceitas: nome, categoria, quantidade, unidade, preço, estoque, marca, descrição, tipo, numeração, coloração.</p>
-      <div class="import-feedback" id="importFeedback">0/0</div>
-      <button class="primary-button" type="submit">Importar</button>
+      <button class="primary-button full-button" id="saveItemButton" type="submit">Salvar item</button>
     </form>
   </dialog>
 

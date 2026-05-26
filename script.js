@@ -1,474 +1,767 @@
-const STORAGE_KEY = "CALCULADORA_TATTOO_LOCAL_STATE_V1";
+const STORAGE_KEY = "CALCULADORA_TATTOO_STATE_V3";
+const LEGACY_STORAGE_KEYS = [
+  "CALCULADORA_TATTOO_LOCAL_STATE_V1",
+  "CALCULADORA_TATTOO_STATE_V2"
+];
+const CATEGORY_ALL = "Todos";
+const CATEGORY_NEEDLES = "Agulhas e Cartuchos";
+const CATEGORY_LIQUIDS = "Líquidos e Pastosos";
+const CATEGORY_DISPOSABLES = "Biossegurança e Descartáveis";
+const CATEGORY_LINEAR = "Materiais de Área/Extensão";
+const CATEGORY_DIRECT_UNIT = "Unidade Avulsa Direta";
+const CALCULATION_UNIT_BOX = "unitBox";
+const CALCULATION_FRACTIONAL = "fractional";
+const CALCULATION_DIRECT_UNIT = "directUnit";
+const MEASURE_UNIT = "un";
+const MEASURE_ML = "ml";
+const MEASURE_GRAM = "g";
+const MEASURE_METER = "m";
+const MEASURE_SHEET = "folhas";
+const INTEGER_STEP = 1;
+const DECIMAL_STEP = 0.5;
+const MAX_IMAGE_SIZE_BYTES = 1800000;
+const SCREEN_META = {
+  home: { title: "Início", eyebrow: "Visão geral" },
+  inventory: { title: "Estoque", eyebrow: "Banco local" },
+  budget: { title: "Orçamento", eyebrow: "Ficha do cliente" }
+};
 const CURRENCY_FORMATTER = new Intl.NumberFormat("pt-BR", {
   style: "currency",
   currency: "BRL"
 });
 const NUMBER_FORMATTER = new Intl.NumberFormat("pt-BR", {
+  minimumFractionDigits: 0,
   maximumFractionDigits: 2
 });
-const DESKTOP_MEDIA_QUERY = window.matchMedia("(min-width: 1024px)");
-const CATEGORY_ALL_VALUE = "Todos";
-const CATEGORY_CARTUCHO = "Cartucho";
-const CATEGORY_TINTA = "Tinta";
-const CATEGORY_BIOSSEGURANCA = "Biossegurança";
-const CATEGORY_DESCARTAVEL = "Descartável";
-const CATEGORY_OUTROS = "Outros";
-const UNIT_PRICING_MODE = "unit";
-const FRACTIONAL_PRICING_MODE = "fractional";
-const SCREEN_TITLES = {
-  home: "Início",
-  inventory: "Estoque",
-  budgets: "Orçamentos"
-};
-const BASE_INVENTORY_CATEGORIES = [
-  CATEGORY_ALL_VALUE,
-  CATEGORY_CARTUCHO,
-  CATEGORY_TINTA,
-  CATEGORY_BIOSSEGURANCA,
-  CATEGORY_DESCARTAVEL,
-  CATEGORY_OUTROS
-];
-const ITEM_CATEGORY_SCHEMAS = {
-  [CATEGORY_CARTUCHO]: {
-    title: "Cartucho",
-    kicker: "Ficha de cartucho",
+const CATEGORY_DEFINITIONS = {
+  [CATEGORY_NEEDLES]: {
+    label: CATEGORY_NEEDLES,
+    helper: "Compra em caixa, uso por unidade.",
+    calculationType: CALCULATION_UNIT_BOX,
+    defaultMeasure: MEASURE_UNIT,
     fields: [
-      {
-        id: "itemBrandInput",
-        key: "brand",
-        label: "Marca",
-        placeholder: "Ex: Electric Ink"
-      },
-      {
-        id: "cartridgeTypeInput",
-        key: "cartridgeType",
-        label: "Tipo",
-        placeholder: "Ex: RL"
-      },
-      {
-        id: "cartridgeNumberInput",
-        key: "cartridgeNumber",
-        label: "Numeração",
-        placeholder: "Ex: 0310"
-      }
+      { key: "brand", label: "Marca", type: "text", placeholder: "Ex: White Head", required: true },
+      { key: "lineType", label: "Linha/Tipo", type: "text", placeholder: "Ex: RL, RS, MG", required: true },
+      { key: "numbering", label: "Numeração", type: "text", placeholder: "Ex: 0310, 0712", required: true },
+      { key: "packageQuantity", label: "Qtd na caixa", type: "number", inputMode: "numeric", placeholder: "20", required: true },
+      { key: "packagePrice", label: "Preço da caixa", type: "currency", inputMode: "decimal", placeholder: "300,00", required: true }
     ]
   },
-  [CATEGORY_BIOSSEGURANCA]: {
-    title: "Biossegurança",
-    kicker: "Ficha de biossegurança",
+  [CATEGORY_LIQUIDS]: {
+    label: CATEGORY_LIQUIDS,
+    helper: "Compra em volume ou peso, uso fracionado.",
+    calculationType: CALCULATION_FRACTIONAL,
+    defaultMeasure: MEASURE_ML,
     fields: [
-      {
-        id: "itemBrandInput",
-        key: "brand",
-        label: "Marca",
-        placeholder: "Ex: Supermax"
-      },
-      {
-        id: "itemDescriptionInput",
-        key: "description",
-        label: "Descrição",
-        placeholder: "Ex: Luva nitrílica preta"
-      }
+      { key: "name", label: "Nome", type: "text", placeholder: "Ex: Tinta preta, vaselina", required: true },
+      { key: "brand", label: "Marca", type: "text", placeholder: "Ex: Dynamic", required: false },
+      { key: "color", label: "Cor, se aplicável", type: "text", placeholder: "Ex: Preto linha", required: false },
+      { key: "packageQuantity", label: "Volume da embalagem", type: "measure", inputMode: "decimal", placeholder: "30", required: true, options: [MEASURE_ML, MEASURE_GRAM] },
+      { key: "packagePrice", label: "Preço da embalagem", type: "currency", inputMode: "decimal", placeholder: "100,00", required: true }
     ]
   },
-  [CATEGORY_DESCARTAVEL]: {
-    title: "Descartável",
-    kicker: "Ficha de descartável",
+  [CATEGORY_DISPOSABLES]: {
+    label: CATEGORY_DISPOSABLES,
+    helper: "Compra em pacote ou caixa, uso por unidade.",
+    calculationType: CALCULATION_UNIT_BOX,
+    defaultMeasure: MEASURE_UNIT,
     fields: [
-      {
-        id: "itemBrandInput",
-        key: "brand",
-        label: "Marca",
-        placeholder: "Ex: Spirit"
-      },
-      {
-        id: "itemDescriptionInput",
-        key: "description",
-        label: "Descrição",
-        placeholder: "Ex: Folha stencil premium"
-      }
+      { key: "name", label: "Nome", type: "text", placeholder: "Ex: Luva nitrílica, batoque", required: true },
+      { key: "brand", label: "Marca", type: "text", placeholder: "Ex: Supermax", required: false },
+      { key: "packageQuantity", label: "Qtd no pacote/caixa", type: "number", inputMode: "numeric", placeholder: "100", required: true },
+      { key: "packagePrice", label: "Preço do pacote", type: "currency", inputMode: "decimal", placeholder: "50,00", required: true }
     ]
   },
-  [CATEGORY_TINTA]: {
-    title: "Tinta",
-    kicker: "Ficha de tinta",
+  [CATEGORY_LINEAR]: {
+    label: CATEGORY_LINEAR,
+    helper: "Compra em rolo, uso por metro ou folha.",
+    calculationType: CALCULATION_FRACTIONAL,
+    defaultMeasure: MEASURE_METER,
     fields: [
-      {
-        id: "itemBrandInput",
-        key: "brand",
-        label: "Marca",
-        placeholder: "Ex: Dynamic"
-      },
-      {
-        id: "itemColorInput",
-        key: "colorName",
-        label: "Coloração",
-        placeholder: "Ex: Preto linha"
-      }
+      { key: "name", label: "Nome", type: "text", placeholder: "Ex: Plástico filme", required: true },
+      { key: "brand", label: "Marca", type: "text", placeholder: "Ex: Marca do rolo", required: false },
+      { key: "packageQuantity", label: "Tamanho total do rolo", type: "measure", inputMode: "decimal", placeholder: "30", required: true, options: [MEASURE_METER, MEASURE_SHEET] },
+      { key: "packagePrice", label: "Preço do rolo", type: "currency", inputMode: "decimal", placeholder: "25,00", required: true }
     ]
   },
-  [CATEGORY_OUTROS]: {
-    title: "Outros",
-    kicker: "Ficha complementar",
+  [CATEGORY_DIRECT_UNIT]: {
+    label: CATEGORY_DIRECT_UNIT,
+    helper: "Compra avulsa, custo direto por unidade.",
+    calculationType: CALCULATION_DIRECT_UNIT,
+    defaultMeasure: MEASURE_UNIT,
     fields: [
-      {
-        id: "itemBrandInput",
-        key: "brand",
-        label: "Marca",
-        placeholder: "Ex: Marca do insumo"
-      },
-      {
-        id: "itemDescriptionInput",
-        key: "description",
-        label: "Descrição",
-        placeholder: "Ex: Detalhe do item"
-      }
+      { key: "name", label: "Nome", type: "text", placeholder: "Ex: Folha de estêncil avulsa", required: true },
+      { key: "unitPrice", label: "Preço unitário pago", type: "currency", inputMode: "decimal", placeholder: "4,50", required: true }
     ]
   }
 };
-
+const CATEGORY_ORDER = [
+  CATEGORY_ALL,
+  CATEGORY_NEEDLES,
+  CATEGORY_LIQUIDS,
+  CATEGORY_DISPOSABLES,
+  CATEGORY_LINEAR,
+  CATEGORY_DIRECT_UNIT
+];
 const DEFAULT_INVENTORY_ITEMS = [
   {
-    id: "item-cartucho-rl0310",
-    name: "Cartucho White Head",
-    category: CATEGORY_CARTUCHO,
+    id: "item-needle-rl0310",
+    category: CATEGORY_NEEDLES,
+    name: "White Head RL 0310",
     brand: "White Head",
-    cartridgeType: "RL",
-    cartridgeNumber: "0310",
-    unitMeasure: "unid",
+    lineType: "RL",
+    numbering: "0310",
     packageQuantity: 20,
-    purchasePrice: 15,
-    currentStock: 20,
-    pricingMode: UNIT_PRICING_MODE
+    packagePrice: 300,
+    measureUnit: MEASURE_UNIT,
+    calculationType: CALCULATION_UNIT_BOX,
+    createdAt: "2026-01-01T00:00:00.000Z",
+    updatedAt: "2026-01-01T00:00:00.000Z"
   },
   {
-    id: "item-tinta-preta",
+    id: "item-liquid-black",
+    category: CATEGORY_LIQUIDS,
     name: "Tinta preta linha",
-    category: CATEGORY_TINTA,
     brand: "Dynamic",
-    colorName: "Preto linha",
-    unitMeasure: "ml",
+    color: "Preto",
     packageQuantity: 30,
-    purchasePrice: 100,
-    currentStock: 30,
-    pricingMode: FRACTIONAL_PRICING_MODE
+    packagePrice: 100,
+    measureUnit: MEASURE_ML,
+    calculationType: CALCULATION_FRACTIONAL,
+    createdAt: "2026-01-01T00:00:00.000Z",
+    updatedAt: "2026-01-01T00:00:00.000Z"
   },
   {
-    id: "item-luvas",
+    id: "item-disposable-glove",
+    category: CATEGORY_DISPOSABLES,
     name: "Luvas nitrílicas",
-    category: CATEGORY_BIOSSEGURANCA,
     brand: "Supermax",
-    description: "Luva nitrílica preta sem pó",
-    unitMeasure: "unid",
     packageQuantity: 100,
-    purchasePrice: 50,
-    currentStock: 100,
-    pricingMode: FRACTIONAL_PRICING_MODE
+    packagePrice: 50,
+    measureUnit: MEASURE_UNIT,
+    calculationType: CALCULATION_UNIT_BOX,
+    createdAt: "2026-01-01T00:00:00.000Z",
+    updatedAt: "2026-01-01T00:00:00.000Z"
   },
   {
-    id: "item-stencil",
-    name: "Folha stencil",
-    category: CATEGORY_DESCARTAVEL,
-    brand: "Spirit",
-    description: "Folha para transferência de stencil",
-    unitMeasure: "folhas",
+    id: "item-linear-film",
+    category: CATEGORY_LINEAR,
+    name: "Plástico filme",
+    brand: "Premium Wrap",
+    packageQuantity: 30,
+    packagePrice: 24,
+    measureUnit: MEASURE_METER,
+    calculationType: CALCULATION_FRACTIONAL,
+    createdAt: "2026-01-01T00:00:00.000Z",
+    updatedAt: "2026-01-01T00:00:00.000Z"
+  },
+  {
+    id: "item-direct-stencil",
+    category: CATEGORY_DIRECT_UNIT,
+    name: "Folha de estêncil avulsa",
+    brand: "",
     packageQuantity: 1,
-    purchasePrice: 4.5,
-    currentStock: 8,
-    pricingMode: FRACTIONAL_PRICING_MODE
+    packagePrice: 4.5,
+    unitPrice: 4.5,
+    measureUnit: MEASURE_UNIT,
+    calculationType: CALCULATION_DIRECT_UNIT,
+    createdAt: "2026-01-01T00:00:00.000Z",
+    updatedAt: "2026-01-01T00:00:00.000Z"
   }
 ];
-
 const DEFAULT_BUDGET = {
   id: "budget-default",
   name: "Novo orçamento",
   clientName: "",
   hourlyRate: 0,
-  sessionHours: 0,
-  tattooImage: "",
-  tattooImageName: "",
+  sessionDuration: 0,
+  referenceImage: "",
+  referenceImageName: "",
   items: []
 };
 
-const elementReferences = {};
-let applicationState = loadApplicationState();
+const dom = {};
+let appState = loadAppState();
 let activeScreen = "home";
+let activeInventoryCategory = CATEGORY_ALL;
+let activeBudgetCategory = CATEGORY_ALL;
 let inventorySearchTerm = "";
 let budgetSearchTerm = "";
-let budgetCategoryFilter = CATEGORY_ALL_VALUE;
-let activeInventoryCategory = CATEGORY_ALL_VALUE;
-let editingInventoryItemId = null;
+let selectedFormCategory = CATEGORY_NEEDLES;
+let editingItemId = null;
 
-/**
- * Inicializa a aplicacao, conecta eventos e renderiza a primeira tela.
- * @returns {void}
- */
-function initializeApplication() {
-  bindElementReferences();
-  bindEventListeners();
-  syncDrawerForViewport();
-  renderApplication();
+function initializeApp() {
+  bindDomReferences();
+  bindEvents();
+  renderApp();
   registerServiceWorker();
 }
 
-/**
- * Armazena referencias dos elementos principais da interface.
- * @returns {void}
- */
-function bindElementReferences() {
-  elementReferences.budgetNameInput = document.querySelector("#budgetNameInput");
-  elementReferences.budgetCategoryFilterList = document.querySelector("#budgetCategoryFilterList");
-  elementReferences.budgetSearchInput = document.querySelector("#budgetSearchInput");
-  elementReferences.budgetTotalValue = document.querySelector("#budgetTotalValue");
-  elementReferences.cartList = document.querySelector("#cartList");
-  elementReferences.categoryFilterList = document.querySelector("#categoryFilterList");
-  elementReferences.categoryDynamicFields = document.querySelector("#categoryDynamicFields");
-  elementReferences.categoryFormKicker = document.querySelector("#categoryFormKicker");
-  elementReferences.categoryFormTitle = document.querySelector("#categoryFormTitle");
-  elementReferences.closeImportModalButton = document.querySelector("#closeImportModalButton");
-  elementReferences.closeItemModalButton = document.querySelector("#closeItemModalButton");
-  elementReferences.clearBudgetSearchButton = document.querySelector("#clearBudgetSearchButton");
-  elementReferences.clientNameInput = document.querySelector("#clientNameInput");
-  elementReferences.createBudgetButton = document.querySelector("#createBudgetButton");
-  elementReferences.currentPageTitle = document.querySelector("#currentPageTitle");
-  elementReferences.currentStockInput = document.querySelector("#currentStockInput");
-  elementReferences.csvFileInput = document.querySelector("#csvFileInput");
-  elementReferences.drawer = document.querySelector("#drawer");
-  elementReferences.drawerBackdrop = document.querySelector("#drawerBackdrop");
-  elementReferences.drawerLinks = document.querySelectorAll("[data-drawer-action]");
-  elementReferences.homeActionButtons = document.querySelectorAll("[data-home-action]");
-  elementReferences.exportInvoiceButton = document.querySelector("#exportInvoiceButton");
-  elementReferences.budgetItemCounter = document.querySelector("#budgetItemCounter");
-  elementReferences.hourlyRateInput = document.querySelector("#hourlyRateInput");
-  elementReferences.importFeedback = document.querySelector("#importFeedback");
-  elementReferences.importForm = document.querySelector("#importForm");
-  elementReferences.importModal = document.querySelector("#importModal");
-  elementReferences.inventoryCounter = document.querySelector("#inventoryCounter");
-  elementReferences.inventoryGrid = document.querySelector("#inventoryGrid");
-  elementReferences.inventorySearchInput = document.querySelector("#inventorySearchInput");
-  elementReferences.invoiceDocument = document.querySelector("#invoiceDocument");
-  elementReferences.itemCategoryInput = document.querySelector("#itemCategoryInput");
-  elementReferences.itemForm = document.querySelector("#itemForm");
-  elementReferences.itemModalKicker = document.querySelector("#itemModalKicker");
-  elementReferences.itemModalTitle = document.querySelector("#itemModalTitle");
-  elementReferences.itemModal = document.querySelector("#itemModal");
-  elementReferences.itemNameInput = document.querySelector("#itemNameInput");
-  elementReferences.itemSubmitButton = document.querySelector("#itemSubmitButton");
-  elementReferences.laborCostValue = document.querySelector("#laborCostValue");
-  elementReferences.materialCostValue = document.querySelector("#materialCostValue");
-  elementReferences.openDrawerButton = document.querySelector("#openDrawerButton");
-  elementReferences.openItemModalButton = document.querySelector("#openItemModalButton");
-  elementReferences.packageQuantityInput = document.querySelector("#packageQuantityInput");
-  elementReferences.packageQuantityLabel = document.querySelector("#packageQuantityLabel");
-  elementReferences.purchasePriceInput = document.querySelector("#purchasePriceInput");
-  elementReferences.purchasePriceLabel = document.querySelector("#purchasePriceLabel");
-  elementReferences.screens = document.querySelectorAll("[data-screen]");
-  elementReferences.sessionHoursInput = document.querySelector("#sessionHoursInput");
-  elementReferences.removeTattooImageButton = document.querySelector("#removeTattooImageButton");
-  elementReferences.stockPickerList = document.querySelector("#stockPickerList");
-  elementReferences.tattooImageInput = document.querySelector("#tattooImageInput");
-  elementReferences.tattooImagePreview = document.querySelector("#tattooImagePreview");
-  elementReferences.unitCostPreview = document.querySelector("#unitCostPreview");
-  elementReferences.unitCostPreviewLabel = document.querySelector("#unitCostPreviewLabel");
-  elementReferences.unitMeasureInput = document.querySelector("#unitMeasureInput");
+function bindDomReferences() {
+  dom.sidebar = document.querySelector("#sidebar");
+  dom.drawerBackdrop = document.querySelector("#drawerBackdrop");
+  dom.openSidebarButton = document.querySelector("#openSidebarButton");
+  dom.navLinks = document.querySelectorAll("[data-screen-target]");
+  dom.homeActions = document.querySelectorAll("[data-home-action]");
+  dom.pageTitle = document.querySelector("#pageTitle");
+  dom.pageEyebrow = document.querySelector("#pageEyebrow");
+  dom.screens = document.querySelectorAll("[data-screen]");
+  dom.quickNewItemButton = document.querySelector("#quickNewItemButton");
+  dom.openItemModalButton = document.querySelector("#openItemModalButton");
+  dom.itemModal = document.querySelector("#itemModal");
+  dom.itemForm = document.querySelector("#itemForm");
+  dom.itemModalEyebrow = document.querySelector("#itemModalEyebrow");
+  dom.itemModalTitle = document.querySelector("#itemModalTitle");
+  dom.closeItemModalButton = document.querySelector("#closeItemModalButton");
+  dom.categoryChoiceGrid = document.querySelector("#categoryChoiceGrid");
+  dom.dynamicFormTitle = document.querySelector("#dynamicFormTitle");
+  dom.dynamicFieldsGrid = document.querySelector("#dynamicFieldsGrid");
+  dom.unitCostPreview = document.querySelector("#unitCostPreview");
+  dom.inventoryCounter = document.querySelector("#inventoryCounter");
+  dom.inventorySearchInput = document.querySelector("#inventorySearchInput");
+  dom.clearInventorySearchButton = document.querySelector("#clearInventorySearchButton");
+  dom.inventoryCategoryFilters = document.querySelector("#inventoryCategoryFilters");
+  dom.inventoryGrid = document.querySelector("#inventoryGrid");
+  dom.budgetCounter = document.querySelector("#budgetCounter");
+  dom.budgetNameInput = document.querySelector("#budgetNameInput");
+  dom.clientNameInput = document.querySelector("#clientNameInput");
+  dom.hourlyRateInput = document.querySelector("#hourlyRateInput");
+  dom.sessionDurationInput = document.querySelector("#sessionDurationInput");
+  dom.referenceImageInput = document.querySelector("#referenceImageInput");
+  dom.removeReferenceImageButton = document.querySelector("#removeReferenceImageButton");
+  dom.referencePreview = document.querySelector("#referencePreview");
+  dom.materialTotalValue = document.querySelector("#materialTotalValue");
+  dom.laborTotalValue = document.querySelector("#laborTotalValue");
+  dom.budgetTotalValue = document.querySelector("#budgetTotalValue");
+  dom.newBudgetButton = document.querySelector("#newBudgetButton");
+  dom.exportPdfButton = document.querySelector("#exportPdfButton");
+  dom.clearBudgetSearchButton = document.querySelector("#clearBudgetSearchButton");
+  dom.budgetSearchInput = document.querySelector("#budgetSearchInput");
+  dom.budgetCategoryFilters = document.querySelector("#budgetCategoryFilters");
+  dom.stockPickerList = document.querySelector("#stockPickerList");
+  dom.cartList = document.querySelector("#cartList");
+  dom.invoiceDocument = document.querySelector("#invoiceDocument");
 }
 
-/**
- * Conecta os eventos de navegacao, formularios e listas dinamicas.
- * @returns {void}
- */
-function bindEventListeners() {
-  elementReferences.openDrawerButton.addEventListener("click", openDrawer);
-  elementReferences.drawerBackdrop.addEventListener("click", closeDrawer);
-  elementReferences.closeItemModalButton.addEventListener("click", () => closeModal(elementReferences.itemModal));
-  elementReferences.closeImportModalButton.addEventListener("click", () => closeModal(elementReferences.importModal));
-  elementReferences.openItemModalButton.addEventListener("click", () => openItemModal());
-
-  elementReferences.drawerLinks.forEach((drawerLink) => {
-    drawerLink.addEventListener("click", () => handleDrawerAction(drawerLink.dataset.drawerAction));
+function bindEvents() {
+  dom.openSidebarButton.addEventListener("click", openSidebar);
+  dom.drawerBackdrop.addEventListener("click", closeSidebar);
+  dom.navLinks.forEach((navLink) => {
+    navLink.addEventListener("click", () => setActiveScreen(navLink.dataset.screenTarget));
   });
-
-  elementReferences.homeActionButtons.forEach((homeButton) => {
-    homeButton.addEventListener("click", () => setActiveScreen(homeButton.dataset.homeAction));
+  dom.homeActions.forEach((homeAction) => {
+    homeAction.addEventListener("click", () => setActiveScreen(homeAction.dataset.homeAction));
   });
-
-  if (typeof DESKTOP_MEDIA_QUERY.addEventListener === "function") {
-    DESKTOP_MEDIA_QUERY.addEventListener("change", syncDrawerForViewport);
-  } else {
-    DESKTOP_MEDIA_QUERY.addListener(syncDrawerForViewport);
-  }
-
-  elementReferences.inventorySearchInput.addEventListener("input", (event) => {
+  dom.quickNewItemButton.addEventListener("click", () => openItemModal());
+  dom.openItemModalButton.addEventListener("click", () => openItemModal());
+  dom.closeItemModalButton.addEventListener("click", () => closeModal(dom.itemModal));
+  dom.categoryChoiceGrid.addEventListener("click", handleCategoryChoiceClick);
+  dom.dynamicFieldsGrid.addEventListener("input", updateUnitCostPreview);
+  dom.dynamicFieldsGrid.addEventListener("change", updateUnitCostPreview);
+  dom.itemForm.addEventListener("submit", handleItemFormSubmit);
+  dom.inventorySearchInput.addEventListener("input", (event) => {
     inventorySearchTerm = event.target.value;
     renderInventory();
   });
-
-  elementReferences.itemCategoryInput.addEventListener("change", handleItemCategoryChange);
-
-  elementReferences.categoryFilterList.addEventListener("click", (event) => {
-    const categoryButton = event.target.closest("[data-category-filter]");
-
-    if (!categoryButton) {
-      return;
-    }
-
-    setActiveInventoryCategory(categoryButton.dataset.categoryFilter);
+  dom.clearInventorySearchButton.addEventListener("click", () => {
+    inventorySearchTerm = "";
+    dom.inventorySearchInput.value = "";
+    renderInventory();
   });
-
-  elementReferences.inventoryGrid.addEventListener("click", handleInventoryGridClick);
-
-  elementReferences.budgetSearchInput.addEventListener("input", (event) => {
+  dom.inventoryCategoryFilters.addEventListener("click", handleInventoryFilterClick);
+  dom.inventoryGrid.addEventListener("click", handleInventoryGridClick);
+  dom.budgetNameInput.addEventListener("input", updateBudgetIdentity);
+  dom.clientNameInput.addEventListener("input", updateBudgetIdentity);
+  dom.hourlyRateInput.addEventListener("input", updateBudgetLabor);
+  dom.sessionDurationInput.addEventListener("input", updateBudgetLabor);
+  dom.referenceImageInput.addEventListener("change", handleReferenceImageChange);
+  dom.removeReferenceImageButton.addEventListener("click", removeReferenceImage);
+  dom.newBudgetButton.addEventListener("click", createNewBudget);
+  dom.exportPdfButton.addEventListener("click", exportPdf);
+  dom.budgetSearchInput.addEventListener("input", (event) => {
     budgetSearchTerm = event.target.value;
     renderStockPicker();
   });
-
-  elementReferences.clearBudgetSearchButton.addEventListener("click", () => {
+  dom.clearBudgetSearchButton.addEventListener("click", () => {
     budgetSearchTerm = "";
-    elementReferences.budgetSearchInput.value = "";
+    dom.budgetSearchInput.value = "";
     renderStockPicker();
   });
-
-  elementReferences.budgetCategoryFilterList.addEventListener("click", (event) => {
-    const categoryButton = event.target.closest("[data-budget-category-filter]");
-
-    if (!categoryButton) {
-      return;
-    }
-
-    setActiveBudgetCategory(categoryButton.dataset.budgetCategoryFilter);
-  });
-
-  elementReferences.budgetNameInput.addEventListener("input", (event) => {
-    getActiveBudget().name = event.target.value;
-    saveApplicationState();
-    renderBudget();
-  });
-
-  elementReferences.clientNameInput.addEventListener("input", (event) => {
-    getActiveBudget().clientName = event.target.value;
-    saveApplicationState();
-  });
-
-  [
-    elementReferences.hourlyRateInput,
-    elementReferences.sessionHoursInput
-  ].forEach((inputElement) => {
-    inputElement.addEventListener("input", updateBudgetLaborFromForm);
-  });
-
-  [
-    elementReferences.packageQuantityInput,
-    elementReferences.purchasePriceInput,
-    elementReferences.unitMeasureInput
-  ].forEach((inputElement) => {
-    inputElement.addEventListener("input", updateUnitCostPreview);
-    inputElement.addEventListener("change", updateUnitCostPreview);
-  });
-
-  elementReferences.itemForm.addEventListener("submit", (event) => {
-    event.preventDefault();
-    saveInventoryItemFromForm();
-  });
-
-  elementReferences.importForm.addEventListener("submit", (event) => {
-    event.preventDefault();
-    importInventoryFromCsv();
-  });
-
-  elementReferences.stockPickerList.addEventListener("click", (event) => {
-    const quantityButton = event.target.closest("[data-picker-quantity-action]");
-
-    if (quantityButton) {
-      const pickerCard = quantityButton.closest("[data-inventory-item-id]");
-      adjustPickerQuantity(
-        pickerCard.dataset.inventoryItemId,
-        quantityButton.dataset.pickerQuantityAction,
-        pickerCard.querySelector("[data-picker-quantity]")
-      );
-      return;
-    }
-
-    const addButton = event.target.closest("[data-add-inventory-item]");
-
-    if (!addButton) {
-      return;
-    }
-
-    const pickerCard = addButton.closest("[data-inventory-item-id]");
-    const quantityInput = pickerCard.querySelector("[data-picker-quantity]");
-    addItemToBudget(pickerCard.dataset.inventoryItemId, quantityInput.value);
-  });
-
-  elementReferences.cartList.addEventListener("change", (event) => {
-    if (!event.target.matches("[data-cart-quantity]")) {
-      return;
-    }
-
-    const cartCard = event.target.closest("[data-cart-item-id]");
-    updateBudgetItemQuantity(cartCard.dataset.cartItemId, event.target.value);
-  });
-
-  elementReferences.cartList.addEventListener("click", (event) => {
-    const quantityButton = event.target.closest("[data-cart-quantity-action]");
-
-    if (quantityButton) {
-      const cartCard = quantityButton.closest("[data-cart-item-id]");
-      adjustBudgetItemQuantity(cartCard.dataset.cartItemId, quantityButton.dataset.cartQuantityAction);
-      return;
-    }
-
-    const removeButton = event.target.closest("[data-remove-cart-item]");
-
-    if (!removeButton) {
-      return;
-    }
-
-    const cartCard = removeButton.closest("[data-cart-item-id]");
-    removeBudgetItem(cartCard.dataset.cartItemId);
-  });
-
-  elementReferences.tattooImageInput.addEventListener("change", handleBudgetTattooImageChange);
-  elementReferences.removeTattooImageButton.addEventListener("click", removeBudgetTattooImage);
-  elementReferences.exportInvoiceButton.addEventListener("click", exportInvoicePdf);
-  elementReferences.createBudgetButton.addEventListener("click", createNewBudget);
+  dom.budgetCategoryFilters.addEventListener("click", handleBudgetFilterClick);
+  dom.stockPickerList.addEventListener("click", handleStockPickerClick);
+  dom.stockPickerList.addEventListener("change", handlePickerQuantityChange);
+  dom.cartList.addEventListener("click", handleCartClick);
+  dom.cartList.addEventListener("change", handleCartQuantityChange);
 }
 
-/**
- * Atualiza a ficha dinamica e a unidade sugerida ao trocar a categoria no modal.
- * @returns {void}
- */
-function handleItemCategoryChange() {
-  const selectedCategory = normalizeCategory(elementReferences.itemCategoryInput.value);
-  elementReferences.unitMeasureInput.value = getDefaultUnitMeasureForCategory(selectedCategory);
-  renderItemCategoryFields(selectedCategory);
+function loadAppState() {
+  const savedState = localStorage.getItem(STORAGE_KEY) || getLegacyState();
+
+  if (!savedState) {
+    return createInitialState();
+  }
+
+  try {
+    return normalizeAppState(JSON.parse(savedState));
+  } catch {
+    return createInitialState();
+  }
+}
+
+function getLegacyState() {
+  const legacyKey = LEGACY_STORAGE_KEYS.find((storageKey) => localStorage.getItem(storageKey));
+  return legacyKey ? localStorage.getItem(legacyKey) : "";
+}
+
+function createInitialState() {
+  return {
+    inventoryItems: DEFAULT_INVENTORY_ITEMS.map((item) => ({ ...item })),
+    budgets: [{ ...DEFAULT_BUDGET, items: [] }],
+    activeBudgetId: DEFAULT_BUDGET.id
+  };
+}
+
+function normalizeAppState(rawState) {
+  const inventorySource = Array.isArray(rawState.inventoryItems) ? rawState.inventoryItems : DEFAULT_INVENTORY_ITEMS;
+  const budgetsSource = Array.isArray(rawState.budgets) && rawState.budgets.length > 0 ? rawState.budgets : [DEFAULT_BUDGET];
+  const budgets = budgetsSource.map(normalizeBudget);
+  const activeBudgetId = budgets.some((budget) => budget.id === rawState.activeBudgetId) ? rawState.activeBudgetId : budgets[0].id;
+
+  return {
+    inventoryItems: inventorySource.map(normalizeInventoryItem),
+    budgets,
+    activeBudgetId
+  };
+}
+
+function normalizeInventoryItem(item) {
+  const category = normalizeCategory(item.category);
+  const categoryDefinition = CATEGORY_DEFINITIONS[category];
+  const measureUnit = normalizeMeasureUnit(item.measureUnit || item.unitMeasure || item.unitLabel || item.tipoUnidade, categoryDefinition.defaultMeasure);
+  const packageQuantity = getNormalizedPackageQuantity(item, category);
+  const packagePrice = getNormalizedPackagePrice(item, category);
+  const normalizedName = getNormalizedItemName(item, category);
+
+  return {
+    id: item.id || createId("item"),
+    category,
+    name: normalizedName,
+    brand: sanitizeText(item.brand || item.marca),
+    lineType: sanitizeText(item.lineType || item.cartridgeType || item.tipo),
+    numbering: sanitizeText(item.numbering || item.cartridgeNumber || item.numeracao || item.numbering),
+    color: sanitizeText(item.color || item.colorName || item.coloration || item.coloracao),
+    packageQuantity,
+    packagePrice,
+    unitPrice: category === CATEGORY_DIRECT_UNIT ? packagePrice : calculateRawUnitCost(packagePrice, packageQuantity),
+    measureUnit,
+    calculationType: categoryDefinition.calculationType,
+    createdAt: item.createdAt || new Date().toISOString(),
+    updatedAt: item.updatedAt || item.createdAt || new Date().toISOString()
+  };
+}
+
+function getNormalizedItemName(item, category) {
+  if (category === CATEGORY_NEEDLES) {
+    const brand = sanitizeText(item.brand || item.marca);
+    const lineType = sanitizeText(item.lineType || item.cartridgeType || item.tipo);
+    const numbering = sanitizeText(item.numbering || item.cartridgeNumber || item.numeracao);
+    return [brand, lineType, numbering].filter(Boolean).join(" ") || "Cartucho sem identificação";
+  }
+
+  return sanitizeText(item.name || item.nome || item.description || item.descricao) || "Novo item";
+}
+
+function getNormalizedPackageQuantity(item, category) {
+  if (category === CATEGORY_DIRECT_UNIT) {
+    return 1;
+  }
+
+  const value = normalizeNumber(item.packageQuantity || item.currentStock || item.quantity || item.quantidade);
+  return value > 0 ? value : 1;
+}
+
+function getNormalizedPackagePrice(item, category) {
+  if (category === CATEGORY_DIRECT_UNIT) {
+    const unitPrice = normalizeNumber(item.unitPrice || item.packagePrice || item.purchasePrice || item.valor);
+    return unitPrice > 0 ? unitPrice : 0;
+  }
+
+  const explicitPackagePrice = normalizeNumber(item.packagePrice);
+
+  if (explicitPackagePrice > 0) {
+    return explicitPackagePrice;
+  }
+
+  const legacyPurchasePrice = normalizeNumber(item.purchasePrice || item.valor || item.price);
+
+  if (category === CATEGORY_NEEDLES && legacyPurchasePrice > 0 && !item.packagePrice) {
+    return legacyPurchasePrice * getNormalizedPackageQuantity(item, category);
+  }
+
+  return legacyPurchasePrice > 0 ? legacyPurchasePrice : 0;
+}
+
+function normalizeBudget(budget) {
+  return {
+    id: budget.id || createId("budget"),
+    name: sanitizeText(budget.name || budget.projectName) || "Novo orçamento",
+    clientName: sanitizeText(budget.clientName || budget.customerName || budget.nomeCliente),
+    hourlyRate: normalizeNumber(budget.hourlyRate || budget.laborHourlyRate || budget.valorHora),
+    sessionDuration: normalizeNumber(budget.sessionDuration || budget.sessionHours || budget.laborHours || budget.duracao),
+    referenceImage: isImageDataUrl(budget.referenceImage || budget.tattooImage) ? (budget.referenceImage || budget.tattooImage) : "",
+    referenceImageName: sanitizeText(budget.referenceImageName || budget.tattooImageName),
+    items: Array.isArray(budget.items) ? budget.items.map(normalizeBudgetItem) : []
+  };
+}
+
+function normalizeBudgetItem(item) {
+  return {
+    id: item.id || createId("cart"),
+    inventoryItemId: item.inventoryItemId,
+    quantityUsed: normalizeNumber(item.quantityUsed)
+  };
+}
+
+function saveAppState() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+}
+
+function renderApp() {
+  renderActiveScreen();
+  renderCategoryChoices();
+  renderDynamicForm();
+  renderInventoryFilters();
+  renderBudgetFilters();
+  renderInventory();
+  renderBudget();
+}
+
+function renderActiveScreen() {
+  const screenMeta = SCREEN_META[activeScreen] || SCREEN_META.home;
+  dom.pageTitle.textContent = screenMeta.title;
+  dom.pageEyebrow.textContent = screenMeta.eyebrow;
+  dom.screens.forEach((screen) => {
+    screen.classList.toggle("is-active", screen.dataset.screen === activeScreen);
+  });
+  dom.navLinks.forEach((navLink) => {
+    navLink.classList.toggle("is-active", navLink.dataset.screenTarget === activeScreen);
+  });
+  dom.quickNewItemButton.hidden = activeScreen !== "inventory";
+}
+
+function renderCategoryChoices() {
+  dom.categoryChoiceGrid.innerHTML = getBusinessCategories().map((categoryName) => {
+    const categoryDefinition = CATEGORY_DEFINITIONS[categoryName];
+    const isActive = selectedFormCategory === categoryName;
+    return `
+      <button class="category-choice ${isActive ? "is-active" : ""}" type="button" data-form-category="${escapeHtml(categoryName)}">
+        <strong>${escapeHtml(categoryDefinition.label)}</strong>
+        <span>${escapeHtml(categoryDefinition.helper)}</span>
+      </button>
+    `;
+  }).join("");
+}
+
+function renderDynamicForm(item = null) {
+  const categoryDefinition = CATEGORY_DEFINITIONS[selectedFormCategory];
+  dom.dynamicFormTitle.textContent = `${categoryDefinition.label}: ficha específica`;
+  dom.dynamicFieldsGrid.innerHTML = categoryDefinition.fields.map((field) => createDynamicFieldHtml(field, item)).join("");
   updateUnitCostPreview();
 }
 
-/**
- * Trata cliques do CRUD por delegacao no container da lista de estoque.
- * @param {MouseEvent} event Evento de clique capturado no grid pai.
- * @returns {void}
- */
+function createDynamicFieldHtml(field, item) {
+  const value = getFieldValueForRender(field, item);
+  const requiredAttribute = field.required ? "required" : "";
+  const inputMode = field.inputMode ? `inputmode="${escapeHtml(field.inputMode)}"` : "";
+
+  if (field.type === "measure") {
+    const selectedUnit = item?.measureUnit || CATEGORY_DEFINITIONS[selectedFormCategory].defaultMeasure;
+    return `
+      <label class="form-field measure-field">
+        <span>${escapeHtml(field.label)}</span>
+        <div class="measure-input-group">
+          <input data-item-field="${escapeHtml(field.key)}" type="text" ${inputMode} placeholder="${escapeHtml(field.placeholder)}" value="${escapeHtml(value)}" ${requiredAttribute} />
+          <select data-item-field="measureUnit" aria-label="Unidade de medida">
+            ${field.options.map((optionValue) => `<option value="${escapeHtml(optionValue)}" ${optionValue === selectedUnit ? "selected" : ""}>${escapeHtml(getMeasureLabel(optionValue))}</option>`).join("")}
+          </select>
+        </div>
+      </label>
+    `;
+  }
+
+  return `
+    <label class="form-field">
+      <span>${escapeHtml(field.label)}</span>
+      <input data-item-field="${escapeHtml(field.key)}" type="text" ${inputMode} placeholder="${escapeHtml(field.placeholder)}" value="${escapeHtml(value)}" ${requiredAttribute} />
+    </label>
+  `;
+}
+
+function getFieldValueForRender(field, item) {
+  if (!item) {
+    return "";
+  }
+
+  if (field.key === "packagePrice") {
+    return formatEditableNumber(item.packagePrice);
+  }
+
+  if (field.key === "unitPrice") {
+    return formatEditableNumber(calculateUnitCost(item));
+  }
+
+  if (field.key === "packageQuantity") {
+    return formatEditableNumber(item.packageQuantity);
+  }
+
+  return item[field.key] || "";
+}
+
+function renderInventoryFilters() {
+  renderFilterGroup(dom.inventoryCategoryFilters, activeInventoryCategory, "inventory-category");
+}
+
+function renderBudgetFilters() {
+  renderFilterGroup(dom.budgetCategoryFilters, activeBudgetCategory, "budget-category");
+}
+
+function renderFilterGroup(container, activeCategory, dataAttributeName) {
+  const categories = CATEGORY_ORDER.filter((categoryName) => categoryName === CATEGORY_ALL || appState.inventoryItems.some((item) => item.category === categoryName));
+  const safeCategories = categories.length > 1 ? categories : CATEGORY_ORDER;
+
+  container.innerHTML = safeCategories.map((categoryName) => {
+    const categoryCount = countItemsByCategory(categoryName);
+    const isActive = categoryName === activeCategory;
+    return `
+      <button class="filter-chip ${isActive ? "is-active" : ""}" type="button" data-${dataAttributeName}="${escapeHtml(categoryName)}">
+        <span>${escapeHtml(categoryName)}</span>
+        <strong>${formatCounter(categoryCount, getCounterTotal(categoryName))}</strong>
+      </button>
+    `;
+  }).join("");
+}
+
+function renderInventory() {
+  const filteredItems = getFilteredInventoryItems(inventorySearchTerm, activeInventoryCategory);
+  dom.inventoryCounter.textContent = formatCounter(filteredItems.length, appState.inventoryItems.length);
+
+  if (filteredItems.length === 0) {
+    dom.inventoryGrid.innerHTML = createEmptyStateHtml("Nenhum item encontrado no estoque.");
+    return;
+  }
+
+  dom.inventoryGrid.innerHTML = filteredItems.map(createInventoryCardHtml).join("");
+}
+
+function createInventoryCardHtml(item) {
+  const unitCost = calculateUnitCost(item);
+  const totalValue = calculateTotalInventoryValue(item);
+  const specification = getItemSpecification(item);
+  const featuredMetric = item.category === CATEGORY_NEEDLES
+    ? `<div class="stock-metric is-featured"><span>Tipo + numeração</span><strong>${escapeHtml(specification)}</strong></div>`
+    : `<div class="stock-metric is-featured"><span>Valor financeiro total</span><strong>${formatCurrency(totalValue)}</strong></div>`;
+
+  return `
+    <article class="inventory-card" data-inventory-item-id="${escapeHtml(item.id)}">
+      <div class="card-topline">
+        <span class="category-pill">${escapeHtml(item.category)}</span>
+        <details class="card-menu">
+          <summary aria-label="Abrir opções">⋯</summary>
+          <div>
+            <button type="button" data-inventory-action="edit">Editar</button>
+            <button type="button" data-inventory-action="delete">Excluir</button>
+          </div>
+        </details>
+      </div>
+      <div class="inventory-title-row">
+        <div class="product-avatar" aria-hidden="true">${escapeHtml(getProductInitial(item))}</div>
+        <div>
+          <h3>${escapeHtml(item.name)}</h3>
+          <span>${escapeHtml(getItemSubtitle(item))}</span>
+        </div>
+      </div>
+      <div class="stock-metric-grid">
+        ${featuredMetric}
+        <div class="stock-metric">
+          <span>Custo por ${escapeHtml(getMeasureLabel(item.measureUnit))}</span>
+          <strong>${formatCurrency(unitCost)}</strong>
+        </div>
+      </div>
+      <p class="card-note">${escapeHtml(getCalculationDescription(item))}</p>
+    </article>
+  `;
+}
+
+function renderBudget() {
+  const activeBudget = getActiveBudget();
+  const budgetTotals = calculateBudgetTotals(activeBudget);
+  dom.budgetNameInput.value = activeBudget.name;
+  dom.clientNameInput.value = activeBudget.clientName;
+  dom.hourlyRateInput.value = activeBudget.hourlyRate > 0 ? formatEditableNumber(activeBudget.hourlyRate) : "";
+  dom.sessionDurationInput.value = activeBudget.sessionDuration > 0 ? formatEditableNumber(activeBudget.sessionDuration) : "";
+  dom.materialTotalValue.textContent = formatCurrency(budgetTotals.materialCost);
+  dom.laborTotalValue.textContent = formatCurrency(budgetTotals.laborCost);
+  dom.budgetTotalValue.textContent = formatCurrency(budgetTotals.totalCost);
+  dom.budgetCounter.textContent = formatCounter(activeBudget.items.length, activeBudget.items.length);
+  renderReferencePreview();
+  renderStockPicker();
+  renderCart();
+}
+
+function renderReferencePreview() {
+  const activeBudget = getActiveBudget();
+
+  if (!activeBudget.referenceImage) {
+    dom.referencePreview.hidden = true;
+    dom.referencePreview.innerHTML = "";
+    return;
+  }
+
+  dom.referencePreview.hidden = false;
+  dom.referencePreview.innerHTML = `
+    <img src="${escapeAttribute(activeBudget.referenceImage)}" alt="Imagem de referência da tatuagem" />
+    <figcaption>${escapeHtml(activeBudget.referenceImageName || "Referência adicionada")}</figcaption>
+  `;
+}
+
+function renderStockPicker() {
+  const filteredItems = getFilteredInventoryItems(budgetSearchTerm, activeBudgetCategory);
+
+  if (filteredItems.length === 0) {
+    dom.stockPickerList.innerHTML = createEmptyStateHtml("Nenhum insumo encontrado para adicionar ao orçamento.");
+    return;
+  }
+
+  dom.stockPickerList.innerHTML = filteredItems.map((item) => {
+    const usageRules = getUsageRules(item);
+    const suffix = getMeasureSuffix(item.measureUnit);
+    return `
+      <article class="picker-card" data-inventory-item-id="${escapeHtml(item.id)}">
+        <div class="picker-info">
+          <strong>${escapeHtml(item.name)}</strong>
+          <span>${escapeHtml(item.category)} · ${escapeHtml(getItemSpecification(item))}</span>
+          <small>${formatCurrency(calculateUnitCost(item))} por ${escapeHtml(getMeasureLabel(item.measureUnit))}</small>
+        </div>
+        <div class="picker-actions">
+          <label class="stepper-field">
+            <span>Quantidade usada</span>
+            <div class="quantity-stepper ${suffix ? "has-suffix" : ""}" data-suffix="${escapeHtml(suffix)}">
+              <button type="button" data-picker-step="decrease" aria-label="Diminuir quantidade">−</button>
+              <input data-picker-quantity type="text" inputmode="${usageRules.inputMode}" value="${formatEditableNumber(usageRules.defaultValue)}" />
+              <button type="button" data-picker-step="increase" aria-label="Aumentar quantidade">+</button>
+            </div>
+          </label>
+          <button class="primary-button" type="button" data-add-to-budget>Adicionar</button>
+        </div>
+      </article>
+    `;
+  }).join("");
+}
+
+function renderCart() {
+  const activeBudget = getActiveBudget();
+  const cartEntries = activeBudget.items
+    .map((cartItem) => ({ cartItem, inventoryItem: findInventoryItem(cartItem.inventoryItemId) }))
+    .filter((entry) => entry.inventoryItem);
+
+  if (cartEntries.length === 0) {
+    dom.cartList.innerHTML = createEmptyStateHtml("Nenhum insumo adicionado ao orçamento.");
+    return;
+  }
+
+  dom.cartList.innerHTML = cartEntries.map(({ cartItem, inventoryItem }) => {
+    const suffix = getMeasureSuffix(inventoryItem.measureUnit);
+    const subtotal = calculateLineSubtotal(inventoryItem, cartItem.quantityUsed);
+    const usageRules = getUsageRules(inventoryItem);
+    return `
+      <article class="cart-line" data-cart-item-id="${escapeHtml(cartItem.id)}">
+        <div>
+          <strong>${escapeHtml(inventoryItem.name)}</strong>
+          <span>${escapeHtml(getItemSpecification(inventoryItem))} · ${formatCurrency(calculateUnitCost(inventoryItem))}/${escapeHtml(getMeasureLabel(inventoryItem.measureUnit))}</span>
+        </div>
+        <label class="stepper-field compact-stepper-field">
+          <span>Uso</span>
+          <div class="quantity-stepper ${suffix ? "has-suffix" : ""}" data-suffix="${escapeHtml(suffix)}">
+            <button type="button" data-cart-step="decrease" aria-label="Diminuir quantidade">−</button>
+            <input data-cart-quantity type="text" inputmode="${usageRules.inputMode}" value="${formatEditableNumber(cartItem.quantityUsed)}" />
+            <button type="button" data-cart-step="increase" aria-label="Aumentar quantidade">+</button>
+          </div>
+        </label>
+        <strong class="line-subtotal">${formatCurrency(subtotal)}</strong>
+        <button class="ghost-button" type="button" data-remove-cart-item>Remover</button>
+      </article>
+    `;
+  }).join("");
+}
+
+function setActiveScreen(screenName) {
+  if (!Object.prototype.hasOwnProperty.call(SCREEN_META, screenName)) {
+    return;
+  }
+
+  activeScreen = screenName;
+  renderActiveScreen();
+  closeSidebar();
+}
+
+function openSidebar() {
+  dom.sidebar.classList.add("is-open");
+  dom.drawerBackdrop.hidden = false;
+}
+
+function closeSidebar() {
+  dom.sidebar.classList.remove("is-open");
+  dom.drawerBackdrop.hidden = true;
+}
+
+function handleCategoryChoiceClick(event) {
+  const categoryButton = event.target.closest("[data-form-category]");
+
+  if (!categoryButton) {
+    return;
+  }
+
+  selectedFormCategory = normalizeCategory(categoryButton.dataset.formCategory);
+  renderCategoryChoices();
+  renderDynamicForm();
+}
+
+function handleInventoryFilterClick(event) {
+  const filterButton = event.target.closest("[data-inventory-category]");
+
+  if (!filterButton) {
+    return;
+  }
+
+  activeInventoryCategory = normalizeCategory(filterButton.dataset.inventoryCategory);
+  renderInventoryFilters();
+  renderInventory();
+}
+
+function handleBudgetFilterClick(event) {
+  const filterButton = event.target.closest("[data-budget-category]");
+
+  if (!filterButton) {
+    return;
+  }
+
+  activeBudgetCategory = normalizeCategory(filterButton.dataset.budgetCategory);
+  renderBudgetFilters();
+  renderStockPicker();
+}
+
 function handleInventoryGridClick(event) {
   const actionButton = event.target.closest("[data-inventory-action]");
 
-  if (!actionButton || !elementReferences.inventoryGrid.contains(actionButton)) {
+  if (!actionButton) {
     return;
   }
 
-  event.preventDefault();
-
   const inventoryCard = actionButton.closest("[data-inventory-item-id]");
-  const inventoryItemId = actionButton.dataset.inventoryItemId || inventoryCard?.dataset.inventoryItemId;
+  const inventoryItemId = inventoryCard?.dataset.inventoryItemId;
 
   if (!inventoryItemId) {
     return;
-  }
-
-  const optionsMenu = actionButton.closest("details");
-
-  if (optionsMenu) {
-    optionsMenu.open = false;
   }
 
   if (actionButton.dataset.inventoryAction === "edit") {
@@ -481,730 +774,83 @@ function handleInventoryGridClick(event) {
   }
 }
 
-/**
- * Executa a acao selecionada no menu lateral.
- * @param {string} actionName Nome semantico da acao do drawer.
- * @returns {void}
- */
-function handleDrawerAction(actionName) {
-  if (Object.prototype.hasOwnProperty.call(SCREEN_TITLES, actionName)) {
-    setActiveScreen(actionName);
-  }
+function handleStockPickerClick(event) {
+  const stepButton = event.target.closest("[data-picker-step]");
 
-  if (actionName === "import") {
-    openImportModal();
-  }
+  if (stepButton) {
+    const pickerCard = stepButton.closest("[data-inventory-item-id]");
+    const inventoryItem = findInventoryItem(pickerCard?.dataset.inventoryItemId);
+    const quantityInput = pickerCard?.querySelector("[data-picker-quantity]");
 
-  if (actionName === "backup") {
-    exportBackup();
-  }
-
-  if (!DESKTOP_MEDIA_QUERY.matches) {
-    closeDrawer();
-  } else {
-    syncDrawerForViewport();
-  }
-}
-
-/**
- * Carrega o estado persistido no localStorage.
- * @returns {{inventoryItems: Array<object>, budgets: Array<object>, activeBudgetId: string}} Estado normalizado da aplicacao.
- */
-function loadApplicationState() {
-  const savedState = localStorage.getItem(STORAGE_KEY);
-
-  if (!savedState) {
-    return createInitialState();
-  }
-
-  try {
-    return normalizeApplicationState(JSON.parse(savedState));
-  } catch {
-    return createInitialState();
-  }
-}
-
-/**
- * Cria o estado padrao usado na primeira visita.
- * @returns {{inventoryItems: Array<object>, budgets: Array<object>, activeBudgetId: string}} Estado inicial.
- */
-function createInitialState() {
-  return {
-    inventoryItems: DEFAULT_INVENTORY_ITEMS.map((item) => ({ ...item })),
-    budgets: [{ ...DEFAULT_BUDGET, items: [] }],
-    activeBudgetId: DEFAULT_BUDGET.id
-  };
-}
-
-/**
- * Normaliza um estado bruto vindo do localStorage.
- * @param {object} rawState Estado sem garantias de formato.
- * @returns {{inventoryItems: Array<object>, budgets: Array<object>, activeBudgetId: string}} Estado validado.
- */
-function normalizeApplicationState(rawState) {
-  const inventoryItems = Array.isArray(rawState.inventoryItems)
-    ? rawState.inventoryItems.map(normalizeInventoryItem)
-    : DEFAULT_INVENTORY_ITEMS;
-  const budgets = Array.isArray(rawState.budgets) && rawState.budgets.length > 0
-    ? rawState.budgets.map(normalizeBudget)
-    : [DEFAULT_BUDGET];
-  const activeBudgetId = budgets.some((budget) => budget.id === rawState.activeBudgetId)
-    ? rawState.activeBudgetId
-    : budgets[0].id;
-
-  return {
-    inventoryItems,
-    budgets,
-    activeBudgetId
-  };
-}
-
-/**
- * Normaliza um item de estoque para o formato atual do app.
- * @param {object} item Item bruto de estoque.
- * @returns {object} Item de estoque normalizado.
- */
-function normalizeInventoryItem(item) {
-  const normalizedCategory = normalizeCategory(item.category);
-  const packageQuantity = normalizeNumber(item.packageQuantity);
-  const rawPurchasePrice = normalizeNumber(item.purchasePrice || item.packagePrice || item.valor);
-  const pricingMode = isCartridgeCategory(normalizedCategory) ? UNIT_PRICING_MODE : FRACTIONAL_PRICING_MODE;
-
-  return {
-    id: item.id || createEntityId("item"),
-    name: String(item.name || "Novo item"),
-    category: normalizedCategory,
-    pricingMode,
-    brand: String(item.brand || item.marca || ""),
-    description: String(item.description || item.descricao || ""),
-    cartridgeType: String(item.cartridgeType || item.tipo || ""),
-    cartridgeNumber: String(item.cartridgeNumber || item.numbering || item.numeracao || ""),
-    colorName: String(item.colorName || item.coloration || item.coloracao || ""),
-    unitMeasure: normalizeUnitMeasure(item.unitMeasure || item.unitLabel || item.tipoUnidade || "unid"),
-    packageQuantity,
-    purchasePrice: normalizePurchasePriceForPricingMode(item, normalizedCategory, packageQuantity, rawPurchasePrice),
-    currentStock: packageQuantity,
-    createdAt: item.createdAt || new Date().toISOString(),
-    updatedAt: item.updatedAt || item.createdAt || new Date().toISOString()
-  };
-}
-/**
- * Normaliza um orcamento salvo ou importado.
- * @param {object} budget Orcamento bruto.
- * @returns {object} Orcamento normalizado.
- */
-function normalizeBudget(budget) {
-  return {
-    id: budget.id || createEntityId("budget"),
-    name: String(budget.name || budget.projectName || "Novo orçamento"),
-    clientName: String(budget.clientName || budget.customerName || budget.nomeCliente || ""),
-    hourlyRate: normalizeNumber(budget.hourlyRate ?? budget.laborHourlyRate ?? budget.valorMaoDeObra),
-    sessionHours: normalizeNumber(budget.sessionHours ?? budget.laborHours ?? budget.tempoSessao),
-    tattooImage: isSafeImageDataUrl(budget.tattooImage) ? budget.tattooImage : "",
-    tattooImageName: String(budget.tattooImageName || ""),
-    items: Array.isArray(budget.items) ? budget.items.map(normalizeBudgetItem) : []
-  };
-}
-
-/**
- * Normaliza um item selecionado dentro do orcamento.
- * @param {object} item Item bruto do carrinho/orcamento.
- * @returns {object} Item de orcamento normalizado.
- */
-function normalizeBudgetItem(item) {
-  return {
-    id: item.id || createEntityId("cart"),
-    inventoryItemId: item.inventoryItemId,
-    quantityUsed: normalizeNumber(item.quantityUsed)
-  };
-}
-
-/**
- * Persiste o estado atual no localStorage.
- * @returns {void}
- */
-function saveApplicationState() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(applicationState));
-}
-
-/**
- * Renderiza todas as areas dependentes do estado.
- * @returns {void}
- */
-function renderApplication() {
-  renderActiveScreen();
-  renderCategoryFilters();
-  renderBudgetCategoryFilters();
-  renderInventory();
-  renderBudget();
-  renderItemCategoryFields(elementReferences.itemCategoryInput.value);
-  updateUnitCostPreview();
-}
-
-/**
- * Alterna a tela ativa e sincroniza titulo, FAB e menu lateral.
- * @returns {void}
- */
-function renderActiveScreen() {
-  elementReferences.screens.forEach((screenElement) => {
-    screenElement.classList.toggle("is-active", screenElement.dataset.screen === activeScreen);
-  });
-
-  elementReferences.drawerLinks.forEach((drawerLink) => {
-    drawerLink.classList.toggle("is-active", drawerLink.dataset.drawerAction === activeScreen);
-  });
-
-  elementReferences.currentPageTitle.textContent = SCREEN_TITLES[activeScreen] || "CalculadoraTattoo";
-  elementReferences.openItemModalButton.hidden = activeScreen !== "inventory";
-}
-
-/**
- * Renderiza a vitrine de estoque com base na busca atual.
- * @returns {void}
- */
-function renderInventory() {
-  const filteredItems = getFilteredInventoryItems(inventorySearchTerm, activeInventoryCategory);
-  elementReferences.inventoryCounter.textContent = formatListSummary(filteredItems.length, applicationState.inventoryItems.length, "insumo");
-
-  if (filteredItems.length === 0) {
-    elementReferences.inventoryGrid.innerHTML = createEmptyStateHtml("Nenhum insumo encontrado.");
+    if (inventoryItem && quantityInput) {
+      quantityInput.value = formatEditableNumber(adjustQuantity(inventoryItem, quantityInput.value, stepButton.dataset.pickerStep, getMinimumQuantity(inventoryItem)));
+    }
     return;
   }
 
-  elementReferences.inventoryGrid.innerHTML = filteredItems.map(createInventoryCardHtml).join("");
-}
+  const addButton = event.target.closest("[data-add-to-budget]");
 
-/**
- * Renderiza os chips de filtro por categoria do estoque.
- * @returns {void}
- */
-function renderCategoryFilters() {
-  const categories = getInventoryCategories();
-
-  if (!categories.includes(activeInventoryCategory)) {
-    activeInventoryCategory = CATEGORY_ALL_VALUE;
-  }
-
-  elementReferences.categoryFilterList.innerHTML = categories.map((categoryName) => {
-    const categoryTotal = countInventoryItemsByCategory(categoryName);
-    const isActive = categoryName === activeInventoryCategory;
-
-    return `
-      <button class="filter-chip ${isActive ? "is-active" : ""}" type="button" data-category-filter="${escapeHtml(categoryName)}">
-        <span>${escapeHtml(categoryName)}</span>
-        <strong>${formatCategoryCount(categoryTotal)}</strong>
-      </button>
-    `;
-  }).join("");
-}
-
-/**
- * Renderiza os chips de filtro do seletor de insumos do orçamento.
- * @returns {void}
- */
-function renderBudgetCategoryFilters() {
-  const categories = getInventoryCategories();
-
-  if (!categories.includes(budgetCategoryFilter)) {
-    budgetCategoryFilter = CATEGORY_ALL_VALUE;
-  }
-
-  elementReferences.budgetCategoryFilterList.innerHTML = categories.map((categoryName) => {
-    const categoryTotal = countInventoryItemsByCategory(categoryName);
-    const isActive = categoryName === budgetCategoryFilter;
-
-    return `
-      <button class="filter-chip ${isActive ? "is-active" : ""}" type="button" data-budget-category-filter="${escapeHtml(categoryName)}">
-        <span>${escapeHtml(categoryName)}</span>
-        <strong>${formatCategoryCount(categoryTotal)}</strong>
-      </button>
-    `;
-  }).join("");
-}
-
-/**
- * Renderiza os campos especificos da categoria selecionada no modal.
- * @param {string} categoryName Categoria selecionada.
- * @returns {void}
- */
-function renderItemCategoryFields(categoryName) {
-  const normalizedCategory = normalizeCategory(categoryName);
-  const schema = ITEM_CATEGORY_SCHEMAS[normalizedCategory] || ITEM_CATEGORY_SCHEMAS[CATEGORY_OUTROS];
-
-  elementReferences.categoryFormKicker.textContent = schema.kicker;
-  elementReferences.categoryFormTitle.textContent = schema.title;
-  elementReferences.categoryDynamicFields.innerHTML = schema.fields.map(createDynamicFieldHtml).join("");
-  updatePricingLabels(normalizedCategory);
-}
-
-/**
- * Cria o HTML de um campo dinamico do cadastro de item.
- * @param {{id: string, label: string, placeholder: string}} fieldDefinition Definicao do campo.
- * @returns {string} HTML seguro do campo.
- */
-function createDynamicFieldHtml(fieldDefinition) {
-  return `
-    <label class="form-field">
-      <span>${escapeHtml(fieldDefinition.label)}</span>
-      <input id="${escapeHtml(fieldDefinition.id)}" type="text" placeholder="${escapeHtml(fieldDefinition.placeholder)}" data-dynamic-item-field />
-    </label>
-  `;
-}
-
-/**
- * Atualiza os textos de preco e quantidade conforme a categoria selecionada.
- * Cartucho usa preco unitario fixo; as demais categorias usam custo fracionado.
- * @param {string} categoryName Categoria ativa no formulario.
- * @returns {void}
- */
-function updatePricingLabels(categoryName) {
-  const normalizedCategory = normalizeCategory(categoryName);
-  const unitMeasure = normalizeUnitMeasure(elementReferences.unitMeasureInput.value);
-
-  if (isCartridgeCategory(normalizedCategory)) {
-    elementReferences.purchasePriceLabel.textContent = "Valor unitário do cartucho";
-    elementReferences.packageQuantityLabel.textContent = "Quantidade em estoque";
-    elementReferences.unitCostPreviewLabel.textContent = "Preço por cartucho";
+  if (!addButton) {
     return;
   }
 
-  elementReferences.purchasePriceLabel.textContent = "Valor da embalagem/frasco";
-  elementReferences.packageQuantityLabel.textContent = `Quantidade da embalagem/frasco (${unitMeasure})`;
-  elementReferences.unitCostPreviewLabel.textContent = `Custo por ${unitMeasure}`;
+  const pickerCard = addButton.closest("[data-inventory-item-id]");
+  const quantityInput = pickerCard?.querySelector("[data-picker-quantity]");
+  addItemToBudget(pickerCard?.dataset.inventoryItemId, quantityInput?.value);
 }
 
-/**
- * Cria o HTML de um card premium de estoque.
- * @param {object} item Item de estoque normalizado.
- * @returns {string} HTML seguro do card.
- */
-function createInventoryCardHtml(item) {
-  const unitCost = calculateUnitCost(item);
-  const stockValue = calculateInventoryStockValue(item);
-  const productInitial = getProductInitial(item.name);
-  const itemMetaLabel = getInventoryItemMetaLabel(item);
-  const brandLabel = getInventoryItemBrandLabel(item);
-  const unitCostMetricHtml = createInventoryUnitCostMetricHtml(item, unitCost);
-
-  return `
-    <article class="inventory-card" data-inventory-item-id="${escapeHtml(item.id)}">
-      <div class="product-topline">
-        <div class="product-tags">
-          <span class="category-pill">${escapeHtml(item.category)}</span>
-          <span class="unit-tag">por ${escapeHtml(item.unitMeasure)}</span>
-        </div>
-        <details class="product-options">
-          <summary aria-label="Abrir opções do item">⋯</summary>
-          <div class="product-options-menu">
-            <button type="button" data-inventory-action="edit" data-inventory-item-id="${escapeHtml(item.id)}">Editar</button>
-            <button type="button" data-inventory-action="delete" data-inventory-item-id="${escapeHtml(item.id)}">Excluir</button>
-          </div>
-        </details>
-      </div>
-
-      <div class="product-card-hero">
-        <div class="product-mark" aria-hidden="true">${escapeHtml(productInitial)}</div>
-        <div class="product-title">
-          <h3>${escapeHtml(item.name)}</h3>
-          <span>${escapeHtml(brandLabel)}</span>
-          <strong class="product-meta-line">${escapeHtml(itemMetaLabel)}</strong>
-        </div>
-      </div>
-
-      <div class="product-details-grid">
-        <div class="unit-price is-featured">
-          <span>Valor total em estoque</span>
-          <strong>${formatCurrency(stockValue)}</strong>
-        </div>
-        ${unitCostMetricHtml}
-      </div>
-
-    </article>
-  `;
-}
-/**
- * Cria a metrica secundaria do card de estoque com o custo de uso.
- * A metrica principal do card sempre fica reservada ao valor total em estoque.
- * @param {object} item Item de estoque.
- * @param {number} unitCost Custo unitario ou fracionado calculado.
- * @returns {string} HTML da metrica secundaria.
- */
-function createInventoryUnitCostMetricHtml(item, unitCost) {
-  return `
-        <div class="unit-price">
-          <span>${escapeHtml(getUnitCostTitle(item))}</span>
-          <strong>${formatCurrency(unitCost)}</strong>
-          <small>${escapeHtml(getUnitCostHelpText(item))}</small>
-        </div>`;
-}
-
-/**
- * Cria a barra de status do estoque.
- * @param {object} item Item de estoque.
- * @param {number} stockPercentage Percentual calculado.
- * @param {{className: string, label: string}} stockStatus Status visual.
- * @returns {string} HTML da barra ou resumo de estoque.
- */
-function createStockMeterHtml(item, stockPercentage, stockStatus) {
-  if (isCartridgeCategory(item.category)) {
-    return `
-      <div class="stock-meter stock-meter-compact">
-        <div class="stock-meter-text">
-          <span>Quantidade cadastrada</span>
-          <strong>${escapeHtml(getStockAvailabilityLabel(item))}</strong>
-        </div>
-      </div>`;
-  }
-
-  return `
-      <div class="stock-meter">
-        <div class="stock-meter-text">
-          <span>${escapeHtml(stockStatus.label)}</span>
-          <strong>${escapeHtml(getStockAvailabilityLabel(item))}</strong>
-        </div>
-        <span class="stock-meter-track">
-          <span class="stock-meter-fill" style="width: ${stockPercentage}%"></span>
-        </span>
-      </div>`;
-}
-
-/**
- * Renderiza os dados resumidos do orcamento ativo.
- * @returns {void}
- */
-function renderBudget() {
-  const activeBudget = getActiveBudget();
-  const totals = calculateBudgetTotals(activeBudget);
-
-  elementReferences.budgetNameInput.value = activeBudget.name;
-  elementReferences.clientNameInput.value = activeBudget.clientName;
-  elementReferences.hourlyRateInput.value = formatEditableNumber(activeBudget.hourlyRate);
-  elementReferences.sessionHoursInput.value = formatEditableNumber(activeBudget.sessionHours);
-  renderTattooImagePreview(activeBudget);
-  renderBudgetTotals(totals);
-  renderBudgetCategoryFilters();
-  renderStockPicker();
-  renderCart();
-}
-
-/**
- * Renderiza os totais financeiros do orcamento ativo.
- * @param {{materialCost: number, laborCost: number, totalCost: number}} totals Totais calculados.
- * @returns {void}
- */
-function renderBudgetTotals(totals) {
-  elementReferences.materialCostValue.textContent = formatCurrency(totals.materialCost);
-  elementReferences.laborCostValue.textContent = formatCurrency(totals.laborCost);
-  elementReferences.budgetTotalValue.textContent = formatCurrency(totals.totalCost);
-}
-
-/**
- * Renderiza os itens de estoque usados no seletor do orcamento.
- * @returns {void}
- */
-function renderStockPicker() {
-  const filteredItems = getFilteredInventoryItems(budgetSearchTerm, budgetCategoryFilter);
-
-  if (filteredItems.length === 0) {
-    elementReferences.stockPickerList.innerHTML = createEmptyStateHtml("Nenhum insumo encontrado. Tente buscar por nome, marca, cor, numeração ou categoria.");
+function handlePickerQuantityChange(event) {
+  if (!event.target.matches("[data-picker-quantity]")) {
     return;
   }
 
-  elementReferences.stockPickerList.innerHTML = filteredItems.map((item) => {
-    const productInitial = getProductInitial(item.name);
-    const itemMetaLabel = getInventoryItemMetaLabel(item);
-    const unitCostLabel = getUnitCostInlineLabel(item);
-    const usageLabel = getUsageLabel(item);
-    const stockValueLabel = formatCurrency(calculateInventoryStockValue(item));
+  const pickerCard = event.target.closest("[data-inventory-item-id]");
+  const inventoryItem = findInventoryItem(pickerCard?.dataset.inventoryItemId);
 
-    return `
-    <article class="picker-card" data-inventory-item-id="${escapeHtml(item.id)}">
-      <div class="picker-card-main">
-        <div class="product-mark product-mark-small" aria-hidden="true">${escapeHtml(productInitial)}</div>
-        <div>
-          <h3>${escapeHtml(item.name)}</h3>
-          <span>${escapeHtml(item.category)} · ${escapeHtml(itemMetaLabel)}</span>
-          <span>${escapeHtml(unitCostLabel)}</span>
-        </div>
-      </div>
-
-      <div class="picker-meta-row">
-        <span class="stock-value-pill">Valor total em estoque: ${stockValueLabel}</span>
-      </div>
-
-      <div class="picker-action-row">
-        <label class="compact-field quantity-stepper-field">
-          <span>${escapeHtml(usageLabel)}</span>
-          <div class="quantity-stepper" data-quantity-stepper>
-            <button type="button" aria-label="Diminuir quantidade" data-picker-quantity-action="decrease">−</button>
-            <input data-picker-quantity type="text" inputmode="decimal" placeholder="0" value="1" />
-            <button type="button" aria-label="Aumentar quantidade" data-picker-quantity-action="increase">+</button>
-          </div>
-        </label>
-        <button class="primary-button" type="button" data-add-inventory-item>Adicionar</button>
-      </div>
-    </article>
-    `;
-  }).join("");
-}
-
-/**
- * Renderiza os itens ja adicionados ao orcamento ativo.
- * @returns {void}
- */
-function renderCart() {
-  const activeBudget = getActiveBudget();
-  const visibleItems = activeBudget.items
-    .map((cartItem) => ({
-      cartItem,
-      inventoryItem: findInventoryItemById(cartItem.inventoryItemId)
-    }))
-    .filter((entry) => entry.inventoryItem);
-  elementReferences.budgetItemCounter.textContent = formatListSummary(visibleItems.length, activeBudget.items.length, "item");
-
-  if (visibleItems.length === 0) {
-    elementReferences.cartList.innerHTML = createEmptyStateHtml("Nenhum item no orçamento.");
+  if (!inventoryItem) {
     return;
   }
 
-  elementReferences.cartList.innerHTML = visibleItems.map(({ cartItem, inventoryItem }) => {
-    const unitCost = calculateUnitCost(inventoryItem);
-    const subtotal = calculateLineSubtotal(inventoryItem, cartItem.quantityUsed);
-    const itemMetaLabel = getInventoryItemMetaLabel(inventoryItem);
-    const unitCostLabel = getUnitCostInlineLabel(inventoryItem);
-    const usageLabel = getUsageLabel(inventoryItem);
-
-    return `
-      <article class="cart-card" data-cart-item-id="${escapeHtml(cartItem.id)}">
-        <div class="cart-card-header">
-          <div>
-            <h3>${escapeHtml(inventoryItem.name)}</h3>
-            <span>${escapeHtml(inventoryItem.category)} · ${escapeHtml(itemMetaLabel)}</span>
-          </div>
-          <strong>${formatCurrency(subtotal)}</strong>
-        </div>
-
-        <div class="cart-calculation">
-          <span>${escapeHtml(unitCostLabel)}</span>
-          <span>x</span>
-          <span>${formatNumber(cartItem.quantityUsed)} ${escapeHtml(getUsageUnitLabel(inventoryItem))}</span>
-        </div>
-
-        <label class="cart-quantity-field quantity-stepper-field">
-          <span>${escapeHtml(usageLabel)}</span>
-          <div class="quantity-stepper cart-quantity-stepper" data-quantity-stepper>
-            <button type="button" aria-label="Diminuir quantidade" data-cart-quantity-action="decrease">−</button>
-            <input class="cart-quantity-input" data-cart-quantity type="text" inputmode="decimal" value="${escapeHtml(formatEditableNumber(cartItem.quantityUsed))}" />
-            <button type="button" aria-label="Aumentar quantidade" data-cart-quantity-action="increase">+</button>
-          </div>
-        </label>
-
-        <button class="danger-button" type="button" data-remove-cart-item>Remover</button>
-      </article>
-    `;
-  }).join("");
+  event.target.value = formatEditableNumber(sanitizeUsageQuantity(inventoryItem, event.target.value, getMinimumQuantity(inventoryItem)));
 }
 
-/**
- * Abre o menu lateral em telas moveis.
- * @returns {void}
- */
-function openDrawer() {
-  elementReferences.drawer.classList.add("is-open");
-  elementReferences.drawer.setAttribute("aria-hidden", "false");
-  elementReferences.drawerBackdrop.hidden = false;
-}
+function handleCartClick(event) {
+  const stepButton = event.target.closest("[data-cart-step]");
 
-/**
- * Fecha o menu lateral em telas moveis.
- * @returns {void}
- */
-function closeDrawer() {
-  elementReferences.drawer.classList.remove("is-open");
-  elementReferences.drawer.setAttribute("aria-hidden", "true");
-  elementReferences.drawerBackdrop.hidden = true;
-}
-
-/**
- * Sincroniza o estado acessivel do drawer conforme o tamanho da tela.
- * @returns {void}
- */
-function syncDrawerForViewport() {
-  if (DESKTOP_MEDIA_QUERY.matches) {
-    elementReferences.drawer.classList.remove("is-open");
-    elementReferences.drawer.setAttribute("aria-hidden", "false");
-    elementReferences.drawerBackdrop.hidden = true;
+  if (stepButton) {
+    const cartLine = stepButton.closest("[data-cart-item-id]");
+    adjustCartQuantity(cartLine?.dataset.cartItemId, stepButton.dataset.cartStep);
     return;
   }
 
-  elementReferences.drawer.setAttribute("aria-hidden", elementReferences.drawer.classList.contains("is-open") ? "false" : "true");
-}
+  const removeButton = event.target.closest("[data-remove-cart-item]");
 
-/**
- * Define a tela ativa da SPA.
- * @param {string} screenName Nome da tela alvo.
- * @returns {void}
- */
-function setActiveScreen(screenName) {
-  activeScreen = screenName;
-  renderActiveScreen();
-}
-
-/**
- * Abre o modal de cadastro ou edicao de insumo.
- * @param {string=} inventoryItemId Identificador opcional para edicao.
- * @returns {void}
- */
-function openItemModal(inventoryItemId) {
-  const inventoryItem = inventoryItemId ? findInventoryItemById(inventoryItemId) : null;
-
-  if (inventoryItem) {
-    populateItemFormForEditing(inventoryItem);
-  } else {
-    resetItemFormForCreation();
+  if (removeButton) {
+    const cartLine = removeButton.closest("[data-cart-item-id]");
+    removeCartItem(cartLine?.dataset.cartItemId);
   }
-
-  updateUnitCostPreview();
-  openModal(elementReferences.itemModal);
-  elementReferences.itemNameInput.focus();
 }
 
-/**
- * Prepara o formulario de insumo para criar um novo registro.
- * @returns {void}
- */
-function resetItemFormForCreation() {
-  editingInventoryItemId = null;
-  elementReferences.itemForm.reset();
-  elementReferences.itemCategoryInput.value = CATEGORY_CARTUCHO;
-  elementReferences.unitMeasureInput.value = "unid";
-  elementReferences.currentStockInput.value = "";
-  renderItemCategoryFields(elementReferences.itemCategoryInput.value);
-  elementReferences.itemModalKicker.textContent = "Novo insumo";
-  elementReferences.itemModalTitle.textContent = "Adicionar item";
-  elementReferences.itemSubmitButton.textContent = "Salvar item";
-}
-
-/**
- * Preenche o formulario de insumo com dados de um item existente.
- * @param {object} inventoryItem Item de estoque que sera editado.
- * @returns {void}
- */
-function populateItemFormForEditing(inventoryItem) {
-  editingInventoryItemId = inventoryItem.id;
-  ensureCategoryOptionExists(inventoryItem.category);
-  elementReferences.itemNameInput.value = inventoryItem.name;
-  elementReferences.itemCategoryInput.value = inventoryItem.category;
-  renderItemCategoryFields(inventoryItem.category);
-  populateDynamicItemFields(inventoryItem);
-  elementReferences.packageQuantityInput.value = formatEditableNumber(inventoryItem.packageQuantity);
-  elementReferences.unitMeasureInput.value = inventoryItem.unitMeasure;
-  elementReferences.purchasePriceInput.value = formatEditableNumber(inventoryItem.purchasePrice);
-  elementReferences.currentStockInput.value = formatEditableNumber(inventoryItem.currentStock);
-  elementReferences.itemModalKicker.textContent = "Editar insumo";
-  elementReferences.itemModalTitle.textContent = "Atualizar item";
-  elementReferences.itemSubmitButton.textContent = "Salvar alterações";
-}
-/**
- * Garante que uma categoria existente no estoque apareca no select de edicao.
- * @param {string} categoryName Categoria que precisa estar disponivel.
- * @returns {void}
- */
-function ensureCategoryOptionExists(categoryName) {
-  const normalizedCategory = normalizeCategory(categoryName);
-  const categoryExists = [...elementReferences.itemCategoryInput.options]
-    .some((optionElement) => optionElement.value === normalizedCategory);
-
-  if (categoryExists) {
+function handleCartQuantityChange(event) {
+  if (!event.target.matches("[data-cart-quantity]")) {
     return;
   }
 
-  const categoryOption = document.createElement("option");
-  categoryOption.value = normalizedCategory;
-  categoryOption.textContent = normalizedCategory;
-  elementReferences.itemCategoryInput.append(categoryOption);
+  const cartLine = event.target.closest("[data-cart-item-id]");
+  updateCartQuantity(cartLine?.dataset.cartItemId, event.target.value);
 }
 
-/**
- * Preenche os campos dinamicos do modal conforme os metadados do item.
- * @param {object} inventoryItem Item usado na edicao.
- * @returns {void}
- */
-function populateDynamicItemFields(inventoryItem) {
-  setDynamicFieldValue("itemBrandInput", inventoryItem.brand);
-  setDynamicFieldValue("itemDescriptionInput", inventoryItem.description);
-  setDynamicFieldValue("cartridgeTypeInput", inventoryItem.cartridgeType);
-  setDynamicFieldValue("cartridgeNumberInput", inventoryItem.cartridgeNumber);
-  setDynamicFieldValue("itemColorInput", inventoryItem.colorName);
+function openItemModal(itemId = null) {
+  const item = itemId ? findInventoryItem(itemId) : null;
+  editingItemId = item?.id || null;
+  selectedFormCategory = item?.category || CATEGORY_NEEDLES;
+  dom.itemModalEyebrow.textContent = editingItemId ? "Editar item" : "Novo item";
+  dom.itemModalTitle.textContent = editingItemId ? "Atualizar insumo" : "Cadastrar insumo";
+  renderCategoryChoices();
+  renderDynamicForm(item);
+  openModal(dom.itemModal);
 }
 
-/**
- * Define o valor de um campo dinamico se ele existir na ficha atual.
- * @param {string} fieldId Identificador do campo.
- * @param {string} value Valor a ser aplicado.
- * @returns {void}
- */
-function setDynamicFieldValue(fieldId, value) {
-  const fieldElement = elementReferences.itemForm.querySelector(`#${fieldId}`);
-
-  if (fieldElement) {
-    fieldElement.value = value || "";
-  }
-}
-
-/**
- * Obtem valor de um campo dinamico, retornando texto vazio quando ele nao existe.
- * @param {string} fieldId Identificador do campo.
- * @returns {string} Valor normalizado para persistencia.
- */
-function getDynamicFieldValue(fieldId) {
-  const fieldElement = elementReferences.itemForm.querySelector(`#${fieldId}`);
-  return fieldElement ? fieldElement.value.trim() : "";
-}
-
-/**
- * Monta metadados especificos da ficha dinamica selecionada.
- * @returns {{brand: string, description: string, cartridgeType: string, cartridgeNumber: string, colorName: string}} Metadados do item.
- */
-function getDynamicMetadataFromForm() {
-  return {
-    brand: getDynamicFieldValue("itemBrandInput"),
-    description: getDynamicFieldValue("itemDescriptionInput"),
-    cartridgeType: getDynamicFieldValue("cartridgeTypeInput").toUpperCase(),
-    cartridgeNumber: getDynamicFieldValue("cartridgeNumberInput"),
-    colorName: getDynamicFieldValue("itemColorInput")
-  };
-}
-
-/**
- * Abre o modal de importacao CSV.
- * @returns {void}
- */
-function openImportModal() {
-  elementReferences.importForm.reset();
-  elementReferences.importFeedback.textContent = formatCounter(0, 0);
-  openModal(elementReferences.importModal);
-}
-
-/**
- * Abre um dialog, com fallback para navegadores sem showModal.
- * @param {HTMLDialogElement} modalElement Dialog que sera aberto.
- * @returns {void}
- */
-function openModal(modalElement) {
-  if (typeof modalElement.showModal === "function") {
-    modalElement.showModal();
-    return;
-  }
-
-  modalElement.setAttribute("open", "");
-}
-
-/**
- * Fecha um dialog, com fallback para navegadores sem close.
- * @param {HTMLDialogElement} modalElement Dialog que sera fechado.
- * @returns {void}
- */
 function closeModal(modalElement) {
   if (typeof modalElement.close === "function" && modalElement.open) {
     modalElement.close();
@@ -1214,189 +860,243 @@ function closeModal(modalElement) {
   modalElement.removeAttribute("open");
 }
 
-/**
- * Salva um insumo novo ou atualiza um insumo existente a partir do formulario.
- * @returns {void}
- */
-function saveInventoryItemFromForm() {
-  const selectedCategory = normalizeCategory(elementReferences.itemCategoryInput.value);
-  const packageQuantity = normalizeNumber(elementReferences.packageQuantityInput.value);
-  const existingItem = editingInventoryItemId ? findInventoryItemById(editingInventoryItemId) : null;
-  const dynamicMetadata = getDynamicMetadataFromForm();
-  const inventoryItem = {
-    id: editingInventoryItemId || createEntityId("item"),
-    name: elementReferences.itemNameInput.value.trim(),
-    category: selectedCategory,
-    pricingMode: isCartridgeCategory(selectedCategory) ? UNIT_PRICING_MODE : FRACTIONAL_PRICING_MODE,
-    ...dynamicMetadata,
-    unitMeasure: normalizeUnitMeasure(elementReferences.unitMeasureInput.value),
+function openModal(modalElement) {
+  if (typeof modalElement.showModal === "function") {
+    modalElement.showModal();
+    return;
+  }
+
+  modalElement.setAttribute("open", "");
+}
+
+function handleItemFormSubmit(event) {
+  event.preventDefault();
+  const inventoryItem = buildInventoryItemFromForm();
+
+  if (!inventoryItem) {
+    dom.itemForm.reportValidity();
+    return;
+  }
+
+  if (editingItemId) {
+    appState.inventoryItems = appState.inventoryItems.map((item) => item.id === editingItemId ? inventoryItem : item);
+  } else {
+    appState.inventoryItems.unshift(inventoryItem);
+  }
+
+  editingItemId = null;
+  saveAppState();
+  closeModal(dom.itemModal);
+  renderApp();
+}
+
+function buildInventoryItemFromForm() {
+  const categoryDefinition = CATEGORY_DEFINITIONS[selectedFormCategory];
+  const fieldData = readDynamicFormData();
+  const existingItem = editingItemId ? findInventoryItem(editingItemId) : null;
+  const packageQuantity = selectedFormCategory === CATEGORY_DIRECT_UNIT ? 1 : normalizeNumber(fieldData.packageQuantity);
+  const packagePrice = selectedFormCategory === CATEGORY_DIRECT_UNIT ? normalizeNumber(fieldData.unitPrice) : normalizeNumber(fieldData.packagePrice);
+  const measureUnit = normalizeMeasureUnit(fieldData.measureUnit, categoryDefinition.defaultMeasure);
+
+  if (packageQuantity <= 0 || packagePrice <= 0 || !validateRequiredFields(categoryDefinition.fields, fieldData)) {
+    return null;
+  }
+
+  const baseItem = {
+    id: editingItemId || createId("item"),
+    category: selectedFormCategory,
+    name: buildItemName(selectedFormCategory, fieldData),
+    brand: sanitizeText(fieldData.brand),
+    lineType: sanitizeText(fieldData.lineType),
+    numbering: sanitizeText(fieldData.numbering),
+    color: sanitizeText(fieldData.color),
     packageQuantity,
-    purchasePrice: normalizeNumber(elementReferences.purchasePriceInput.value),
-    currentStock: packageQuantity,
+    packagePrice,
+    unitPrice: selectedFormCategory === CATEGORY_DIRECT_UNIT ? packagePrice : calculateRawUnitCost(packagePrice, packageQuantity),
+    measureUnit,
+    calculationType: categoryDefinition.calculationType,
     createdAt: existingItem?.createdAt || new Date().toISOString(),
     updatedAt: new Date().toISOString()
   };
 
-  if (!inventoryItem.name || inventoryItem.packageQuantity <= 0 || inventoryItem.purchasePrice <= 0) {
-    elementReferences.itemForm.reportValidity();
+  return normalizeInventoryItem(baseItem);
+}
+
+function readDynamicFormData() {
+  const formData = {};
+  dom.dynamicFieldsGrid.querySelectorAll("[data-item-field]").forEach((fieldElement) => {
+    formData[fieldElement.dataset.itemField] = fieldElement.value;
+  });
+  return formData;
+}
+
+function validateRequiredFields(fields, fieldData) {
+  return fields.every((field) => !field.required || sanitizeText(fieldData[field.key] || fieldData.unitPrice));
+}
+
+function buildItemName(categoryName, fieldData) {
+  if (categoryName === CATEGORY_NEEDLES) {
+    return [fieldData.brand, fieldData.lineType, fieldData.numbering].map(sanitizeText).filter(Boolean).join(" ");
+  }
+
+  return sanitizeText(fieldData.name);
+}
+
+function updateUnitCostPreview() {
+  const fieldData = readDynamicFormData();
+  const categoryDefinition = CATEGORY_DEFINITIONS[selectedFormCategory];
+  const packageQuantity = selectedFormCategory === CATEGORY_DIRECT_UNIT ? 1 : normalizeNumber(fieldData.packageQuantity);
+  const packagePrice = selectedFormCategory === CATEGORY_DIRECT_UNIT ? normalizeNumber(fieldData.unitPrice) : normalizeNumber(fieldData.packagePrice);
+  const measureUnit = normalizeMeasureUnit(fieldData.measureUnit, categoryDefinition.defaultMeasure);
+  const unitCost = calculateRawUnitCost(packagePrice, packageQuantity);
+  const previewLabel = getPreviewLabel(selectedFormCategory, measureUnit);
+  dom.unitCostPreview.innerHTML = `
+    <span>${escapeHtml(previewLabel)}</span>
+    <strong>${formatCurrency(unitCost)}</strong>
+  `;
+}
+
+function getPreviewLabel(categoryName, measureUnit) {
+  if (categoryName === CATEGORY_NEEDLES) {
+    return "Custo por cartucho/agulha";
+  }
+
+  if (categoryName === CATEGORY_DIRECT_UNIT) {
+    return "Custo por unidade avulsa";
+  }
+
+  return `Custo por ${getMeasureLabel(measureUnit)}`;
+}
+
+function deleteInventoryItem(itemId) {
+  appState.inventoryItems = appState.inventoryItems.filter((item) => item.id !== itemId);
+  appState.budgets = appState.budgets.map((budget) => ({
+    ...budget,
+    items: budget.items.filter((cartItem) => cartItem.inventoryItemId !== itemId)
+  }));
+  saveAppState();
+  renderApp();
+}
+
+function updateBudgetIdentity() {
+  const activeBudget = getActiveBudget();
+  activeBudget.name = sanitizeText(dom.budgetNameInput.value) || "Novo orçamento";
+  activeBudget.clientName = sanitizeText(dom.clientNameInput.value);
+  saveAppState();
+}
+
+function updateBudgetLabor() {
+  const activeBudget = getActiveBudget();
+  activeBudget.hourlyRate = normalizeNumber(dom.hourlyRateInput.value);
+  activeBudget.sessionDuration = normalizeNumber(dom.sessionDurationInput.value);
+  saveAppState();
+  renderBudgetTotalsOnly();
+}
+
+function renderBudgetTotalsOnly() {
+  const totals = calculateBudgetTotals(getActiveBudget());
+  dom.materialTotalValue.textContent = formatCurrency(totals.materialCost);
+  dom.laborTotalValue.textContent = formatCurrency(totals.laborCost);
+  dom.budgetTotalValue.textContent = formatCurrency(totals.totalCost);
+}
+
+function handleReferenceImageChange(event) {
+  const imageFile = event.target.files?.[0];
+
+  if (!imageFile || !imageFile.type.startsWith("image/") || imageFile.size > MAX_IMAGE_SIZE_BYTES) {
+    event.target.value = "";
     return;
   }
 
-  if (editingInventoryItemId) {
-    updateInventoryItem(inventoryItem);
-  } else {
-    applicationState.inventoryItems.unshift(inventoryItem);
-  }
-
-  saveApplicationState();
-  closeModal(elementReferences.itemModal);
-  editingInventoryItemId = null;
-  renderCategoryFilters();
-  renderApplication();
-}
-/**
- * Atualiza um insumo existente no estado local.
- * @param {object} updatedItem Item de estoque com dados atualizados.
- * @returns {void}
- */
-function updateInventoryItem(updatedItem) {
-  applicationState.inventoryItems = applicationState.inventoryItems.map((inventoryItem) => (
-    inventoryItem.id === updatedItem.id
-      ? {
-        ...inventoryItem,
-        ...updatedItem,
-        createdAt: inventoryItem.createdAt || updatedItem.createdAt
-      }
-      : inventoryItem
-  ));
+  const reader = new FileReader();
+  reader.addEventListener("load", () => {
+    const activeBudget = getActiveBudget();
+    activeBudget.referenceImage = String(reader.result || "");
+    activeBudget.referenceImageName = imageFile.name;
+    saveAppState();
+    renderReferencePreview();
+  });
+  reader.readAsDataURL(imageFile);
 }
 
-/**
- * Exclui um insumo do estoque e remove suas referencias dos orcamentos.
- * @param {string} inventoryItemId Identificador do insumo.
- * @returns {void}
- */
-function deleteInventoryItem(inventoryItemId) {
-  const inventoryItem = findInventoryItemById(inventoryItemId);
+function removeReferenceImage() {
+  const activeBudget = getActiveBudget();
+  activeBudget.referenceImage = "";
+  activeBudget.referenceImageName = "";
+  dom.referenceImageInput.value = "";
+  saveAppState();
+  renderReferencePreview();
+}
+
+function createNewBudget() {
+  const newBudget = {
+    ...DEFAULT_BUDGET,
+    id: createId("budget"),
+    items: []
+  };
+  appState.budgets.unshift(newBudget);
+  appState.activeBudgetId = newBudget.id;
+  saveAppState();
+  renderBudget();
+}
+
+function addItemToBudget(itemId, rawQuantity) {
+  const inventoryItem = findInventoryItem(itemId);
 
   if (!inventoryItem) {
     return;
   }
 
-  const shouldDeleteItem = window.confirm(`Excluir "${inventoryItem.name}" do estoque?`);
-
-  if (!shouldDeleteItem) {
-    return;
-  }
-
-  applicationState.inventoryItems = applicationState.inventoryItems.filter((item) => item.id !== inventoryItemId);
-  applicationState.budgets = applicationState.budgets.map((budget) => ({
-    ...budget,
-    items: budget.items.filter((cartItem) => cartItem.inventoryItemId !== inventoryItemId)
-  }));
-
-  saveApplicationState();
-  renderApplication();
-}
-
-/**
- * Define a categoria ativa usada na filtragem do estoque.
- * @param {string} categoryName Nome da categoria selecionada.
- * @returns {void}
- */
-function setActiveInventoryCategory(categoryName) {
-  activeInventoryCategory = categoryName || CATEGORY_ALL_VALUE;
-  renderCategoryFilters();
-  renderInventory();
-}
-
-/**
- * Define a categoria ativa usada na busca de insumos do orçamento.
- * @param {string} categoryName Nome da categoria selecionada.
- * @returns {void}
- */
-function setActiveBudgetCategory(categoryName) {
-  budgetCategoryFilter = categoryName || CATEGORY_ALL_VALUE;
-  renderBudgetCategoryFilters();
-  renderStockPicker();
-}
-
-/**
- * Atualiza os dados de mao de obra do orcamento ativo.
- * @returns {void}
- */
-function updateBudgetLaborFromForm() {
   const activeBudget = getActiveBudget();
+  const quantityUsed = sanitizeUsageQuantity(inventoryItem, rawQuantity, getMinimumQuantity(inventoryItem));
+  const existingCartItem = activeBudget.items.find((cartItem) => cartItem.inventoryItemId === itemId);
 
-  activeBudget.hourlyRate = normalizeNumber(elementReferences.hourlyRateInput.value);
-  activeBudget.sessionHours = normalizeNumber(elementReferences.sessionHoursInput.value);
-  saveApplicationState();
-  renderBudgetTotals(calculateBudgetTotals(activeBudget));
-}
-
-/**
- * Atualiza o preview do custo unitario no formulario de estoque.
- * @returns {void}
- */
-function updateUnitCostPreview() {
-  const selectedCategory = normalizeCategory(elementReferences.itemCategoryInput.value);
-  updatePricingLabels(selectedCategory);
-
-  const previewItem = {
-    category: selectedCategory,
-    packageQuantity: elementReferences.packageQuantityInput.value,
-    purchasePrice: elementReferences.purchasePriceInput.value
-  };
-
-  elementReferences.unitCostPreview.textContent = formatCurrency(calculateUnitCost(previewItem));
-}
-
-/**
- * Adiciona um item de estoque ao orcamento ativo.
- * @param {string} inventoryItemId Identificador do item de estoque.
- * @param {string|number} rawQuantity Quantidade informada pelo usuario.
- * @returns {void}
- */
-function addItemToBudget(inventoryItemId, rawQuantity) {
-  const inventoryItem = findInventoryItemById(inventoryItemId);
-  const quantityUsed = normalizeNumber(rawQuantity);
-
-  if (!inventoryItem || quantityUsed <= 0) {
-    return;
-  }
-
-  const activeBudget = getActiveBudget();
-  const existingItem = activeBudget.items.find((cartItem) => cartItem.inventoryItemId === inventoryItemId);
-
-  if (existingItem) {
-    existingItem.quantityUsed += quantityUsed;
+  if (existingCartItem) {
+    existingCartItem.quantityUsed = sanitizeUsageQuantity(inventoryItem, existingCartItem.quantityUsed + quantityUsed, getMinimumQuantity(inventoryItem));
   } else {
     activeBudget.items.push({
-      id: createEntityId("cart"),
-      inventoryItemId,
+      id: createId("cart"),
+      inventoryItemId: itemId,
       quantityUsed
     });
   }
 
-  saveApplicationState();
+  saveAppState();
   renderBudget();
 }
 
-/**
- * Atualiza a quantidade usada de um item do orcamento.
- * @param {string} cartItemId Identificador do item no orcamento.
- * @param {string|number} rawQuantity Quantidade digitada.
- * @returns {void}
- */
-function updateBudgetItemQuantity(cartItemId, rawQuantity) {
+function adjustCartQuantity(cartItemId, action) {
   const activeBudget = getActiveBudget();
   const cartItem = activeBudget.items.find((item) => item.id === cartItemId);
+  const inventoryItem = cartItem ? findInventoryItem(cartItem.inventoryItemId) : null;
 
-  if (!cartItem) {
+  if (!cartItem || !inventoryItem) {
     return;
   }
 
-  const quantityUsed = normalizeNumber(rawQuantity);
+  const minimumValue = 0;
+  const nextQuantity = adjustQuantity(inventoryItem, cartItem.quantityUsed, action, minimumValue);
+
+  if (nextQuantity <= 0) {
+    activeBudget.items = activeBudget.items.filter((item) => item.id !== cartItemId);
+  } else {
+    cartItem.quantityUsed = nextQuantity;
+  }
+
+  saveAppState();
+  renderBudget();
+}
+
+function updateCartQuantity(cartItemId, rawQuantity) {
+  const activeBudget = getActiveBudget();
+  const cartItem = activeBudget.items.find((item) => item.id === cartItemId);
+  const inventoryItem = cartItem ? findInventoryItem(cartItem.inventoryItemId) : null;
+
+  if (!cartItem || !inventoryItem) {
+    return;
+  }
+
+  const quantityUsed = sanitizeUsageQuantity(inventoryItem, rawQuantity, 0);
 
   if (quantityUsed <= 0) {
     activeBudget.items = activeBudget.items.filter((item) => item.id !== cartItemId);
@@ -1404,388 +1104,400 @@ function updateBudgetItemQuantity(cartItemId, rawQuantity) {
     cartItem.quantityUsed = quantityUsed;
   }
 
-  saveApplicationState();
+  saveAppState();
   renderBudget();
 }
 
-/**
- * Ajusta a quantidade ainda antes de adicionar o item ao orçamento.
- * @param {string} inventoryItemId Identificador do item de estoque.
- * @param {string} action Acao solicitada: increase ou decrease.
- * @param {HTMLInputElement} quantityInput Campo que recebera o novo valor.
- * @returns {void}
- */
-function adjustPickerQuantity(inventoryItemId, action, quantityInput) {
-  const inventoryItem = findInventoryItemById(inventoryItemId);
-
-  if (!inventoryItem || !quantityInput) {
-    return;
-  }
-
-  const nextQuantity = calculateAdjustedQuantity(inventoryItem, quantityInput.value, action, 0);
-  quantityInput.value = nextQuantity > 0 ? formatEditableNumber(nextQuantity) : "";
-}
-
-/**
- * Ajusta a quantidade usada em um item ja adicionado ao orçamento.
- * @param {string} cartItemId Identificador do item no orçamento.
- * @param {string} action Acao solicitada: increase ou decrease.
- * @returns {void}
- */
-function adjustBudgetItemQuantity(cartItemId, action) {
-  const activeBudget = getActiveBudget();
-  const cartItem = activeBudget.items.find((item) => item.id === cartItemId);
-
-  if (!cartItem) {
-    return;
-  }
-
-  const inventoryItem = findInventoryItemById(cartItem.inventoryItemId);
-
-  if (!inventoryItem) {
-    return;
-  }
-
-  const nextQuantity = calculateAdjustedQuantity(inventoryItem, cartItem.quantityUsed, action, 0);
-  updateBudgetItemQuantity(cartItemId, nextQuantity);
-}
-
-/**
- * Calcula a nova quantidade respeitando a categoria do item.
- * @param {object} inventoryItem Item usado como referência para o passo.
- * @param {string|number} currentValue Valor atual.
- * @param {string} action Acao solicitada.
- * @param {number} minimumValue Menor valor permitido.
- * @returns {number} Nova quantidade.
- */
-function calculateAdjustedQuantity(inventoryItem, currentValue, action, minimumValue) {
-  const currentQuantity = normalizeNumber(currentValue);
-  const stepValue = getQuantityStep(inventoryItem);
-  const operationSignal = action === "decrease" ? -1 : 1;
-  const nextQuantity = currentQuantity + (stepValue * operationSignal);
-
-  return Math.max(minimumValue, roundQuantity(nextQuantity));
-}
-
-/**
- * Remove um item do orcamento ativo.
- * @param {string} cartItemId Identificador do item no orcamento.
- * @returns {void}
- */
-function removeBudgetItem(cartItemId) {
+function removeCartItem(cartItemId) {
   const activeBudget = getActiveBudget();
   activeBudget.items = activeBudget.items.filter((item) => item.id !== cartItemId);
-  saveApplicationState();
+  saveAppState();
   renderBudget();
 }
 
-/**
- * Cria um novo orcamento vazio e o define como ativo.
- * @returns {void}
- */
-function createNewBudget() {
-  const newBudget = {
-    id: createEntityId("budget"),
-    name: "Novo orçamento",
-    clientName: "",
-    hourlyRate: 0,
-    sessionHours: 0,
-    tattooImage: "",
-    tattooImageName: "",
-    items: []
+function adjustQuantity(item, currentValue, action, minimumValue) {
+  const rules = getUsageRules(item);
+  const signal = action === "decrease" ? -1 : 1;
+  const nextValue = normalizeNumber(currentValue) + (rules.step * signal);
+  return sanitizeUsageQuantity(item, nextValue, minimumValue);
+}
+
+function sanitizeUsageQuantity(item, rawValue, minimumValue) {
+  const quantity = normalizeNumber(rawValue);
+  const rules = getUsageRules(item);
+  const safeQuantity = Math.max(minimumValue, quantity);
+
+  if (rules.integerOnly) {
+    return Math.max(minimumValue, Math.round(safeQuantity));
+  }
+
+  return roundDecimal(safeQuantity);
+}
+
+function getMinimumQuantity(item) {
+  return getUsageRules(item).integerOnly ? 1 : DECIMAL_STEP;
+}
+
+function getUsageRules(item) {
+  const usesDecimal = isDecimalMeasure(item.measureUnit);
+  return {
+    step: usesDecimal ? DECIMAL_STEP : INTEGER_STEP,
+    defaultValue: usesDecimal ? DECIMAL_STEP : INTEGER_STEP,
+    inputMode: usesDecimal ? "decimal" : "numeric",
+    integerOnly: !usesDecimal
   };
-
-  applicationState.budgets.unshift(newBudget);
-  applicationState.activeBudgetId = newBudget.id;
-  saveApplicationState();
-  renderBudget();
 }
 
-/**
- * Le um arquivo CSV local e adiciona os itens importados ao estoque.
- * @returns {void}
- */
-function importInventoryFromCsv() {
-  const selectedFile = elementReferences.csvFileInput.files[0];
+function isDecimalMeasure(measureUnit) {
+  return [MEASURE_ML, MEASURE_GRAM, MEASURE_METER].includes(measureUnit);
+}
 
-  if (!selectedFile) {
-    return;
+function getActiveBudget() {
+  let activeBudget = appState.budgets.find((budget) => budget.id === appState.activeBudgetId);
+
+  if (!activeBudget) {
+    activeBudget = appState.budgets[0] || { ...DEFAULT_BUDGET, items: [] };
+    appState.activeBudgetId = activeBudget.id;
   }
 
-  const fileReader = new FileReader();
-
-  elementReferences.importFeedback.textContent = formatCounter(0, 0);
-
-  fileReader.onprogress = handleCsvReadProgress;
-
-  fileReader.onload = () => {
-    const importedItems = parseCsvInventory(String(fileReader.result || ""));
-    applicationState.inventoryItems = [...importedItems, ...applicationState.inventoryItems];
-    saveApplicationState();
-    elementReferences.importFeedback.textContent = `${formatCounter(importedItems.length, importedItems.length)} itens importados`;
-    renderApplication();
-  };
-
-  fileReader.readAsText(selectedFile, "utf-8");
+  return activeBudget;
 }
 
-/**
- * Atualiza o feedback de progresso da leitura do CSV.
- * @param {ProgressEvent<FileReader>} event Evento de progresso da File API.
- * @returns {void}
- */
-function handleCsvReadProgress(event) {
-  if (!event.lengthComputable) {
-    return;
-  }
-
-  elementReferences.importFeedback.textContent = `${formatCounter(event.loaded, event.total)} bytes`;
+function findInventoryItem(itemId) {
+  return appState.inventoryItems.find((item) => item.id === itemId) || null;
 }
 
-/**
- * Converte texto CSV em itens de estoque normalizados.
- * @param {string} csvText Conteudo bruto do arquivo CSV.
- * @returns {Array<object>} Lista de itens importaveis.
- */
-function parseCsvInventory(csvText) {
-  const rows = parseCsvRows(csvText).filter((row) => row.some(Boolean));
-  const headerRow = rows[0] || [];
-  const hasHeader = headerRow.some((cell) => normalizeSearchText(cell).includes("nome"));
-  const dataRows = hasHeader ? rows.slice(1) : rows;
+function getFilteredInventoryItems(searchTerm, categoryFilter) {
+  const normalizedSearch = normalizeSearch(searchTerm);
+  const normalizedCategory = normalizeCategory(categoryFilter);
 
-  return dataRows.map((row) => {
-    const itemName = row[0] || "Item importado";
-    const packageQuantity = normalizeNumber(row[2] || row[1]);
-    const currentStock = normalizeNumber(row[5] || packageQuantity);
-
-    return {
-      id: createEntityId("item"),
-      name: itemName,
-      category: normalizeCategory(row[1] || CATEGORY_OUTROS),
-      pricingMode: isCartridgeCategory(row[1] || CATEGORY_OUTROS) ? UNIT_PRICING_MODE : FRACTIONAL_PRICING_MODE,
-      packageQuantity,
-      unitMeasure: normalizeUnitMeasure(row[3] || "unid"),
-      purchasePrice: normalizeNumber(row[4]),
-      currentStock: packageQuantity,
-      brand: row[6] || "",
-      description: row[7] || "",
-      cartridgeType: String(row[8] || "").toUpperCase(),
-      cartridgeNumber: row[9] || "",
-      colorName: row[10] || "",
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
-  }).filter((item) => item.packageQuantity > 0);
-}
-/**
- * Quebra o conteudo CSV em linhas e celulas simples.
- * @param {string} csvText Conteudo bruto do CSV.
- * @returns {Array<Array<string>>} Linhas e colunas do CSV.
- */
-function parseCsvRows(csvText) {
-  const delimiter = csvText.includes(";") ? ";" : ",";
-  return csvText
-    .split(/\r?\n/)
-    .map((line) => line.split(delimiter).map((cell) => cell.trim().replace(/^"|"$/g, "")));
-}
-
-/**
- * Exporta o estado atual como arquivo JSON de backup.
- * @returns {void}
- */
-function exportBackup() {
-  const backupBlob = new Blob([JSON.stringify(applicationState, null, 2)], { type: "application/json" });
-  const downloadUrl = URL.createObjectURL(backupBlob);
-  const anchorElement = document.createElement("a");
-
-  anchorElement.href = downloadUrl;
-  anchorElement.download = `calculadora-tattoo-backup-${new Date().toISOString().slice(0, 10)}.json`;
-  anchorElement.click();
-  URL.revokeObjectURL(downloadUrl);
-}
-
-/**
- * Lê e comprime a imagem de referência do orçamento.
- * @param {Event} event Evento do input de arquivo.
- * @returns {void}
- */
-function handleBudgetTattooImageChange(event) {
-  const selectedFile = event.target.files[0];
-
-  if (!selectedFile || !selectedFile.type.startsWith("image/")) {
-    return;
-  }
-
-  resizeImageFile(selectedFile, 900, 0.82).then((imageDataUrl) => {
-    const activeBudget = getActiveBudget();
-    activeBudget.tattooImage = imageDataUrl;
-    activeBudget.tattooImageName = selectedFile.name;
-    saveApplicationState();
-    renderTattooImagePreview(activeBudget);
+  return appState.inventoryItems.filter((item) => {
+    const matchesCategory = normalizedCategory === CATEGORY_ALL || item.category === normalizedCategory;
+    const matchesSearch = !normalizedSearch || normalizeSearch(getSearchIndex(item)).includes(normalizedSearch);
+    return matchesCategory && matchesSearch;
   });
 }
 
-/**
- * Remove a imagem vinculada ao orçamento ativo.
- * @returns {void}
- */
-function removeBudgetTattooImage() {
-  const activeBudget = getActiveBudget();
-  activeBudget.tattooImage = "";
-  activeBudget.tattooImageName = "";
-  elementReferences.tattooImageInput.value = "";
-  saveApplicationState();
-  renderTattooImagePreview(activeBudget);
+function getSearchIndex(item) {
+  return [
+    item.category,
+    item.name,
+    item.brand,
+    item.lineType,
+    item.numbering,
+    item.color,
+    item.measureUnit,
+    getItemSpecification(item)
+  ].join(" ");
 }
 
-/**
- * Renderiza o preview da imagem de referência do orçamento.
- * @param {object} budget Orçamento ativo.
- * @returns {void}
- */
-function renderTattooImagePreview(budget) {
-  if (!budget.tattooImage) {
-    elementReferences.tattooImagePreview.hidden = true;
-    elementReferences.tattooImagePreview.innerHTML = "";
-    return;
+function getBusinessCategories() {
+  return CATEGORY_ORDER.filter((categoryName) => categoryName !== CATEGORY_ALL);
+}
+
+function countItemsByCategory(categoryName) {
+  if (categoryName === CATEGORY_ALL) {
+    return appState.inventoryItems.length;
   }
 
-  elementReferences.tattooImagePreview.hidden = false;
-  elementReferences.tattooImagePreview.innerHTML = `
-    <img src="${escapeHtml(budget.tattooImage)}" alt="Referência da tatuagem" />
-    <figcaption>${escapeHtml(budget.tattooImageName || "Imagem adicionada")}</figcaption>
+  return appState.inventoryItems.filter((item) => item.category === categoryName).length;
+}
+
+function getCounterTotal(categoryName) {
+  return categoryName === CATEGORY_ALL ? appState.inventoryItems.length : appState.inventoryItems.length;
+}
+
+function calculateUnitCost(item) {
+  if (item.category === CATEGORY_DIRECT_UNIT) {
+    return normalizeNumber(item.unitPrice || item.packagePrice);
+  }
+
+  return calculateRawUnitCost(item.packagePrice, item.packageQuantity);
+}
+
+function calculateRawUnitCost(price, quantity) {
+  const normalizedPrice = normalizeNumber(price);
+  const normalizedQuantity = normalizeNumber(quantity);
+
+  if (normalizedPrice <= 0 || normalizedQuantity <= 0) {
+    return 0;
+  }
+
+  return normalizedPrice / normalizedQuantity;
+}
+
+function calculateTotalInventoryValue(item) {
+  return normalizeNumber(item.packagePrice);
+}
+
+function calculateLineSubtotal(item, quantityUsed) {
+  return calculateUnitCost(item) * normalizeNumber(quantityUsed);
+}
+
+function calculateBudgetTotals(budget) {
+  const materialCost = budget.items.reduce((total, cartItem) => {
+    const inventoryItem = findInventoryItem(cartItem.inventoryItemId);
+    return inventoryItem ? total + calculateLineSubtotal(inventoryItem, cartItem.quantityUsed) : total;
+  }, 0);
+  const laborCost = normalizeNumber(budget.hourlyRate) * normalizeNumber(budget.sessionDuration);
+
+  return {
+    materialCost,
+    laborCost,
+    totalCost: materialCost + laborCost
+  };
+}
+
+function getItemSpecification(item) {
+  if (item.category === CATEGORY_NEEDLES) {
+    return [item.lineType, item.numbering].filter(Boolean).join(" ") || "Sem numeração";
+  }
+
+  if (item.category === CATEGORY_LIQUIDS && item.color) {
+    return item.color;
+  }
+
+  return `${formatNumber(item.packageQuantity)} ${getMeasureLabel(item.measureUnit)}`;
+}
+
+function getItemSubtitle(item) {
+  if (item.category === CATEGORY_NEEDLES) {
+    return item.brand || "Marca não informada";
+  }
+
+  const brand = item.brand || "Marca não informada";
+  const specification = getItemSpecification(item);
+  return `${brand} · ${specification}`;
+}
+
+function getCalculationDescription(item) {
+  if (item.category === CATEGORY_NEEDLES) {
+    return `Caixa com ${formatNumber(item.packageQuantity)} unidades. Custo calculado por cartucho.`;
+  }
+
+  if (item.category === CATEGORY_DIRECT_UNIT) {
+    return "Unidade avulsa com custo direto, sem divisão por embalagem.";
+  }
+
+  if (item.category === CATEGORY_DISPOSABLES) {
+    return `Pacote com ${formatNumber(item.packageQuantity)} unidades. Uso inteiro no orçamento.`;
+  }
+
+  return `Embalagem com ${formatNumber(item.packageQuantity)} ${getMeasureLabel(item.measureUnit)}. Uso fracionado no orçamento.`;
+}
+
+function getProductInitial(item) {
+  const sourceText = item.category === CATEGORY_NEEDLES ? item.lineType || item.name : item.name;
+  return sanitizeText(sourceText).slice(0, 2).toUpperCase() || "CT";
+}
+
+function getMeasureLabel(measureUnit) {
+  const labels = {
+    [MEASURE_UNIT]: "unidade",
+    [MEASURE_ML]: "ml",
+    [MEASURE_GRAM]: "g",
+    [MEASURE_METER]: "m",
+    [MEASURE_SHEET]: "folha"
+  };
+  return labels[measureUnit] || measureUnit || "unidade";
+}
+
+function getMeasureSuffix(measureUnit) {
+  const suffixes = {
+    [MEASURE_UNIT]: "un",
+    [MEASURE_ML]: "ml",
+    [MEASURE_GRAM]: "g",
+    [MEASURE_METER]: "m",
+    [MEASURE_SHEET]: "fl"
+  };
+  return suffixes[measureUnit] || "";
+}
+
+function normalizeMeasureUnit(unitValue, fallbackUnit = MEASURE_UNIT) {
+  const normalizedValue = sanitizeText(unitValue).toLowerCase();
+  const unitMap = {
+    unidade: MEASURE_UNIT,
+    unidades: MEASURE_UNIT,
+    unid: MEASURE_UNIT,
+    un: MEASURE_UNIT,
+    ml: MEASURE_ML,
+    mililitro: MEASURE_ML,
+    mililitros: MEASURE_ML,
+    grama: MEASURE_GRAM,
+    gramas: MEASURE_GRAM,
+    g: MEASURE_GRAM,
+    metro: MEASURE_METER,
+    metros: MEASURE_METER,
+    m: MEASURE_METER,
+    folha: MEASURE_SHEET,
+    folhas: MEASURE_SHEET
+  };
+  return unitMap[normalizedValue] || fallbackUnit;
+}
+
+function normalizeCategory(categoryValue) {
+  const normalizedValue = sanitizeText(categoryValue).toLowerCase();
+  const categoryMap = {
+    todos: CATEGORY_ALL,
+    cartucho: CATEGORY_NEEDLES,
+    cartuchos: CATEGORY_NEEDLES,
+    agulha: CATEGORY_NEEDLES,
+    agulhas: CATEGORY_NEEDLES,
+    "agulhas e cartuchos": CATEGORY_NEEDLES,
+    tinta: CATEGORY_LIQUIDS,
+    tintas: CATEGORY_LIQUIDS,
+    liquidos: CATEGORY_LIQUIDS,
+    líquidos: CATEGORY_LIQUIDS,
+    "líquidos e pastosos": CATEGORY_LIQUIDS,
+    "liquidos e pastosos": CATEGORY_LIQUIDS,
+    biossegurança: CATEGORY_DISPOSABLES,
+    biosseguranca: CATEGORY_DISPOSABLES,
+    descartável: CATEGORY_DISPOSABLES,
+    descartavel: CATEGORY_DISPOSABLES,
+    descartáveis: CATEGORY_DISPOSABLES,
+    descartaveis: CATEGORY_DISPOSABLES,
+    "biossegurança e descartáveis": CATEGORY_DISPOSABLES,
+    "biosseguranca e descartaveis": CATEGORY_DISPOSABLES,
+    "materiais de área/extensão": CATEGORY_LINEAR,
+    "materiais de area/extensao": CATEGORY_LINEAR,
+    "materiais de área": CATEGORY_LINEAR,
+    "materiais de area": CATEGORY_LINEAR,
+    rolo: CATEGORY_LINEAR,
+    "unidade avulsa direta": CATEGORY_DIRECT_UNIT,
+    avulso: CATEGORY_DIRECT_UNIT,
+    avulsa: CATEGORY_DIRECT_UNIT,
+    outros: CATEGORY_DIRECT_UNIT
+  };
+  return categoryMap[normalizedValue] || CATEGORY_NEEDLES;
+}
+
+function normalizeNumber(value) {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return value;
+  }
+
+  if (typeof value !== "string") {
+    return 0;
+  }
+
+  const compactValue = value.replace(/\s/g, "").replace(/[^0-9,.-]/g, "");
+  const hasComma = compactValue.includes(",");
+  const sanitizedValue = hasComma
+    ? compactValue.replace(/\./g, "").replace(",", ".")
+    : compactValue;
+  const parsedValue = Number.parseFloat(sanitizedValue);
+  return Number.isFinite(parsedValue) ? parsedValue : 0;
+}
+
+function normalizeSearch(value) {
+  return sanitizeText(value).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+}
+
+function sanitizeText(value) {
+  return String(value || "").trim();
+}
+
+function roundDecimal(value) {
+  return Math.round((normalizeNumber(value) + Number.EPSILON) * 100) / 100;
+}
+
+function formatCurrency(value) {
+  return CURRENCY_FORMATTER.format(normalizeNumber(value));
+}
+
+function formatNumber(value) {
+  return NUMBER_FORMATTER.format(normalizeNumber(value));
+}
+
+function formatEditableNumber(value) {
+  const normalizedValue = normalizeNumber(value);
+  return normalizedValue > 0 ? String(roundDecimal(normalizedValue)).replace(".", ",") : "";
+}
+
+function formatCounter(currentValue, totalValue) {
+  return `${normalizeNumber(currentValue)} de ${normalizeNumber(totalValue)}`;
+}
+
+function createEmptyStateHtml(message) {
+  return `
+    <article class="empty-state">
+      <strong>${escapeHtml(message)}</strong>
+      <span>Use a busca, altere o filtro ou cadastre um novo item.</span>
+    </article>
   `;
 }
 
-/**
- * Redimensiona uma imagem local para manter o localStorage leve.
- * @param {File} imageFile Arquivo selecionado.
- * @param {number} maxSize Tamanho máximo em pixels.
- * @param {number} quality Qualidade JPEG/WebP.
- * @returns {Promise<string>} Data URL compacta.
- */
-function resizeImageFile(imageFile, maxSize, quality) {
-  return new Promise((resolve) => {
-    const fileReader = new FileReader();
-
-    fileReader.onload = () => {
-      const imageElement = new Image();
-
-      imageElement.onload = () => {
-        const scaleFactor = Math.min(1, maxSize / Math.max(imageElement.width, imageElement.height));
-        const canvasElement = document.createElement("canvas");
-        canvasElement.width = Math.max(1, Math.round(imageElement.width * scaleFactor));
-        canvasElement.height = Math.max(1, Math.round(imageElement.height * scaleFactor));
-        const canvasContext = canvasElement.getContext("2d");
-        canvasContext.drawImage(imageElement, 0, 0, canvasElement.width, canvasElement.height);
-        resolve(canvasElement.toDataURL("image/jpeg", quality));
-      };
-
-      imageElement.src = String(fileReader.result || "");
-    };
-
-    fileReader.readAsDataURL(imageFile);
-  });
+function createId(prefix) {
+  return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
-/**
- * Valida data URL de imagem antes de reusar dados persistidos.
- * @param {string} imageDataUrl Valor persistido.
- * @returns {boolean} Indica se o formato é aceitável.
- */
-function isSafeImageDataUrl(imageDataUrl) {
-  return typeof imageDataUrl === "string" && /^data:image\/(png|jpeg|jpg|webp);base64,/i.test(imageDataUrl);
+function escapeHtml(value) {
+  return sanitizeText(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
 }
 
-/**
- * Prepara o template de invoice e aciona a impressao/PDF do navegador.
- * @returns {void}
- */
-function exportInvoicePdf() {
-  renderInvoiceDocument();
-  window.print();
+function escapeAttribute(value) {
+  return escapeHtml(value).replace(/`/g, "&#096;");
 }
 
-/**
- * Renderiza o documento oculto usado na exportacao em PDF.
- * @returns {void}
- */
-function renderInvoiceDocument() {
+function isImageDataUrl(value) {
+  return /^data:image\/(png|jpeg|jpg|webp);base64,/i.test(String(value || ""));
+}
+
+function exportPdf() {
+  dom.invoiceDocument.innerHTML = createInvoiceHtml();
+  requestAnimationFrame(() => window.print());
+}
+
+function createInvoiceHtml() {
   const activeBudget = getActiveBudget();
   const totals = calculateBudgetTotals(activeBudget);
-  const materialEntries = activeBudget.items
-    .map((cartItem) => ({
-      cartItem,
-      inventoryItem: findInventoryItemById(cartItem.inventoryItemId)
-    }))
-    .filter((entry) => entry.inventoryItem);
-  const tattooImageHtml = activeBudget.tattooImage
-    ? `<figure class="invoice-tattoo-reference"><img src="${escapeHtml(activeBudget.tattooImage)}" alt="Referência da tatuagem" /><figcaption>Referência visual</figcaption></figure>`
-    : "";
-  const clientName = activeBudget.clientName || "Não informado";
-  const itemRows = materialEntries.map(({ cartItem, inventoryItem }) => {
-    const unitCost = calculateUnitCost(inventoryItem);
-    const lineSubtotal = calculateLineSubtotal(inventoryItem, cartItem.quantityUsed);
-    const specification = getInventoryItemMetaLabel(inventoryItem);
-    const brandLabel = getInventoryItemBrandLabel(inventoryItem);
+  const itemRows = activeBudget.items.map((cartItem) => {
+    const inventoryItem = findInventoryItem(cartItem.inventoryItemId);
+
+    if (!inventoryItem) {
+      return "";
+    }
 
     return `
       <tr>
-        <td>
-          <strong>${escapeHtml(inventoryItem.name)}</strong>
-          <span>${escapeHtml(brandLabel)}</span>
-        </td>
+        <td>${escapeHtml(inventoryItem.name)}</td>
         <td>${escapeHtml(inventoryItem.category)}</td>
-        <td>${escapeHtml(specification)}</td>
-        <td>${formatNumber(cartItem.quantityUsed)} ${escapeHtml(getUsageUnitLabel(inventoryItem))}</td>
-        <td>${formatCurrency(unitCost)}</td>
-        <td>${formatCurrency(lineSubtotal)}</td>
+        <td>${escapeHtml(getItemSpecification(inventoryItem))}</td>
+        <td>${formatNumber(cartItem.quantityUsed)} ${escapeHtml(getMeasureLabel(inventoryItem.measureUnit))}</td>
+        <td>${formatCurrency(calculateUnitCost(inventoryItem))}</td>
+        <td>${formatCurrency(calculateLineSubtotal(inventoryItem, cartItem.quantityUsed))}</td>
       </tr>
     `;
   }).join("");
+  const referenceImageHtml = activeBudget.referenceImage
+    ? `<img class="invoice-reference-image" src="${escapeAttribute(activeBudget.referenceImage)}" alt="Referência da tatuagem" />`
+    : `<div class="invoice-reference-placeholder">Sem imagem de referência</div>`;
 
-  elementReferences.invoiceDocument.innerHTML = `
-    <article class="invoice-template">
+  return `
+    <article class="invoice-page">
       <header class="invoice-header">
-        <div class="invoice-logo-space">CT</div>
         <div>
-          <span>Orçamento premium</span>
-          <h2>${escapeHtml(activeBudget.name)}</h2>
-          <p>Cliente: ${escapeHtml(clientName)} · CalculadoraTattoo</p>
+          <span>CalculadoraTattoo</span>
+          <h1>${escapeHtml(activeBudget.name || "Orçamento")}</h1>
+          <p>Cliente: <strong>${escapeHtml(activeBudget.clientName || "Não informado")}</strong></p>
         </div>
-        ${tattooImageHtml}
+        ${referenceImageHtml}
       </header>
 
       <section class="invoice-summary-grid">
-        <div>
-          <span>Cliente</span>
-          <strong>${escapeHtml(clientName)}</strong>
-        </div>
-        <div>
-          <span>Data</span>
-          <strong>${new Date().toLocaleDateString("pt-BR")}</strong>
-        </div>
-        <div>
-          <span>Materiais</span>
-          <strong>${formatCounter(materialEntries.length, activeBudget.items.length)}</strong>
-        </div>
-        <div>
-          <span>Insumos utilizados</span>
-          <strong>${formatCurrency(totals.materialCost)}</strong>
-        </div>
-        <div>
-          <span>Mão de obra</span>
-          <strong>${formatCurrency(totals.laborCost)}</strong>
-        </div>
-        <div>
-          <span>Total</span>
-          <strong>${formatCurrency(totals.totalCost)}</strong>
-        </div>
+        <div><span>Insumos</span><strong>${formatCurrency(totals.materialCost)}</strong></div>
+        <div><span>Mão de obra</span><strong>${formatCurrency(totals.laborCost)}</strong></div>
+        <div><span>Total</span><strong>${formatCurrency(totals.totalCost)}</strong></div>
       </section>
 
-      <section class="invoice-labor-panel">
-        <span>Mão de obra</span>
-        <strong>${formatNumber(activeBudget.sessionHours)} h x ${formatCurrency(activeBudget.hourlyRate)} = ${formatCurrency(totals.laborCost)}</strong>
+      <section class="invoice-labor-line">
+        <strong>Mão de obra:</strong>
+        ${formatNumber(activeBudget.sessionDuration)} h × ${formatCurrency(activeBudget.hourlyRate)} = ${formatCurrency(totals.laborCost)}
       </section>
 
       <table class="invoice-table">
@@ -1799,568 +1511,21 @@ function renderInvoiceDocument() {
             <th>Subtotal</th>
           </tr>
         </thead>
-        <tbody>${itemRows || "<tr><td colspan=\"6\">Nenhum item selecionado.</td></tr>"}</tbody>
+        <tbody>${itemRows || `<tr><td colspan="6">Nenhum item selecionado.</td></tr>`}</tbody>
       </table>
 
-      <section class="invoice-total-panel">
-        <span>Resumo financeiro</span>
-        <strong>Insumos utilizados: ${formatCurrency(totals.materialCost)}</strong>
-        <strong>Mão de obra: ${formatCurrency(totals.laborCost)}</strong>
-        <strong>Total do orçamento: ${formatCurrency(totals.totalCost)}</strong>
-      </section>
+      <footer class="invoice-footer">
+        <span>Orçamento gerado localmente no navegador.</span>
+        <strong>Total final: ${formatCurrency(totals.totalCost)}</strong>
+      </footer>
     </article>
   `;
 }
-/**
- * Calcula o custo unitario de um insumo.
- * @param {object} item Item com preco de compra e quantidade por embalagem.
- * @returns {number} Custo por unidade fracionada.
- */
-function calculateUnitCost(item) {
-  const packageQuantity = normalizeNumber(item.packageQuantity);
-  const purchasePrice = normalizeNumber(item.purchasePrice);
 
-  if (isCartridgeCategory(item.category)) {
-    return purchasePrice;
-  }
-
-  if (packageQuantity <= 0) {
-    return 0;
-  }
-
-  return purchasePrice / packageQuantity;
-}
-
-/**
- * Calcula o subtotal de uma linha do orcamento.
- * @param {object} item Item de estoque usado.
- * @param {string|number} quantityUsed Quantidade usada no orcamento.
- * @returns {number} Subtotal da linha.
- */
-function calculateLineSubtotal(item, quantityUsed) {
-  return calculateUnitCost(item) * normalizeNumber(quantityUsed);
-}
-
-/**
- * Calcula o valor financeiro do estoque atual de um insumo.
- * @param {object} item Item de estoque.
- * @returns {number} Valor total disponivel em estoque.
- */
-function calculateInventoryStockValue(item) {
-  return calculateUnitCost(item) * normalizeNumber(item.currentStock);
-}
-
-/**
- * Calcula os totais agregados do orcamento.
- * @param {object} budget Orcamento ativo.
- * @returns {{materialCost: number, laborCost: number, totalCost: number}} Totais calculados.
- */
-function calculateBudgetTotals(budget) {
-  const materialCost = budget.items.reduce((total, cartItem) => {
-    const inventoryItem = findInventoryItemById(cartItem.inventoryItemId);
-    return inventoryItem ? total + calculateLineSubtotal(inventoryItem, cartItem.quantityUsed) : total;
-  }, 0);
-  const laborCost = calculateLaborCost(budget);
-
-  return {
-    materialCost,
-    laborCost,
-    totalCost: materialCost + laborCost
-  };
-}
-
-/**
- * Calcula o valor de mao de obra do orcamento.
- * @param {object} budget Orcamento com horas e valor por hora.
- * @returns {number} Custo total de mao de obra.
- */
-function calculateLaborCost(budget) {
-  return normalizeNumber(budget.sessionHours) * normalizeNumber(budget.hourlyRate);
-}
-
-/**
- * Calcula o percentual de estoque em relacao a uma embalagem completa.
- * @param {object} item Item de estoque.
- * @returns {number} Percentual limitado entre 0 e 100.
- */
-function calculateStockPercentage(item) {
-  const packageQuantity = normalizeNumber(item.packageQuantity);
-
-  if (packageQuantity <= 0) {
-    return 0;
-  }
-
-  return Math.max(0, Math.min(100, (normalizeNumber(item.currentStock) / packageQuantity) * 100));
-}
-
-/**
- * Define a classe visual e o texto de status do estoque.
- * @param {number} stockPercentage Percentual de estoque disponivel.
- * @returns {{className: string, label: string}} Status visual do estoque.
- */
-function getStockStatus(stockPercentage) {
-  if (stockPercentage <= 15) {
-    return {
-      className: "is-stock-critical",
-      label: "Estoque"
-    };
-  }
-
-  if (stockPercentage <= 35) {
-    return {
-      className: "is-stock-low",
-      label: "Estoque"
-    };
-  }
-
-  return {
-    className: "is-stock-healthy",
-    label: "Estoque"
-  };
-}
-
-/**
- * Ajusta somente o item demonstrativo salvo pela versao anterior, que usava preco total da caixa.
- * @param {object} item Item bruto persistido.
- * @param {string} categoryName Categoria normalizada.
- * @param {number} packageQuantity Quantidade cadastrada.
- * @param {number} purchasePrice Valor bruto persistido.
- * @returns {number} Valor compativel com a regra atual.
- */
-function normalizePurchasePriceForPricingMode(item, categoryName, packageQuantity, purchasePrice) {
-  const isLegacyDefaultCartridge = isCartridgeCategory(categoryName)
-    && item.id === "item-cartucho-rl0310"
-    && purchasePrice === 300
-    && packageQuantity === 20;
-
-  return isLegacyDefaultCartridge ? purchasePrice / packageQuantity : purchasePrice;
-}
-
-/**
- * Verifica se uma categoria deve usar regra de preco unitario fixo.
- * @param {string} categoryName Categoria avaliada.
- * @returns {boolean} Verdadeiro para cartuchos.
- */
-function isCartridgeCategory(categoryName) {
-  return normalizeCategory(categoryName) === CATEGORY_CARTUCHO;
-}
-
-/**
- * Retorna o titulo do custo exibido no card conforme a regra de precificacao.
- * @param {object} item Item de estoque.
- * @returns {string} Texto de titulo.
- */
-function getUnitCostTitle(item) {
-  return isCartridgeCategory(item.category) ? "Preço por cartucho" : "Unidade fracionada";
-}
-
-/**
- * Retorna o custo unitario em texto curto para seletores e carrinho.
- * @param {object} item Item de estoque.
- * @returns {string} Texto formatado.
- */
-function getUnitCostInlineLabel(item) {
-  const unitCost = calculateUnitCost(item);
-
-  if (isCartridgeCategory(item.category)) {
-    return `${formatCurrency(unitCost)} por cartucho`;
-  }
-
-  return `${formatCurrency(unitCost)}/${item.unitMeasure}`;
-}
-
-/**
- * Retorna o texto de apoio para explicar o custo unitario/fracionado.
- * @param {object} item Item de estoque.
- * @returns {string} Texto de apoio.
- */
-function getUnitCostHelpText(item) {
-  if (isCartridgeCategory(item.category)) {
-    return "valor de 1 cartucho";
-  }
-
-  return `custo por ${item.unitMeasure}`;
-}
-
-/**
- * Retorna a disponibilidade fisica do item sem usar contador progressivo para cartuchos.
- * @param {object} item Item de estoque.
- * @returns {string} Texto de disponibilidade.
- */
-function getStockAvailabilityLabel(item) {
-  if (isCartridgeCategory(item.category)) {
-    return `${formatNumber(item.currentStock)} ${normalizeNumber(item.currentStock) === 1 ? "cartucho" : "cartuchos"}`;
-  }
-
-  return `${formatNumber(item.currentStock)} ${item.unitMeasure} cadastrados`;
-}
-
-/**
- * Retorna a unidade textual usada no orçamento.
- * @param {object} item Item de estoque.
- * @returns {string} Unidade de uso.
- */
-function getUsageUnitLabel(item) {
-  return isCartridgeCategory(item.category) ? "cartuchos" : item.unitMeasure;
-}
-
-/**
- * Retorna o label do campo de uso no orçamento.
- * @param {object} item Item de estoque.
- * @returns {string} Label de campo.
- */
-function getUsageLabel(item) {
-  return isCartridgeCategory(item.category) ? "Cartuchos usados" : `Quantidade usada (${item.unitMeasure})`;
-}
-
-/**
- * Retorna a legenda de quantidade cadastrada no item.
- * @param {object} item Item de estoque.
- * @returns {string} Texto formatado.
- */
-function getPackageQuantityLabel(item) {
-  const quantityLabel = `${formatNumber(item.packageQuantity)} ${item.unitMeasure}`;
-  return isCartridgeCategory(item.category) ? `${quantityLabel} em estoque` : `${quantityLabel} por embalagem`;
-}
-
-/**
- * Retorna o texto principal da especificacao por categoria.
- * @param {object} item Item de estoque.
- * @returns {string} Metadado relevante para exibicao.
- */
-function getInventoryItemMetaLabel(item) {
-  if (item.category === CATEGORY_CARTUCHO) {
-    const cartridgeLabel = [item.cartridgeType, item.cartridgeNumber].filter(Boolean).join(" ").trim();
-    return cartridgeLabel || "Cartucho sem numeração";
-  }
-
-  if (item.category === CATEGORY_TINTA) {
-    return item.colorName || "Coloração não informada";
-  }
-
-  if (item.category === CATEGORY_BIOSSEGURANCA || item.category === CATEGORY_DESCARTAVEL) {
-    return item.description || "Descrição não informada";
-  }
-
-  return item.description || item.colorName || "Especificação não informada";
-}
-
-/**
- * Retorna o texto de marca padronizado para cards e PDF.
- * @param {object} item Item de estoque.
- * @returns {string} Texto de marca.
- */
-function getInventoryItemBrandLabel(item) {
-  return item.brand ? `Marca: ${item.brand}` : "Marca não informada";
-}
-
-/**
- * Extrai a inicial usada como marcador visual do produto.
- * @param {string} name Nome do produto.
- * @returns {string} Inicial em caixa alta.
- */
-function getProductInitial(name) {
-  const normalizedName = String(name || "I").trim();
-  return normalizedName.charAt(0).toUpperCase() || "I";
-}
-
-/**
- * Retorna o orcamento ativo do estado.
- * @returns {object} Orcamento ativo.
- */
-function getActiveBudget() {
-  return applicationState.budgets.find((budget) => budget.id === applicationState.activeBudgetId) || applicationState.budgets[0];
-}
-
-/**
- * Busca um item de estoque pelo identificador.
- * @param {string} itemId Identificador do item.
- * @returns {object|undefined} Item encontrado.
- */
-function findInventoryItemById(itemId) {
-  return applicationState.inventoryItems.find((item) => item.id === itemId);
-}
-
-/**
- * Filtra itens de estoque por texto de busca e categoria.
- * @param {string} searchTerm Termo digitado pelo usuario.
- * @param {string=} categoryName Categoria selecionada.
- * @returns {Array<object>} Itens filtrados.
- */
-function getFilteredInventoryItems(searchTerm, categoryName = CATEGORY_ALL_VALUE) {
-  const normalizedSearchTerm = normalizeSearchText(searchTerm);
-
-  return applicationState.inventoryItems.filter((item) => {
-    const searchableText = normalizeSearchText(`${item.name} ${item.category} ${item.unitMeasure} ${item.brand} ${item.description} ${item.cartridgeType} ${item.cartridgeNumber} ${item.colorName}`);
-    const matchesSearch = !normalizedSearchTerm || searchableText.includes(normalizedSearchTerm);
-    const matchesCategory = categoryName === CATEGORY_ALL_VALUE || item.category === categoryName;
-    return matchesSearch && matchesCategory;
-  });
-}
-
-/**
- * Retorna categorias base e categorias cadastradas no estoque.
- * @returns {Array<string>} Categorias sem repeticao.
- */
-function getInventoryCategories() {
-  const inventoryCategories = applicationState.inventoryItems.map((item) => item.category);
-  return [...new Set([...BASE_INVENTORY_CATEGORIES, ...inventoryCategories])];
-}
-
-/**
- * Conta quantos itens existem em uma categoria.
- * @param {string} categoryName Categoria avaliada.
- * @returns {number} Quantidade de itens da categoria.
- */
-function countInventoryItemsByCategory(categoryName) {
-  if (categoryName === CATEGORY_ALL_VALUE) {
-    return applicationState.inventoryItems.length;
-  }
-
-  return applicationState.inventoryItems.filter((item) => item.category === categoryName).length;
-}
-
-/**
- * Define a unidade inicial mais comum para cada categoria.
- * @param {string} categoryName Categoria normalizada.
- * @returns {string} Unidade sugerida.
- */
-function getDefaultUnitMeasureForCategory(categoryName) {
-  if (categoryName === CATEGORY_TINTA) {
-    return "ml";
-  }
-
-  return "unid";
-}
-
-/**
- * Normaliza categorias antigas e novas para manter compatibilidade com localStorage.
- * @param {string} categoryName Categoria bruta.
- * @returns {string} Categoria oficial do app.
- */
-function normalizeCategory(categoryName) {
-  const normalizedCategory = normalizeSearchText(categoryName).replace(/[^a-z0-9]/g, "");
-
-  if (["cartucho", "cartuchos"].includes(normalizedCategory)) {
-    return CATEGORY_CARTUCHO;
-  }
-
-  if (["tinta", "tintas"].includes(normalizedCategory)) {
-    return CATEGORY_TINTA;
-  }
-
-  if (["biosseguranca", "bioseguranca"].includes(normalizedCategory)) {
-    return CATEGORY_BIOSSEGURANCA;
-  }
-
-  if (["descartavel", "descartaveis"].includes(normalizedCategory)) {
-    return CATEGORY_DESCARTAVEL;
-  }
-
-  return CATEGORY_OUTROS;
-}
-
-/**
- * Normaliza unidades de medida aceitas pela interface.
- * @param {string} unitMeasure Unidade digitada ou selecionada.
- * @returns {string} Unidade normalizada.
- */
-function normalizeUnitMeasure(unitMeasure) {
-  const normalizedUnit = normalizeSearchText(unitMeasure).replace(/[^a-z0-9]/g, "");
-
-  if (["un", "und", "unid", "unidade", "unidades"].includes(normalizedUnit)) {
-    return "unid";
-  }
-
-  if (["g", "grama", "gramas"].includes(normalizedUnit)) {
-    return "gramas";
-  }
-
-  if (["metro", "metros", "m"].includes(normalizedUnit)) {
-    return "metros";
-  }
-
-  if (["folha", "folhas"].includes(normalizedUnit)) {
-    return "folhas";
-  }
-
-  if (["ml", "mg"].includes(normalizedUnit)) {
-    return normalizedUnit;
-  }
-
-  return "unid";
-}
-
-/**
- * Converte textos monetarios ou decimais em numero positivo.
- * @param {string|number|null|undefined} value Valor bruto.
- * @returns {number} Numero normalizado.
- */
-function normalizeNumber(value) {
-  const numericText = String(value == null ? "" : value)
-    .trim()
-    .replace(/\s/g, "")
-    .replace(/[R$]/g, "");
-  const lastCommaIndex = numericText.lastIndexOf(",");
-  const lastDotIndex = numericText.lastIndexOf(".");
-  let normalizedText = numericText;
-
-  if (lastCommaIndex > -1 && lastDotIndex > -1) {
-    normalizedText = lastCommaIndex > lastDotIndex
-      ? numericText.replace(/\./g, "").replace(",", ".")
-      : numericText.replace(/,/g, "");
-  } else if (lastCommaIndex > -1) {
-    normalizedText = numericText.replace(",", ".");
-  }
-
-  const parsedValue = Number(normalizedText);
-  return Number.isFinite(parsedValue) && parsedValue >= 0 ? parsedValue : 0;
-}
-
-/**
- * Normaliza texto para buscas sem acento e em caixa baixa.
- * @param {string} value Texto bruto.
- * @returns {string} Texto normalizado.
- */
-function normalizeSearchText(value) {
-  return String(value || "")
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .trim();
-}
-
-/**
- * Cria identificadores unicos para entidades do app.
- * @param {string} prefix Prefixo semantico da entidade.
- * @returns {string} Identificador unico.
- */
-function createEntityId(prefix) {
-  if (window.crypto && typeof window.crypto.randomUUID === "function") {
-    return `${prefix}-${window.crypto.randomUUID()}`;
-  }
-
-  return `${prefix}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
-}
-
-/**
- * Formata valores monetarios em reais.
- * @param {number} value Valor numerico.
- * @returns {string} Valor formatado em BRL.
- */
-function formatCurrency(value) {
-  return CURRENCY_FORMATTER.format(Number.isFinite(value) ? value : 0);
-}
-
-/**
- * Formata numeros para exibicao curta.
- * @param {number} value Valor numerico.
- * @returns {string} Numero formatado.
- */
-function formatNumber(value) {
-  return NUMBER_FORMATTER.format(Number.isFinite(value) ? value : 0);
-}
-
-/**
- * Define o passo dos controles de mais e menos conforme a categoria.
- * @param {object} inventoryItem Item de estoque.
- * @returns {number} Passo aplicado no seletor de quantidade.
- */
-function getQuantityStep(inventoryItem) {
-  return isCartridgeCategory(inventoryItem.category) ? 1 : 1;
-}
-
-/**
- * Arredonda quantidades para evitar sobras de ponto flutuante no seletor.
- * @param {number} value Quantidade calculada.
- * @returns {number} Quantidade arredondada.
- */
-function roundQuantity(value) {
-  return Math.round(normalizeNumber(value) * 100) / 100;
-}
-
-/**
- * Formata o resumo visual de listas sem usar o padrão X de X.
- * @param {number} currentValue Quantidade visível.
- * @param {number} totalValue Quantidade total.
- * @param {string} singularLabel Nome no singular.
- * @returns {string} Texto de resumo.
- */
-function formatListSummary(currentValue, totalValue, singularLabel) {
-  const normalizedCurrent = normalizeNumber(currentValue);
-  const normalizedTotal = normalizeNumber(totalValue);
-  const pluralLabel = normalizedTotal === 1 ? singularLabel : `${singularLabel}s`;
-
-  if (normalizedCurrent === normalizedTotal) {
-    return `${formatNumber(normalizedTotal)} ${pluralLabel}`;
-  }
-
-  return `${formatNumber(normalizedCurrent)} exibidos · ${formatNumber(normalizedTotal)} ${pluralLabel}`;
-}
-
-/**
- * Formata a quantidade simples usada nos chips de categoria.
- * @param {number} value Total da categoria.
- * @returns {string} Total formatado.
- */
-function formatCategoryCount(value) {
-  return formatNumber(value);
-}
-
-/**
- * Formata contadores de progresso em formato compacto.
- * @param {string|number} currentValue Valor atual.
- * @param {string|number} totalValue Valor total.
- * @returns {string} Contador compacto.
- */
-function formatCounter(currentValue, totalValue) {
-  return `${formatNumber(normalizeNumber(currentValue))}/${formatNumber(normalizeNumber(totalValue))}`;
-}
-
-/**
- * Formata um numero para edicao em campos pt-BR.
- * @param {string|number} value Valor bruto.
- * @returns {string} Valor editavel.
- */
-function formatEditableNumber(value) {
-  return String(normalizeNumber(value)).replace(".", ",");
-}
-
-/**
- * Escapa texto antes de inserir HTML dinamico.
- * @param {unknown} value Valor bruto.
- * @returns {string} Texto seguro para HTML.
- */
-function escapeHtml(value) {
-  return String(value == null ? "" : value)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
-}
-
-/**
- * Cria o HTML de estado vazio.
- * @param {string} message Mensagem exibida.
- * @returns {string} HTML do estado vazio.
- */
-function createEmptyStateHtml(message) {
-  return `<article class="empty-state">${escapeHtml(message)}</article>`;
-}
-
-/**
- * Registra o service worker de forma silenciosa.
- * @returns {void}
- */
 function registerServiceWorker() {
-  if (!("serviceWorker" in navigator)) {
-    return;
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("service-worker.js").catch(() => {});
   }
-
-  window.addEventListener("load", () => {
-    navigator.serviceWorker.register("./service-worker.js").catch(() => {});
-  });
 }
 
-initializeApplication();
+document.addEventListener("DOMContentLoaded", initializeApp);
