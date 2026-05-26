@@ -1967,3 +1967,179 @@ body::after {
   font-weight: 760;
   line-height: 1.45;
 }
+
+/* Refinamento orçamento: busca simples, cliente e imagem no PDF */
+.budget-identity-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.budget-search-shell {
+  display: grid;
+  gap: 10px;
+  align-items: end;
+}
+
+.clear-budget-search-button {
+  min-height: 48px;
+}
+
+.budget-filter-chip-row {
+  margin-top: 12px;
+  padding-bottom: 2px;
+}
+
+.tattoo-reference-panel {
+  display: grid;
+  gap: 12px;
+  grid-column: 1 / -1;
+  padding: 14px;
+  border: 1px solid rgba(225, 190, 231, 0.22);
+  border-radius: var(--radius-card);
+  background:
+    radial-gradient(circle at top right, rgba(225, 190, 231, 0.16), transparent 34%),
+    rgba(18, 18, 18, 0.46);
+}
+
+.tattoo-reference-panel > div:first-child {
+  display: grid;
+  gap: 4px;
+}
+
+.tattoo-reference-panel span,
+.tattoo-reference-panel small,
+.tattoo-preview figcaption {
+  color: var(--text-soft);
+  font-size: 0.74rem;
+  font-weight: 850;
+}
+
+.tattoo-reference-panel span {
+  color: var(--color-purple-light);
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.tattoo-reference-panel strong {
+  color: var(--color-white);
+  font-size: 1rem;
+  font-weight: 950;
+}
+
+.tattoo-reference-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.tattoo-image-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.ghost-button {
+  min-height: 44px;
+  border: 1px solid rgba(225, 190, 231, 0.22);
+  border-radius: var(--radius-pill);
+  background: rgba(18, 18, 18, 0.34);
+  color: var(--color-white);
+  padding: 0 16px;
+  font-size: 0.84rem;
+  font-weight: 950;
+  cursor: pointer;
+  transition: transform 180ms ease, border-color 180ms ease, background 180ms ease;
+}
+
+.ghost-button:hover,
+.ghost-button:focus-visible {
+  border-color: rgba(225, 190, 231, 0.48);
+  background: rgba(106, 27, 154, 0.28);
+  transform: translateY(-1px);
+}
+
+.tattoo-preview {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+}
+
+.tattoo-preview[hidden] {
+  display: none;
+}
+
+.tattoo-preview img {
+  width: min(100%, 220px);
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border: 1px solid rgba(225, 190, 231, 0.22);
+  border-radius: 18px;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.32);
+}
+
+.stock-meter {
+  display: none;
+}
+
+.invoice-header {
+  grid-template-columns: auto minmax(0, 1fr);
+}
+
+.invoice-tattoo-reference {
+  display: grid;
+  gap: 6px;
+  justify-items: end;
+  margin: 0;
+}
+
+.invoice-tattoo-reference img {
+  width: 112px;
+  height: 112px;
+  object-fit: cover;
+  border: 1px solid rgba(45, 11, 64, 0.2);
+  border-radius: 18px;
+}
+
+.invoice-tattoo-reference figcaption {
+  color: #4a235f;
+  font-size: 0.72rem;
+  font-weight: 900;
+}
+
+@media (min-width: 760px) {
+  .budget-identity-grid,
+  .budget-search-shell {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .budget-search-shell {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .tattoo-reference-panel {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+  }
+
+  .tattoo-preview {
+    grid-column: 1 / -1;
+  }
+
+  .invoice-header:has(.invoice-tattoo-reference) {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+  }
+}
+
+@media print {
+  .invoice-header {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+  }
+
+  .invoice-tattoo-reference img {
+    width: 92px;
+    height: 92px;
+  }
+}

@@ -144,10 +144,17 @@
 
         <div class="budget-dashboard-grid">
           <section class="budget-summary-card budget-calculator-card" aria-label="Calculadora do orçamento">
-            <label class="form-field budget-name-field">
-              <span>Nome do orçamento</span>
-              <input id="budgetNameInput" type="text" placeholder="Fechamento braço - Cliente" />
-            </label>
+            <div class="budget-identity-grid">
+              <label class="form-field budget-name-field">
+                <span>Nome do orçamento</span>
+                <input id="budgetNameInput" type="text" placeholder="Fechamento braço" />
+              </label>
+
+              <label class="form-field budget-client-field">
+                <span>Nome do cliente</span>
+                <input id="clientNameInput" type="text" placeholder="Ex: Mariana Souza" />
+              </label>
+            </div>
 
             <label class="form-field">
               <span>Valor mão de obra por hora</span>
@@ -158,6 +165,20 @@
               <span>Tempo estimado da sessão</span>
               <input id="sessionHoursInput" type="text" inputmode="decimal" placeholder="3" />
             </label>
+
+            <section class="tattoo-reference-panel" aria-label="Referência visual da tatuagem">
+              <div>
+                <span>Imagem da tatuagem</span>
+                <strong>Referência para o PDF</strong>
+                <small>Adicione um JPG/PNG pequeno para sair junto no orçamento.</small>
+              </div>
+              <div class="tattoo-reference-actions">
+                <label class="secondary-button tattoo-image-button" for="tattooImageInput">Adicionar imagem</label>
+                <button class="ghost-button" id="removeTattooImageButton" type="button">Remover</button>
+                <input id="tattooImageInput" type="file" accept="image/png,image/jpeg,image/webp" hidden />
+              </div>
+              <figure class="tattoo-preview" id="tattooImagePreview" hidden></figure>
+            </section>
 
             <div class="budget-breakdown-grid" aria-live="polite">
               <div class="budget-breakdown-box">
@@ -203,10 +224,15 @@
               <h3 id="stockPickerTitle">Buscar insumos</h3>
             </div>
 
-            <label class="search-field budget-search-field">
-              <span>Buscar item</span>
-              <input id="budgetSearchInput" type="search" placeholder="Escolha um item do estoque" />
-            </label>
+            <div class="budget-search-shell">
+              <label class="search-field budget-search-field">
+                <span>Buscar item</span>
+                <input id="budgetSearchInput" type="search" placeholder="Digite nome, marca, cor, agulha ou categoria" />
+              </label>
+              <button class="secondary-button clear-budget-search-button" id="clearBudgetSearchButton" type="button">Limpar</button>
+            </div>
+
+            <section class="filter-chip-row budget-filter-chip-row" id="budgetCategoryFilterList" aria-label="Filtrar insumos do orçamento por categoria"></section>
 
             <div class="stock-picker-list" id="stockPickerList"></div>
           </section>

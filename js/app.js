@@ -182,8 +182,11 @@ const DEFAULT_INVENTORY_ITEMS = [
 const DEFAULT_BUDGET = {
   id: "budget-default",
   name: "Novo orçamento",
+  clientName: "",
   hourlyRate: 0,
   sessionHours: 0,
+  tattooImage: "",
+  tattooImageName: "",
   items: []
 };
 
@@ -192,6 +195,7 @@ let applicationState = loadApplicationState();
 let activeScreen = "home";
 let inventorySearchTerm = "";
 let budgetSearchTerm = "";
+let budgetCategoryFilter = CATEGORY_ALL_VALUE;
 let activeInventoryCategory = CATEGORY_ALL_VALUE;
 let editingInventoryItemId = null;
 
@@ -213,6 +217,7 @@ function initializeApplication() {
  */
 function bindElementReferences() {
   elementReferences.budgetNameInput = document.querySelector("#budgetNameInput");
+  elementReferences.budgetCategoryFilterList = document.querySelector("#budgetCategoryFilterList");
   elementReferences.budgetSearchInput = document.querySelector("#budgetSearchInput");
   elementReferences.budgetTotalValue = document.querySelector("#budgetTotalValue");
   elementReferences.cartList = document.querySelector("#cartList");
@@ -222,6 +227,8 @@ function bindElementReferences() {
   elementReferences.categoryFormTitle = document.querySelector("#categoryFormTitle");
   elementReferences.closeImportModalButton = document.querySelector("#closeImportModalButton");
   elementReferences.closeItemModalButton = document.querySelector("#closeItemModalButton");
+  elementReferences.clearBudgetSearchButton = document.querySelector("#clearBudgetSearchButton");
+  elementReferences.clientNameInput = document.querySelector("#clientNameInput");
   elementReferences.createBudgetButton = document.querySelector("#createBudgetButton");
   elementReferences.currentPageTitle = document.querySelector("#currentPageTitle");
   elementReferences.currentStockInput = document.querySelector("#currentStockInput");
@@ -257,7 +264,10 @@ function bindElementReferences() {
   elementReferences.purchasePriceLabel = document.querySelector("#purchasePriceLabel");
   elementReferences.screens = document.querySelectorAll("[data-screen]");
   elementReferences.sessionHoursInput = document.querySelector("#sessionHoursInput");
+  elementReferences.removeTattooImageButton = document.querySelector("#removeTattooImageButton");
   elementReferences.stockPickerList = document.querySelector("#stockPickerList");
+  elementReferences.tattooImageInput = document.querySelector("#tattooImageInput");
+  elementReferences.tattooImagePreview = document.querySelector("#tattooImagePreview");
   elementReferences.unitCostPreview = document.querySelector("#unitCostPreview");
   elementReferences.unitCostPreviewLabel = document.querySelector("#unitCostPreviewLabel");
   elementReferences.unitMeasureInput = document.querySelector("#unitMeasureInput");
@@ -312,10 +322,31 @@ function bindEventListeners() {
     renderStockPicker();
   });
 
+  elementReferences.clearBudgetSearchButton.addEventListener("click", () => {
+    budgetSearchTerm = "";
+    elementReferences.budgetSearchInput.value = "";
+    renderStockPicker();
+  });
+
+  elementReferences.budgetCategoryFilterList.addEventListener("click", (event) => {
+    const categoryButton = event.target.closest("[data-budget-category-filter]");
+
+    if (!categoryButton) {
+      return;
+    }
+
+    setActiveBudgetCategory(categoryButton.dataset.budgetCategoryFilter);
+  });
+
   elementReferences.budgetNameInput.addEventListener("input", (event) => {
     getActiveBudget().name = event.target.value;
     saveApplicationState();
     renderBudget();
+  });
+
+  elementReferences.clientNameInput.addEventListener("input", (event) => {
+    getActiveBudget().clientName = event.target.value;
+    saveApplicationState();
   });
 
   [
@@ -396,6 +427,8 @@ function bindEventListeners() {
     removeBudgetItem(cartCard.dataset.cartItemId);
   });
 
+  elementReferences.tattooImageInput.addEventListener("change", handleBudgetTattooImageChange);
+  elementReferences.removeTattooImageButton.addEventListener("click", removeBudgetTattooImage);
   elementReferences.exportInvoiceButton.addEventListener("click", exportInvoicePdf);
   elementReferences.createBudgetButton.addEventListener("click", createNewBudget);
 }
@@ -534,7 +567,6 @@ function normalizeApplicationState(rawState) {
 function normalizeInventoryItem(item) {
   const normalizedCategory = normalizeCategory(item.category);
   const packageQuantity = normalizeNumber(item.packageQuantity);
-  const currentStock = normalizeNumber(item.currentStock);
   const rawPurchasePrice = normalizeNumber(item.purchasePrice || item.packagePrice || item.valor);
   const pricingMode = isCartridgeCategory(normalizedCategory) ? UNIT_PRICING_MODE : FRACTIONAL_PRICING_MODE;
 
@@ -551,7 +583,7 @@ function normalizeInventoryItem(item) {
     unitMeasure: normalizeUnitMeasure(item.unitMeasure || item.unitLabel || item.tipoUnidade || "unid"),
     packageQuantity,
     purchasePrice: normalizePurchasePriceForPricingMode(item, normalizedCategory, packageQuantity, rawPurchasePrice),
-    currentStock: currentStock > 0 ? currentStock : packageQuantity,
+    currentStock: packageQuantity,
     createdAt: item.createdAt || new Date().toISOString(),
     updatedAt: item.updatedAt || item.createdAt || new Date().toISOString()
   };
@@ -565,8 +597,11 @@ function normalizeBudget(budget) {
   return {
     id: budget.id || createEntityId("budget"),
     name: String(budget.name || budget.projectName || "Novo orçamento"),
+    clientName: String(budget.clientName || budget.customerName || budget.nomeCliente || ""),
     hourlyRate: normalizeNumber(budget.hourlyRate ?? budget.laborHourlyRate ?? budget.valorMaoDeObra),
     sessionHours: normalizeNumber(budget.sessionHours ?? budget.laborHours ?? budget.tempoSessao),
+    tattooImage: isSafeImageDataUrl(budget.tattooImage) ? budget.tattooImage : "",
+    tattooImageName: String(budget.tattooImageName || ""),
     items: Array.isArray(budget.items) ? budget.items.map(normalizeBudgetItem) : []
   };
 }
@@ -599,6 +634,7 @@ function saveApplicationState() {
 function renderApplication() {
   renderActiveScreen();
   renderCategoryFilters();
+  renderBudgetCategoryFilters();
   renderInventory();
   renderBudget();
   renderItemCategoryFields(elementReferences.itemCategoryInput.value);
@@ -663,6 +699,30 @@ function renderCategoryFilters() {
 }
 
 /**
+ * Renderiza os chips de filtro do seletor de insumos do orçamento.
+ * @returns {void}
+ */
+function renderBudgetCategoryFilters() {
+  const categories = getInventoryCategories();
+
+  if (!categories.includes(budgetCategoryFilter)) {
+    budgetCategoryFilter = CATEGORY_ALL_VALUE;
+  }
+
+  elementReferences.budgetCategoryFilterList.innerHTML = categories.map((categoryName) => {
+    const categoryTotal = countInventoryItemsByCategory(categoryName);
+    const isActive = categoryName === budgetCategoryFilter;
+
+    return `
+      <button class="filter-chip ${isActive ? "is-active" : ""}" type="button" data-budget-category-filter="${escapeHtml(categoryName)}">
+        <span>${escapeHtml(categoryName)}</span>
+        <strong>${formatCategoryCount(categoryTotal)}</strong>
+      </button>
+    `;
+  }).join("");
+}
+
+/**
  * Renderiza os campos especificos da categoria selecionada no modal.
  * @param {string} categoryName Categoria selecionada.
  * @returns {void}
@@ -709,7 +769,7 @@ function updatePricingLabels(categoryName) {
   }
 
   elementReferences.purchasePriceLabel.textContent = "Valor da embalagem/frasco";
-  elementReferences.packageQuantityLabel.textContent = `Quantidade total (${unitMeasure})`;
+  elementReferences.packageQuantityLabel.textContent = `Quantidade da embalagem/frasco (${unitMeasure})`;
   elementReferences.unitCostPreviewLabel.textContent = `Custo por ${unitMeasure}`;
 }
 
@@ -721,18 +781,13 @@ function updatePricingLabels(categoryName) {
 function createInventoryCardHtml(item) {
   const unitCost = calculateUnitCost(item);
   const stockValue = calculateInventoryStockValue(item);
-  const stockPercentage = calculateStockPercentage(item);
-  const stockStatus = getStockStatus(stockPercentage);
   const productInitial = getProductInitial(item.name);
   const itemMetaLabel = getInventoryItemMetaLabel(item);
   const brandLabel = getInventoryItemBrandLabel(item);
-  const unitCostTitle = getUnitCostTitle(item);
-  const packageQuantityLabel = getPackageQuantityLabel(item);
   const unitCostMetricHtml = createInventoryUnitCostMetricHtml(item, unitCost);
-  const stockMeterHtml = createStockMeterHtml(item, stockPercentage, stockStatus);
 
   return `
-    <article class="inventory-card ${stockStatus.className}" data-inventory-item-id="${escapeHtml(item.id)}">
+    <article class="inventory-card" data-inventory-item-id="${escapeHtml(item.id)}">
       <div class="product-topline">
         <div class="product-tags">
           <span class="category-pill">${escapeHtml(item.category)}</span>
@@ -753,7 +808,6 @@ function createInventoryCardHtml(item) {
           <h3>${escapeHtml(item.name)}</h3>
           <span>${escapeHtml(brandLabel)}</span>
           <strong class="product-meta-line">${escapeHtml(itemMetaLabel)}</strong>
-          <small>${escapeHtml(packageQuantityLabel)}</small>
         </div>
       </div>
 
@@ -765,7 +819,6 @@ function createInventoryCardHtml(item) {
         ${unitCostMetricHtml}
       </div>
 
-      ${stockMeterHtml}
     </article>
   `;
 }
@@ -797,7 +850,7 @@ function createStockMeterHtml(item, stockPercentage, stockStatus) {
     return `
       <div class="stock-meter stock-meter-compact">
         <div class="stock-meter-text">
-          <span>Estoque físico</span>
+          <span>Quantidade cadastrada</span>
           <strong>${escapeHtml(getStockAvailabilityLabel(item))}</strong>
         </div>
       </div>`;
@@ -824,9 +877,12 @@ function renderBudget() {
   const totals = calculateBudgetTotals(activeBudget);
 
   elementReferences.budgetNameInput.value = activeBudget.name;
+  elementReferences.clientNameInput.value = activeBudget.clientName;
   elementReferences.hourlyRateInput.value = formatEditableNumber(activeBudget.hourlyRate);
   elementReferences.sessionHoursInput.value = formatEditableNumber(activeBudget.sessionHours);
+  renderTattooImagePreview(activeBudget);
   renderBudgetTotals(totals);
+  renderBudgetCategoryFilters();
   renderStockPicker();
   renderCart();
 }
@@ -843,29 +899,26 @@ function renderBudgetTotals(totals) {
 }
 
 /**
- * Renderiza os itens de estoque disponiveis para adicionar ao orcamento.
+ * Renderiza os itens de estoque usados no seletor do orcamento.
  * @returns {void}
  */
 function renderStockPicker() {
-  const filteredItems = getFilteredInventoryItems(budgetSearchTerm, CATEGORY_ALL_VALUE);
+  const filteredItems = getFilteredInventoryItems(budgetSearchTerm, budgetCategoryFilter);
 
   if (filteredItems.length === 0) {
-    elementReferences.stockPickerList.innerHTML = createEmptyStateHtml("Nenhum item disponível no estoque.");
+    elementReferences.stockPickerList.innerHTML = createEmptyStateHtml("Nenhum insumo encontrado. Tente buscar por nome, marca, cor, numeração ou categoria.");
     return;
   }
 
   elementReferences.stockPickerList.innerHTML = filteredItems.map((item) => {
-    const unitCost = calculateUnitCost(item);
     const productInitial = getProductInitial(item.name);
-    const stockStatus = getStockStatus(calculateStockPercentage(item));
     const itemMetaLabel = getInventoryItemMetaLabel(item);
     const unitCostLabel = getUnitCostInlineLabel(item);
-    const stockAvailabilityLabel = getStockAvailabilityLabel(item);
     const usageLabel = getUsageLabel(item);
     const stockValueLabel = formatCurrency(calculateInventoryStockValue(item));
 
     return `
-    <article class="picker-card ${stockStatus.className}" data-inventory-item-id="${escapeHtml(item.id)}">
+    <article class="picker-card" data-inventory-item-id="${escapeHtml(item.id)}">
       <div class="picker-card-main">
         <div class="product-mark product-mark-small" aria-hidden="true">${escapeHtml(productInitial)}</div>
         <div>
@@ -876,8 +929,7 @@ function renderStockPicker() {
       </div>
 
       <div class="picker-meta-row">
-        <span class="stock-availability-pill">Estoque físico: ${escapeHtml(stockAvailabilityLabel)}</span>
-        <span class="stock-value-pill">Valor em estoque: ${stockValueLabel}</span>
+        <span class="stock-value-pill">Valor total em estoque: ${stockValueLabel}</span>
       </div>
 
       <div class="picker-action-row">
@@ -1169,10 +1221,8 @@ function closeModal(modalElement) {
 function saveInventoryItemFromForm() {
   const selectedCategory = normalizeCategory(elementReferences.itemCategoryInput.value);
   const packageQuantity = normalizeNumber(elementReferences.packageQuantityInput.value);
-  const hiddenCurrentStock = normalizeNumber(elementReferences.currentStockInput.value);
   const existingItem = editingInventoryItemId ? findInventoryItemById(editingInventoryItemId) : null;
   const dynamicMetadata = getDynamicMetadataFromForm();
-  const shouldSyncStockWithQuantity = isCartridgeCategory(selectedCategory) || !existingItem || hiddenCurrentStock <= 0;
   const inventoryItem = {
     id: editingInventoryItemId || createEntityId("item"),
     name: elementReferences.itemNameInput.value.trim(),
@@ -1182,7 +1232,7 @@ function saveInventoryItemFromForm() {
     unitMeasure: normalizeUnitMeasure(elementReferences.unitMeasureInput.value),
     packageQuantity,
     purchasePrice: normalizeNumber(elementReferences.purchasePriceInput.value),
-    currentStock: shouldSyncStockWithQuantity ? packageQuantity : hiddenCurrentStock,
+    currentStock: packageQuantity,
     createdAt: existingItem?.createdAt || new Date().toISOString(),
     updatedAt: new Date().toISOString()
   };
@@ -1258,6 +1308,17 @@ function setActiveInventoryCategory(categoryName) {
   activeInventoryCategory = categoryName || CATEGORY_ALL_VALUE;
   renderCategoryFilters();
   renderInventory();
+}
+
+/**
+ * Define a categoria ativa usada na busca de insumos do orçamento.
+ * @param {string} categoryName Nome da categoria selecionada.
+ * @returns {void}
+ */
+function setActiveBudgetCategory(categoryName) {
+  budgetCategoryFilter = categoryName || CATEGORY_ALL_VALUE;
+  renderBudgetCategoryFilters();
+  renderStockPicker();
 }
 
 /**
@@ -1426,8 +1487,11 @@ function createNewBudget() {
   const newBudget = {
     id: createEntityId("budget"),
     name: "Novo orçamento",
+    clientName: "",
     hourlyRate: 0,
     sessionHours: 0,
+    tattooImage: "",
+    tattooImageName: "",
     items: []
   };
 
@@ -1502,7 +1566,7 @@ function parseCsvInventory(csvText) {
       packageQuantity,
       unitMeasure: normalizeUnitMeasure(row[3] || "unid"),
       purchasePrice: normalizeNumber(row[4]),
-      currentStock: currentStock > 0 ? currentStock : packageQuantity,
+      currentStock: packageQuantity,
       brand: row[6] || "",
       description: row[7] || "",
       cartridgeType: String(row[8] || "").toUpperCase(),
@@ -1541,6 +1605,99 @@ function exportBackup() {
 }
 
 /**
+ * Lê e comprime a imagem de referência do orçamento.
+ * @param {Event} event Evento do input de arquivo.
+ * @returns {void}
+ */
+function handleBudgetTattooImageChange(event) {
+  const selectedFile = event.target.files[0];
+
+  if (!selectedFile || !selectedFile.type.startsWith("image/")) {
+    return;
+  }
+
+  resizeImageFile(selectedFile, 900, 0.82).then((imageDataUrl) => {
+    const activeBudget = getActiveBudget();
+    activeBudget.tattooImage = imageDataUrl;
+    activeBudget.tattooImageName = selectedFile.name;
+    saveApplicationState();
+    renderTattooImagePreview(activeBudget);
+  });
+}
+
+/**
+ * Remove a imagem vinculada ao orçamento ativo.
+ * @returns {void}
+ */
+function removeBudgetTattooImage() {
+  const activeBudget = getActiveBudget();
+  activeBudget.tattooImage = "";
+  activeBudget.tattooImageName = "";
+  elementReferences.tattooImageInput.value = "";
+  saveApplicationState();
+  renderTattooImagePreview(activeBudget);
+}
+
+/**
+ * Renderiza o preview da imagem de referência do orçamento.
+ * @param {object} budget Orçamento ativo.
+ * @returns {void}
+ */
+function renderTattooImagePreview(budget) {
+  if (!budget.tattooImage) {
+    elementReferences.tattooImagePreview.hidden = true;
+    elementReferences.tattooImagePreview.innerHTML = "";
+    return;
+  }
+
+  elementReferences.tattooImagePreview.hidden = false;
+  elementReferences.tattooImagePreview.innerHTML = `
+    <img src="${escapeHtml(budget.tattooImage)}" alt="Referência da tatuagem" />
+    <figcaption>${escapeHtml(budget.tattooImageName || "Imagem adicionada")}</figcaption>
+  `;
+}
+
+/**
+ * Redimensiona uma imagem local para manter o localStorage leve.
+ * @param {File} imageFile Arquivo selecionado.
+ * @param {number} maxSize Tamanho máximo em pixels.
+ * @param {number} quality Qualidade JPEG/WebP.
+ * @returns {Promise<string>} Data URL compacta.
+ */
+function resizeImageFile(imageFile, maxSize, quality) {
+  return new Promise((resolve) => {
+    const fileReader = new FileReader();
+
+    fileReader.onload = () => {
+      const imageElement = new Image();
+
+      imageElement.onload = () => {
+        const scaleFactor = Math.min(1, maxSize / Math.max(imageElement.width, imageElement.height));
+        const canvasElement = document.createElement("canvas");
+        canvasElement.width = Math.max(1, Math.round(imageElement.width * scaleFactor));
+        canvasElement.height = Math.max(1, Math.round(imageElement.height * scaleFactor));
+        const canvasContext = canvasElement.getContext("2d");
+        canvasContext.drawImage(imageElement, 0, 0, canvasElement.width, canvasElement.height);
+        resolve(canvasElement.toDataURL("image/jpeg", quality));
+      };
+
+      imageElement.src = String(fileReader.result || "");
+    };
+
+    fileReader.readAsDataURL(imageFile);
+  });
+}
+
+/**
+ * Valida data URL de imagem antes de reusar dados persistidos.
+ * @param {string} imageDataUrl Valor persistido.
+ * @returns {boolean} Indica se o formato é aceitável.
+ */
+function isSafeImageDataUrl(imageDataUrl) {
+  return typeof imageDataUrl === "string" && /^data:image\/(png|jpeg|jpg|webp);base64,/i.test(imageDataUrl);
+}
+
+/**
  * Prepara o template de invoice e aciona a impressao/PDF do navegador.
  * @returns {void}
  */
@@ -1562,6 +1719,10 @@ function renderInvoiceDocument() {
       inventoryItem: findInventoryItemById(cartItem.inventoryItemId)
     }))
     .filter((entry) => entry.inventoryItem);
+  const tattooImageHtml = activeBudget.tattooImage
+    ? `<figure class="invoice-tattoo-reference"><img src="${escapeHtml(activeBudget.tattooImage)}" alt="Referência da tatuagem" /><figcaption>Referência visual</figcaption></figure>`
+    : "";
+  const clientName = activeBudget.clientName || "Não informado";
   const itemRows = materialEntries.map(({ cartItem, inventoryItem }) => {
     const unitCost = calculateUnitCost(inventoryItem);
     const lineSubtotal = calculateLineSubtotal(inventoryItem, cartItem.quantityUsed);
@@ -1590,11 +1751,16 @@ function renderInvoiceDocument() {
         <div>
           <span>Orçamento premium</span>
           <h2>${escapeHtml(activeBudget.name)}</h2>
-          <p>CalculadoraTattoo · Gestão de estúdio</p>
+          <p>Cliente: ${escapeHtml(clientName)} · CalculadoraTattoo</p>
         </div>
+        ${tattooImageHtml}
       </header>
 
       <section class="invoice-summary-grid">
+        <div>
+          <span>Cliente</span>
+          <strong>${escapeHtml(clientName)}</strong>
+        </div>
         <div>
           <span>Data</span>
           <strong>${new Date().toLocaleDateString("pt-BR")}</strong>
@@ -1736,20 +1902,20 @@ function getStockStatus(stockPercentage) {
   if (stockPercentage <= 15) {
     return {
       className: "is-stock-critical",
-      label: "Estoque crítico"
+      label: "Estoque"
     };
   }
 
   if (stockPercentage <= 35) {
     return {
       className: "is-stock-low",
-      label: "Reposição sugerida"
+      label: "Estoque"
     };
   }
 
   return {
     className: "is-stock-healthy",
-    label: "Estoque saudável"
+    label: "Estoque"
   };
 }
 
@@ -1826,7 +1992,7 @@ function getStockAvailabilityLabel(item) {
     return `${formatNumber(item.currentStock)} ${normalizeNumber(item.currentStock) === 1 ? "cartucho" : "cartuchos"}`;
   }
 
-  return `${formatNumber(item.currentStock)} ${item.unitMeasure} disponíveis`;
+  return `${formatNumber(item.currentStock)} ${item.unitMeasure} cadastrados`;
 }
 
 /**
