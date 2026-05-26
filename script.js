@@ -15,6 +15,11 @@ const CATEGORY_DESCARTAVEL = "Descartável";
 const CATEGORY_OUTROS = "Outros";
 const UNIT_PRICING_MODE = "unit";
 const FRACTIONAL_PRICING_MODE = "fractional";
+const SCREEN_TITLES = {
+  home: "Início",
+  inventory: "Estoque",
+  budgets: "Orçamentos"
+};
 const BASE_INVENTORY_CATEGORIES = [
   CATEGORY_ALL_VALUE,
   CATEGORY_CARTUCHO,
@@ -184,7 +189,7 @@ const DEFAULT_BUDGET = {
 
 const elementReferences = {};
 let applicationState = loadApplicationState();
-let activeScreen = "inventory";
+let activeScreen = "home";
 let inventorySearchTerm = "";
 let budgetSearchTerm = "";
 let activeInventoryCategory = CATEGORY_ALL_VALUE;
@@ -224,6 +229,7 @@ function bindElementReferences() {
   elementReferences.drawer = document.querySelector("#drawer");
   elementReferences.drawerBackdrop = document.querySelector("#drawerBackdrop");
   elementReferences.drawerLinks = document.querySelectorAll("[data-drawer-action]");
+  elementReferences.homeActionButtons = document.querySelectorAll("[data-home-action]");
   elementReferences.exportInvoiceButton = document.querySelector("#exportInvoiceButton");
   elementReferences.budgetItemCounter = document.querySelector("#budgetItemCounter");
   elementReferences.hourlyRateInput = document.querySelector("#hourlyRateInput");
@@ -270,6 +276,10 @@ function bindEventListeners() {
 
   elementReferences.drawerLinks.forEach((drawerLink) => {
     drawerLink.addEventListener("click", () => handleDrawerAction(drawerLink.dataset.drawerAction));
+  });
+
+  elementReferences.homeActionButtons.forEach((homeButton) => {
+    homeButton.addEventListener("click", () => setActiveScreen(homeButton.dataset.homeAction));
   });
 
   if (typeof DESKTOP_MEDIA_QUERY.addEventListener === "function") {
@@ -424,7 +434,7 @@ function handleInventoryGridClick(event) {
  * @returns {void}
  */
 function handleDrawerAction(actionName) {
-  if (actionName === "inventory" || actionName === "budgets") {
+  if (Object.prototype.hasOwnProperty.call(SCREEN_TITLES, actionName)) {
     setActiveScreen(actionName);
   }
 
@@ -588,7 +598,7 @@ function renderActiveScreen() {
     drawerLink.classList.toggle("is-active", drawerLink.dataset.drawerAction === activeScreen);
   });
 
-  elementReferences.currentPageTitle.textContent = activeScreen === "inventory" ? "Estoque" : "Orçamentos";
+  elementReferences.currentPageTitle.textContent = SCREEN_TITLES[activeScreen] || "CalculadoraTattoo";
   elementReferences.openItemModalButton.hidden = activeScreen !== "inventory";
 }
 
@@ -695,9 +705,10 @@ function createInventoryCardHtml(item) {
   const productInitial = getProductInitial(item.name);
   const itemMetaLabel = getInventoryItemMetaLabel(item);
   const brandLabel = getInventoryItemBrandLabel(item);
-  const stockCounterTotal = Math.max(normalizeNumber(item.currentStock), normalizeNumber(item.packageQuantity));
   const unitCostTitle = getUnitCostTitle(item);
   const packageQuantityLabel = getPackageQuantityLabel(item);
+  const secondaryMetricHtml = createInventorySecondaryMetricHtml(item);
+  const stockMeterHtml = createStockMeterHtml(item, stockPercentage, stockStatus);
 
   return `
     <article class="inventory-card ${stockStatus.className}" data-inventory-item-id="${escapeHtml(item.id)}">
@@ -730,24 +741,71 @@ function createInventoryCardHtml(item) {
           <span>${escapeHtml(unitCostTitle)}</span>
           <strong>${formatCurrency(unitCost)}</strong>
         </div>
+        ${secondaryMetricHtml}
+      </div>
+
+      ${stockMeterHtml}
+    </article>
+  `;
+}
+/**
+ * Cria a metrica secundaria do card de estoque.
+ * Cartucho nao usa contador progressivo de estoque, pois o valor unitario e fixo.
+ * @param {object} item Item de estoque.
+ * @returns {string} HTML da metrica secundaria.
+ */
+function createInventorySecondaryMetricHtml(item) {
+  if (isCartridgeCategory(item.category)) {
+    const stockValue = calculateInventoryStockValue(item);
+
+    return `
+        <div class="unit-price">
+          <span>Valor total em estoque</span>
+          <strong>${formatCurrency(stockValue)}</strong>
+          <small>${escapeHtml(getStockAvailabilityLabel(item))}</small>
+        </div>`;
+  }
+
+  const stockCounterTotal = Math.max(normalizeNumber(item.currentStock), normalizeNumber(item.packageQuantity));
+
+  return `
         <div class="unit-price">
           <span>Estoque</span>
           <strong>${formatCounter(item.currentStock, stockCounterTotal)}</strong>
-        </div>
-      </div>
+          <small>${escapeHtml(getStockAvailabilityLabel(item))}</small>
+        </div>`;
+}
 
+/**
+ * Cria a barra de status do estoque.
+ * @param {object} item Item de estoque.
+ * @param {number} stockPercentage Percentual calculado.
+ * @param {{className: string, label: string}} stockStatus Status visual.
+ * @returns {string} HTML da barra ou resumo de estoque.
+ */
+function createStockMeterHtml(item, stockPercentage, stockStatus) {
+  if (isCartridgeCategory(item.category)) {
+    return `
+      <div class="stock-meter stock-meter-compact">
+        <div class="stock-meter-text">
+          <span>Estoque físico</span>
+          <strong>${escapeHtml(getStockAvailabilityLabel(item))}</strong>
+        </div>
+      </div>`;
+  }
+
+  return `
       <div class="stock-meter">
         <div class="stock-meter-text">
-          <span>${stockStatus.label}</span>
+          <span>${escapeHtml(stockStatus.label)}</span>
           <strong>${formatNumber(stockPercentage)}%</strong>
         </div>
         <span class="stock-meter-track">
           <span class="stock-meter-fill" style="width: ${stockPercentage}%"></span>
         </span>
-      </div>
-    </article>
-  `;
+      </div>`;
 }
+
 /**
  * Renderiza os dados resumidos do orcamento ativo.
  * @returns {void}
@@ -793,6 +851,8 @@ function renderStockPicker() {
     const stockStatus = getStockStatus(calculateStockPercentage(item));
     const itemMetaLabel = getInventoryItemMetaLabel(item);
     const unitCostLabel = getUnitCostInlineLabel(item);
+    const stockAvailabilityLabel = getStockAvailabilityLabel(item);
+    const usageLabel = getUsageLabel(item);
 
     return `
     <article class="picker-card ${stockStatus.className}" data-inventory-item-id="${escapeHtml(item.id)}">
@@ -805,10 +865,14 @@ function renderStockPicker() {
         </div>
       </div>
 
+      <div class="picker-meta-row">
+        <span class="stock-availability-pill">${escapeHtml(stockAvailabilityLabel)}</span>
+      </div>
+
       <div class="picker-action-row">
         <label class="compact-field">
-          <span>Usar</span>
-          <input data-picker-quantity type="text" inputmode="decimal" placeholder="${escapeHtml(item.unitMeasure)}" />
+          <span>${escapeHtml(usageLabel)}</span>
+          <input data-picker-quantity type="text" inputmode="decimal" placeholder="0" />
         </label>
         <button class="primary-button" type="button" data-add-inventory-item>Adicionar</button>
       </div>
@@ -841,13 +905,14 @@ function renderCart() {
     const subtotal = calculateLineSubtotal(inventoryItem, cartItem.quantityUsed);
     const itemMetaLabel = getInventoryItemMetaLabel(inventoryItem);
     const unitCostLabel = getUnitCostInlineLabel(inventoryItem);
+    const usageLabel = getUsageLabel(inventoryItem);
 
     return `
       <article class="cart-card" data-cart-item-id="${escapeHtml(cartItem.id)}">
         <div class="cart-card-header">
           <div>
             <h3>${escapeHtml(inventoryItem.name)}</h3>
-            <span>${escapeHtml(inventoryItem.category)} · ${escapeHtml(itemMetaLabel)} · ${escapeHtml(inventoryItem.unitMeasure)}</span>
+            <span>${escapeHtml(inventoryItem.category)} · ${escapeHtml(itemMetaLabel)}</span>
           </div>
           <strong>${formatCurrency(subtotal)}</strong>
         </div>
@@ -855,11 +920,11 @@ function renderCart() {
         <div class="cart-calculation">
           <span>${escapeHtml(unitCostLabel)}</span>
           <span>x</span>
-          <span>${formatNumber(cartItem.quantityUsed)} ${escapeHtml(inventoryItem.unitMeasure)}</span>
+          <span>${formatNumber(cartItem.quantityUsed)} ${escapeHtml(getUsageUnitLabel(inventoryItem))}</span>
         </div>
 
         <label class="cart-quantity-field">
-          <span>Quantidade usada</span>
+          <span>${escapeHtml(usageLabel)}</span>
           <input class="cart-quantity-input" data-cart-quantity type="text" inputmode="decimal" value="${escapeHtml(formatEditableNumber(cartItem.quantityUsed))}" />
         </label>
 
@@ -1426,7 +1491,7 @@ function renderInvoiceDocument() {
         </td>
         <td>${escapeHtml(inventoryItem.category)}</td>
         <td>${escapeHtml(specification)}</td>
-        <td>${formatNumber(cartItem.quantityUsed)} ${escapeHtml(inventoryItem.unitMeasure)}</td>
+        <td>${formatNumber(cartItem.quantityUsed)} ${escapeHtml(getUsageUnitLabel(inventoryItem))}</td>
         <td>${formatCurrency(unitCost)}</td>
         <td>${formatCurrency(lineSubtotal)}</td>
       </tr>
@@ -1523,6 +1588,15 @@ function calculateUnitCost(item) {
  */
 function calculateLineSubtotal(item, quantityUsed) {
   return calculateUnitCost(item) * normalizeNumber(quantityUsed);
+}
+
+/**
+ * Calcula o valor financeiro do estoque atual de um insumo.
+ * @param {object} item Item de estoque.
+ * @returns {number} Valor total disponivel em estoque.
+ */
+function calculateInventoryStockValue(item) {
+  return calculateUnitCost(item) * normalizeNumber(item.currentStock);
 }
 
 /**
@@ -1642,6 +1716,37 @@ function getUnitCostInlineLabel(item) {
   }
 
   return `${formatCurrency(unitCost)}/${item.unitMeasure}`;
+}
+
+/**
+ * Retorna a disponibilidade fisica do item sem usar contador progressivo para cartuchos.
+ * @param {object} item Item de estoque.
+ * @returns {string} Texto de disponibilidade.
+ */
+function getStockAvailabilityLabel(item) {
+  if (isCartridgeCategory(item.category)) {
+    return `${formatNumber(item.currentStock)} ${normalizeNumber(item.currentStock) === 1 ? "cartucho" : "cartuchos"}`;
+  }
+
+  return `${formatNumber(item.currentStock)} ${item.unitMeasure} disponíveis`;
+}
+
+/**
+ * Retorna a unidade textual usada no orçamento.
+ * @param {object} item Item de estoque.
+ * @returns {string} Unidade de uso.
+ */
+function getUsageUnitLabel(item) {
+  return isCartridgeCategory(item.category) ? "cartuchos" : item.unitMeasure;
+}
+
+/**
+ * Retorna o label do campo de uso no orçamento.
+ * @param {object} item Item de estoque.
+ * @returns {string} Label de campo.
+ */
+function getUsageLabel(item) {
+  return isCartridgeCategory(item.category) ? "Cartuchos usados" : `Quantidade usada (${item.unitMeasure})`;
 }
 
 /**

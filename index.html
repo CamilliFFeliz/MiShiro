@@ -20,6 +20,10 @@
     </div>
 
     <nav class="drawer-navigation" aria-label="Navegação principal">
+      <button class="drawer-link" type="button" data-drawer-action="home">
+        <span aria-hidden="true">⌂</span>
+        Início
+      </button>
       <button class="drawer-link" type="button" data-drawer-action="inventory">
         <span aria-hidden="true">▦</span>
         Estoque
@@ -42,11 +46,75 @@
   <div class="app-shell">
     <header class="app-header">
       <button class="header-menu-button" id="openDrawerButton" type="button" aria-label="Abrir menu">☰</button>
-      <h1 id="currentPageTitle">Estoque</h1>
+      <h1 id="currentPageTitle">Início</h1>
     </header>
 
     <main class="app-content">
-      <section class="screen-panel is-active" id="inventoryScreen" data-screen="inventory" aria-labelledby="inventoryTitle">
+      <section class="screen-panel is-active" id="homeScreen" data-screen="home" aria-labelledby="homeTitle">
+        <section class="home-hero-panel">
+          <div class="home-hero-copy">
+            <span class="eyebrow-label">Gestão inteligente para estúdios</span>
+            <h2 id="homeTitle">Calcule cada sessão com precisão antes de passar o valor ao cliente.</h2>
+            <p>
+              Cadastre seus insumos, informe valores reais de compra e monte orçamentos somando materiais usados com mão de obra. Cartuchos são tratados como unidade fixa; tintas e demais materiais continuam com custo fracionado.
+            </p>
+            <div class="home-action-row">
+              <button class="primary-button" type="button" data-home-action="inventory">Cadastrar insumos</button>
+              <button class="secondary-button" type="button" data-home-action="budgets">Montar orçamento</button>
+            </div>
+          </div>
+
+          <div class="home-preview-card" aria-label="Resumo de funcionamento">
+            <div class="home-preview-header">
+              <span>Fluxo do app</span>
+              <strong>3 passos</strong>
+            </div>
+            <div class="home-step-list">
+              <article>
+                <strong>1</strong>
+                <div>
+                  <h3>Cadastre o estoque</h3>
+                  <p>Informe categoria, marca, valor e quantidade conforme o tipo de material.</p>
+                </div>
+              </article>
+              <article>
+                <strong>2</strong>
+                <div>
+                  <h3>Monte o projeto</h3>
+                  <p>Escolha os insumos usados e registre horas de sessão + valor por hora.</p>
+                </div>
+              </article>
+              <article>
+                <strong>3</strong>
+                <div>
+                  <h3>Gere o PDF</h3>
+                  <p>O orçamento sai discriminado com materiais, mão de obra e total final.</p>
+                </div>
+              </article>
+            </div>
+          </div>
+        </section>
+
+        <section class="home-feature-grid" aria-label="Recursos principais">
+          <article class="home-feature-card">
+            <span>Cartuchos</span>
+            <strong>Preço unitário real</strong>
+            <p>Um RL 0310 de R$ 15,00 continua valendo R$ 15,00 por unidade, mesmo se houver 5 no estoque.</p>
+          </article>
+          <article class="home-feature-card">
+            <span>Tintas e fracionáveis</span>
+            <strong>Custo proporcional</strong>
+            <p>Valor da embalagem dividido pela quantidade total para chegar ao custo por ml, grama, folha ou unidade.</p>
+          </article>
+          <article class="home-feature-card">
+            <span>Orçamentos</span>
+            <strong>Materiais + mão de obra</strong>
+            <p>Some insumos utilizados com horas trabalhadas para chegar a um valor mais profissional.</p>
+          </article>
+        </section>
+      </section>
+
+      <section class="screen-panel" id="inventoryScreen" data-screen="inventory" aria-labelledby="inventoryTitle">
         <div class="screen-intro screen-intro-row">
           <div>
             <span>Vitrine de insumos</span>
@@ -68,70 +136,89 @@
       <section class="screen-panel" id="budgetsScreen" data-screen="budgets" aria-labelledby="budgetsTitle">
         <div class="screen-intro screen-intro-row">
           <div>
-            <span>Carrinho de compras</span>
+            <span>Projeto financeiro</span>
             <h2 id="budgetsTitle">Orçamentos</h2>
           </div>
           <strong class="screen-counter" id="budgetItemCounter">0 de 0</strong>
         </div>
 
-        <section class="budget-summary-card">
-          <label class="form-field">
-            <span>Nome do orçamento</span>
-            <input id="budgetNameInput" type="text" placeholder="Fechamento braço - Cliente" />
-          </label>
+        <div class="budget-dashboard-grid">
+          <section class="budget-summary-card budget-calculator-card" aria-label="Calculadora do orçamento">
+            <label class="form-field budget-name-field">
+              <span>Nome do orçamento</span>
+              <input id="budgetNameInput" type="text" placeholder="Fechamento braço - Cliente" />
+            </label>
 
-          <label class="form-field">
-            <span>Valor mão de obra por hora</span>
-            <input id="hourlyRateInput" type="text" inputmode="decimal" placeholder="150,00" />
-          </label>
+            <label class="form-field">
+              <span>Valor mão de obra por hora</span>
+              <input id="hourlyRateInput" type="text" inputmode="decimal" placeholder="150,00" />
+            </label>
 
-          <label class="form-field">
-            <span>Tempo estimado da sessão</span>
-            <input id="sessionHoursInput" type="text" inputmode="decimal" placeholder="3" />
-          </label>
+            <label class="form-field">
+              <span>Tempo estimado da sessão</span>
+              <input id="sessionHoursInput" type="text" inputmode="decimal" placeholder="3" />
+            </label>
 
-          <div class="budget-breakdown-grid" aria-live="polite">
-            <div class="budget-breakdown-box">
-              <span>Insumos</span>
-              <strong id="materialCostValue">R$ 0,00</strong>
+            <div class="budget-breakdown-grid" aria-live="polite">
+              <div class="budget-breakdown-box">
+                <span>Insumos</span>
+                <strong id="materialCostValue">R$ 0,00</strong>
+              </div>
+              <div class="budget-breakdown-box">
+                <span>Mão de obra</span>
+                <strong id="laborCostValue">R$ 0,00</strong>
+              </div>
             </div>
-            <div class="budget-breakdown-box">
-              <span>Mão de obra</span>
-              <strong id="laborCostValue">R$ 0,00</strong>
+
+            <div class="budget-total-box">
+              <span>Total do orçamento</span>
+              <strong id="budgetTotalValue">R$ 0,00</strong>
             </div>
-          </div>
 
-          <div class="budget-total-box">
-            <span>Total do orçamento</span>
-            <strong id="budgetTotalValue">R$ 0,00</strong>
-          </div>
+            <div class="budget-actions-row">
+              <button class="secondary-button" id="createBudgetButton" type="button">Novo orçamento</button>
+              <button class="primary-button" id="exportInvoiceButton" type="button">Gerar PDF</button>
+            </div>
+          </section>
 
-          <button class="secondary-button" id="createBudgetButton" type="button">Novo orçamento</button>
-          <button class="primary-button" id="exportInvoiceButton" type="button">Gerar PDF</button>
-        </section>
+          <aside class="budget-guide-card" aria-label="Regras do cálculo">
+            <span>Como o app calcula</span>
+            <h3>Preço final = insumos usados + mão de obra</h3>
+            <p>Cartuchos entram pelo valor unitário real. Materiais fracionáveis entram pelo custo por unidade de medida. A mão de obra é calculada por horas multiplicadas pelo valor por hora.</p>
+            <div class="budget-formula-box">
+              <strong>Materiais</strong>
+              <span>+</span>
+              <strong>Horas × Valor/h</strong>
+              <span>=</span>
+              <strong>Total</strong>
+            </div>
+          </aside>
+        </div>
 
-        <section class="cart-section" aria-labelledby="stockPickerTitle">
-          <div class="section-heading">
-            <span>Adicionar ao carrinho</span>
-            <h3 id="stockPickerTitle">Buscar insumos</h3>
-          </div>
+        <div class="budget-workspace-grid">
+          <section class="cart-section" aria-labelledby="stockPickerTitle">
+            <div class="section-heading">
+              <span>Adicionar ao orçamento</span>
+              <h3 id="stockPickerTitle">Buscar insumos</h3>
+            </div>
 
-          <label class="search-field">
-            <span>Buscar item</span>
-            <input id="budgetSearchInput" type="search" placeholder="Escolha um item do estoque" />
-          </label>
+            <label class="search-field budget-search-field">
+              <span>Buscar item</span>
+              <input id="budgetSearchInput" type="search" placeholder="Escolha um item do estoque" />
+            </label>
 
-          <div class="stock-picker-list" id="stockPickerList"></div>
-        </section>
+            <div class="stock-picker-list" id="stockPickerList"></div>
+          </section>
 
-        <section class="cart-section" aria-labelledby="cartTitle">
-          <div class="section-heading">
-            <span>Itens selecionados</span>
-            <h3 id="cartTitle">Carrinho</h3>
-          </div>
+          <section class="cart-section" aria-labelledby="cartTitle">
+            <div class="section-heading">
+              <span>Itens selecionados</span>
+              <h3 id="cartTitle">Carrinho do projeto</h3>
+            </div>
 
-          <div class="cart-list" id="cartList"></div>
-        </section>
+            <div class="cart-list" id="cartList"></div>
+          </section>
+        </div>
       </section>
     </main>
 
