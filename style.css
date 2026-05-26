@@ -1,0 +1,689 @@
+:root {
+  --color-purple-dark: #2D0B40;
+  --color-purple: #6A1B9A;
+  --color-black: #121212;
+  --color-white: #FFFFFF;
+  --header-height: 64px;
+  --page-padding: 16px;
+  --radius-small: 8px;
+  --radius-medium: 14px;
+  --radius-pill: 999px;
+  --shadow-panel: 0 18px 42px var(--color-black);
+  --transition-default: 180ms ease-in-out;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-width: 320px;
+  background: var(--color-black);
+  color-scheme: dark;
+}
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  min-height: 100dvh;
+  margin: 0;
+  overflow-x: hidden;
+  background: var(--color-black);
+  color: var(--color-white);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+button,
+input,
+select {
+  font: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+input,
+select {
+  width: 100%;
+  min-width: 0;
+  min-height: 52px;
+  border: 1px solid var(--color-purple);
+  border-radius: var(--radius-small);
+  outline: none;
+  background: var(--color-black);
+  color: var(--color-white);
+  font-size: 16px;
+  padding: 0 14px;
+}
+
+input::placeholder {
+  color: var(--color-white);
+}
+
+input:focus,
+select:focus {
+  border-color: var(--color-white);
+  box-shadow: 0 0 0 3px var(--color-purple);
+}
+
+button,
+.inventory-card,
+.cart-card,
+.picker-card,
+.drawer,
+.drawer-backdrop,
+.app-modal {
+  transition:
+    background var(--transition-default),
+    border-color var(--transition-default),
+    color var(--transition-default),
+    opacity var(--transition-default),
+    transform var(--transition-default),
+    box-shadow var(--transition-default);
+}
+
+.app-shell {
+  width: 100%;
+  max-width: 1040px;
+  min-height: 100vh;
+  min-height: 100dvh;
+  margin: 0 auto;
+  padding-top: var(--header-height);
+}
+
+.app-header {
+  position: fixed;
+  top: 0;
+  right: 0;
+  left: 0;
+  z-index: 40;
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+  min-height: var(--header-height);
+  padding: max(8px, env(safe-area-inset-top)) var(--page-padding) 8px;
+  background: var(--color-purple-dark);
+  border-bottom: 1px solid var(--color-purple);
+  box-shadow: var(--shadow-panel);
+}
+
+.header-menu-button,
+.icon-button {
+  display: grid;
+  width: 48px;
+  height: 48px;
+  place-items: center;
+  border: 1px solid var(--color-purple);
+  border-radius: var(--radius-small);
+  background: var(--color-black);
+  color: var(--color-white);
+  font-size: 24px;
+  font-weight: 950;
+  line-height: 1;
+}
+
+.app-header h1 {
+  margin: 0;
+  overflow: hidden;
+  color: var(--color-white);
+  font-size: 1.24rem;
+  font-weight: 950;
+  line-height: 1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.app-content {
+  padding: 18px var(--page-padding) 96px;
+}
+
+.screen-panel {
+  display: none;
+}
+
+.screen-panel.is-active {
+  display: block;
+}
+
+.screen-intro,
+.section-heading {
+  display: grid;
+  gap: 4px;
+  margin-bottom: 16px;
+}
+
+.screen-intro span,
+.section-heading span,
+.drawer-brand span,
+.form-field span,
+.budget-total-box span,
+.unit-cost-preview span,
+.import-feedback,
+.helper-text {
+  color: var(--color-white);
+  font-size: 0.76rem;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.screen-intro h2,
+.section-heading h3 {
+  margin: 0;
+  color: var(--color-white);
+  font-size: 2.1rem;
+  font-weight: 950;
+  line-height: 1;
+}
+
+.section-heading h3 {
+  font-size: 1.25rem;
+}
+
+.drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  background: var(--color-black);
+  opacity: 0.72;
+}
+
+.drawer {
+  position: fixed;
+  inset: 0 auto 0 0;
+  z-index: 80;
+  width: min(86vw, 340px);
+  min-width: 286px;
+  padding: max(18px, env(safe-area-inset-top)) 16px max(18px, env(safe-area-inset-bottom));
+  background: var(--color-purple-dark);
+  border-right: 1px solid var(--color-purple);
+  box-shadow: var(--shadow-panel);
+  transform: translateX(-104%);
+}
+
+.drawer.is-open {
+  transform: translateX(0);
+}
+
+.drawer-brand {
+  display: grid;
+  gap: 5px;
+  padding: 10px 0 18px;
+  border-bottom: 1px solid var(--color-purple);
+}
+
+.drawer-brand strong {
+  color: var(--color-white);
+  font-size: 1.2rem;
+  font-weight: 950;
+}
+
+.drawer-navigation {
+  display: grid;
+  gap: 10px;
+  padding-top: 18px;
+}
+
+.drawer-link {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+  min-height: 56px;
+  border: 1px solid var(--color-purple);
+  border-radius: var(--radius-small);
+  background: var(--color-black);
+  color: var(--color-white);
+  padding: 0 14px;
+  font-size: 0.95rem;
+  font-weight: 950;
+  text-align: left;
+}
+
+.drawer-link span {
+  display: grid;
+  height: 32px;
+  place-items: center;
+  border-radius: var(--radius-small);
+  background: var(--color-purple);
+  color: var(--color-white);
+  font-size: 0.72rem;
+}
+
+.search-field,
+.form-field {
+  display: grid;
+  gap: 7px;
+}
+
+.search-field {
+  margin-bottom: 16px;
+}
+
+.inventory-grid,
+.stock-picker-list,
+.cart-list {
+  display: grid;
+  gap: 14px;
+}
+
+.inventory-card,
+.picker-card,
+.cart-card,
+.budget-summary-card,
+.cart-section,
+.modal-card {
+  border: 1px solid var(--color-purple);
+  border-radius: var(--radius-medium);
+  background: var(--color-purple-dark);
+  box-shadow: var(--shadow-panel);
+}
+
+.inventory-card,
+.picker-card,
+.cart-card {
+  display: grid;
+  gap: 14px;
+  padding: 15px;
+}
+
+.product-topline,
+.product-footer,
+.cart-line,
+.picker-action-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.category-pill,
+.unit-tag {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  max-width: 100%;
+  border-radius: var(--radius-pill);
+  padding: 0 10px;
+  font-size: 0.74rem;
+  font-weight: 950;
+  white-space: nowrap;
+}
+
+.category-pill {
+  background: var(--color-purple);
+  color: var(--color-white);
+}
+
+.unit-tag {
+  border: 1px solid var(--color-white);
+  color: var(--color-white);
+}
+
+.product-title {
+  display: grid;
+  gap: 5px;
+}
+
+.product-title h3,
+.cart-card h3,
+.picker-card h3 {
+  margin: 0;
+  color: var(--color-white);
+  font-size: 1.12rem;
+  font-weight: 950;
+  line-height: 1.1;
+}
+
+.product-title span,
+.cart-card span,
+.picker-card span {
+  color: var(--color-white);
+  font-size: 0.84rem;
+  font-weight: 750;
+}
+
+.unit-price {
+  display: grid;
+  gap: 3px;
+  min-width: 116px;
+  padding: 12px;
+  border: 1px solid var(--color-purple);
+  border-radius: var(--radius-small);
+  background: var(--color-black);
+  text-align: right;
+}
+
+.unit-price span {
+  color: var(--color-white);
+  font-size: 0.68rem;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.unit-price strong {
+  color: var(--color-white);
+  font-size: 1.18rem;
+  font-weight: 950;
+}
+
+.stock-meter {
+  display: grid;
+  gap: 8px;
+}
+
+.stock-meter-text {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  color: var(--color-white);
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.stock-meter-track {
+  display: block;
+  height: 10px;
+  overflow: hidden;
+  border-radius: var(--radius-pill);
+  background: var(--color-black);
+}
+
+.stock-meter-fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--color-purple);
+}
+
+.floating-action-button {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 45;
+  display: grid;
+  width: 64px;
+  height: 64px;
+  place-items: center;
+  border: 1px solid var(--color-white);
+  border-radius: var(--radius-pill);
+  background: var(--color-purple);
+  color: var(--color-white);
+  box-shadow: var(--shadow-panel);
+  font-size: 2rem;
+  font-weight: 950;
+  line-height: 1;
+}
+
+.floating-action-button[hidden] {
+  display: none;
+}
+
+.budget-summary-card,
+.cart-section {
+  display: grid;
+  gap: 14px;
+  margin-bottom: 16px;
+  padding: 15px;
+}
+
+.budget-total-box,
+.unit-cost-preview,
+.import-feedback {
+  display: grid;
+  gap: 6px;
+  padding: 14px;
+  border: 1px solid var(--color-purple);
+  border-radius: var(--radius-small);
+  background: var(--color-black);
+}
+
+.budget-total-box strong,
+.unit-cost-preview strong {
+  color: var(--color-white);
+  font-size: 1.75rem;
+  font-weight: 950;
+  line-height: 1;
+}
+
+.form-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.primary-button,
+.secondary-button,
+.danger-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 52px;
+  border: 1px solid var(--color-white);
+  border-radius: var(--radius-small);
+  padding: 0 16px;
+  font-size: 0.94rem;
+  font-weight: 950;
+}
+
+.primary-button {
+  background: var(--color-purple);
+  color: var(--color-white);
+}
+
+.secondary-button {
+  background: var(--color-black);
+  color: var(--color-white);
+}
+
+.danger-button {
+  background: var(--color-black);
+  color: var(--color-white);
+}
+
+.picker-action-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.picker-action-row input,
+.cart-quantity-input {
+  text-align: center;
+}
+
+.cart-line strong {
+  color: var(--color-white);
+  font-size: 1.12rem;
+  font-weight: 950;
+}
+
+.app-modal {
+  width: min(100% - 24px, 560px);
+  max-height: calc(100dvh - 24px);
+  margin: auto;
+  padding: 0;
+  overflow: auto;
+  border: 0;
+  background: transparent;
+  color: var(--color-white);
+}
+
+.app-modal::backdrop {
+  background: var(--color-black);
+  opacity: 0.82;
+}
+
+.modal-card {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+}
+
+.modal-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+}
+
+.modal-header span {
+  color: var(--color-white);
+  font-size: 0.74rem;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.modal-header h2 {
+  margin: 4px 0 0;
+  color: var(--color-white);
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.empty-state {
+  padding: 24px;
+  border: 1px solid var(--color-purple);
+  border-radius: var(--radius-medium);
+  background: var(--color-purple-dark);
+  color: var(--color-white);
+  text-align: center;
+}
+
+.invoice-document {
+  display: none;
+}
+
+.invoice-template {
+  width: 794px;
+  min-height: 1123px;
+  padding: 48px;
+  background: var(--color-white);
+  color: var(--color-black);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.invoice-header {
+  display: grid;
+  grid-template-columns: 88px minmax(0, 1fr);
+  gap: 22px;
+  align-items: center;
+  padding: 24px;
+  background: var(--color-purple-dark);
+  color: var(--color-white);
+}
+
+.invoice-logo-space {
+  display: grid;
+  width: 72px;
+  height: 72px;
+  place-items: center;
+  background: var(--color-white);
+  color: var(--color-purple-dark);
+  font-size: 12px;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.invoice-header h2 {
+  margin: 4px 0;
+  color: var(--color-white);
+  font-size: 30px;
+  line-height: 1;
+}
+
+.invoice-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin: 18px 0;
+}
+
+.invoice-summary-grid div,
+.invoice-total-panel {
+  padding: 14px;
+  border: 1px solid var(--color-purple);
+}
+
+.invoice-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.invoice-table th,
+.invoice-table td {
+  padding: 10px;
+  border-bottom: 1px solid var(--color-purple);
+  text-align: left;
+}
+
+.invoice-table th {
+  background: var(--color-purple-dark);
+  color: var(--color-white);
+}
+
+@media (min-width: 560px) {
+  :root {
+    --page-padding: 20px;
+  }
+
+  .form-grid,
+  .budget-summary-card {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .budget-total-box,
+  .budget-summary-card .primary-button {
+    grid-column: 1 / -1;
+  }
+
+  .inventory-grid,
+  .stock-picker-list,
+  .cart-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 860px) {
+  :root {
+    --page-padding: 28px;
+  }
+
+  .inventory-grid,
+  .stock-picker-list,
+  .cart-list {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media print {
+  @page {
+    margin: 0;
+  }
+
+  body {
+    background: var(--color-white);
+  }
+
+  .drawer,
+  .drawer-backdrop,
+  .app-shell,
+  .app-modal,
+  .floating-action-button {
+    display: none !important;
+  }
+
+  .invoice-document {
+    display: block;
+  }
+}

@@ -1,14 +1,10 @@
-const CACHE_NAME = "calculadora-tattoo-cache-v7";
+const CACHE_NAME = "calculadora-tattoo-cache-v8";
 
 const STATIC_ASSETS = [
   "./",
   "./index.html",
-  "./css/style.css",
-  "./js/app.js",
-  "./js/application-repository.js",
-  "./js/calculation-engine.js",
-  "./js/data-contracts.js",
-  "./js/indexeddb-repository.js",
+  "./style.css",
+  "./script.js",
   "./manifest.webmanifest",
   "./icons/icon.svg"
 ];
