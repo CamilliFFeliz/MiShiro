@@ -1,4 +1,4 @@
-import {
+﻿import {
   calculateMaterialCost,
   calculateTotalCost,
   calculateUnitCost,
@@ -15,6 +15,8 @@ const DEFAULT_HOURLY_RATE = 0;
 const ALL_CATEGORIES_FILTER = "Todos";
 const CARTRIDGE_CATEGORY_NAME = "Cartuchos";
 const CSV_PROCESS_BATCH_SIZE = 24;
+const JSPDF_CDN_URL = "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
+const STOCK_LOW_PERCENTAGE = 25;
 
 const INVENTORY_CATEGORY_OPTIONS = [
   "Cartuchos",
@@ -28,6 +30,24 @@ const INVENTORY_FILTER_OPTIONS = [
   ALL_CATEGORIES_FILTER,
   ...INVENTORY_CATEGORY_OPTIONS
 ];
+
+const UNIT_MEASURE_OPTIONS = [
+  "ml",
+  "gramas",
+  "mg",
+  "unidade",
+  "folhas",
+  "metros"
+];
+
+const UNIT_MEASURE_LABELS = {
+  ml: "ml",
+  gramas: "gramas",
+  mg: "mg",
+  unidade: "unidade",
+  folhas: "folhas",
+  metros: "metros"
+};
 
 const DEFAULT_CSV_COLUMN_INDEXES = {
   name: 0,
@@ -51,12 +71,12 @@ const CSV_HEADER_ALIASES = {
 };
 
 const BASE_INVENTORY_ITEMS = [
-  { name: "Cartucho White Head", category: "Cartuchos", packageQuantity: 20, unitLabel: "un", packagePrice: 300, currentStock: 20, brand: "White Head", specification: "RL0310" },
+  { name: "Cartucho White Head", category: "Cartuchos", packageQuantity: 20, unitLabel: "unidade", packagePrice: 300, currentStock: 20, brand: "White Head", specification: "RL0310" },
   { name: "Tinta preto linha", category: "Tintas", packageQuantity: 20, unitLabel: "ml", packagePrice: 50, currentStock: 20 },
   { name: "Tinta Raven Clow", category: "Tintas", packageQuantity: 20, unitLabel: "ml", packagePrice: 79, currentStock: 20 },
-  { name: "Luvas", category: "Biossegurança", packageQuantity: 100, unitLabel: "un", packagePrice: 30, currentStock: 100 },
-  { name: "Máscara", category: "Biossegurança", packageQuantity: 100, unitLabel: "un", packagePrice: 25, currentStock: 100 },
-  { name: "Batoque", category: "Descartáveis", packageQuantity: 50, unitLabel: "un", packagePrice: 30, currentStock: 50 },
+  { name: "Luvas", category: "Biossegurança", packageQuantity: 100, unitLabel: "unidade", packagePrice: 30, currentStock: 100 },
+  { name: "Máscara", category: "Biossegurança", packageQuantity: 100, unitLabel: "unidade", packagePrice: 25, currentStock: 100 },
+  { name: "Batoque", category: "Descartáveis", packageQuantity: 50, unitLabel: "unidade", packagePrice: 30, currentStock: 50 },
   { name: "Papel toalha", category: "Descartáveis", packageQuantity: 200, unitLabel: "folhas", packagePrice: 12, currentStock: 200 },
   { name: "Folha stencil", category: "Descartáveis", packageQuantity: 1, unitLabel: "folha", packagePrice: 4.5, currentStock: 1 },
   { name: "Transfer", category: "Outros", packageQuantity: 30, unitLabel: "ml", packagePrice: 28, currentStock: 30 }
@@ -69,6 +89,14 @@ const CURRENCY_FORMATTER = new Intl.NumberFormat("pt-BR", {
 
 const NUMBER_FORMATTER = new Intl.NumberFormat("pt-BR", {
   maximumFractionDigits: 2
+});
+
+const PDF_COLORS = Object.freeze({
+  PURPLE_DARK: [45, 11, 64],
+  PURPLE: [106, 27, 154],
+  PURPLE_LIGHT: [225, 190, 231],
+  BLACK: [18, 18, 18],
+  WHITE: [255, 255, 255]
 });
 
 const CalculadoraTattooApp = (() => {
@@ -123,11 +151,13 @@ const CalculadoraTattooApp = (() => {
     elementReferences.closeSupplyModalButton = document.querySelector("#closeSupplyModalButton");
     elementReferences.createProjectButton = document.querySelector("#createProjectButton");
     elementReferences.currentStockInput = document.querySelector("#currentStockInput");
+    elementReferences.currentStockLabel = document.querySelector("#currentStockLabel");
     elementReferences.csvFileInput = document.querySelector("#csvFileInput");
     elementReferences.csvImportForm = document.querySelector("#csvImportForm");
     elementReferences.csvImportModal = document.querySelector("#csvImportModal");
     elementReferences.csvImportProgress = document.querySelector("#csvImportProgress");
     elementReferences.downloadBackupButton = document.querySelector("#downloadBackupButton");
+    elementReferences.downloadBackupBottomButton = document.querySelector("#downloadBackupBottomButton");
     elementReferences.downloadProjectPdfButton = document.querySelector("#downloadProjectPdfButton");
     elementReferences.drawerBackdrop = document.querySelector("#drawerBackdrop");
     elementReferences.drawerMenu = document.querySelector("#drawerMenu");
@@ -141,18 +171,18 @@ const CalculadoraTattooApp = (() => {
     elementReferences.inventoryDashboard = document.querySelector("#inventoryDashboard");
     elementReferences.inventoryList = document.querySelector("#inventoryList");
     elementReferences.inventorySearchInput = document.querySelector("#inventorySearchInput");
+    elementReferences.invoiceDocument = document.querySelector("#invoiceDocument");
     elementReferences.laborHoursInput = document.querySelector("#laborHoursInput");
     elementReferences.laborPreviewValue = document.querySelector("#laborPreviewValue");
     elementReferences.navigationButtons = document.querySelectorAll("[data-screen-target]");
     elementReferences.newProjectNameInput = document.querySelector("#newProjectNameInput");
     elementReferences.openCsvImportModalButton = document.querySelector("#openCsvImportModalButton");
+    elementReferences.openCsvImportBottomButton = document.querySelector("#openCsvImportBottomButton");
     elementReferences.openDrawerButton = document.querySelector("#openDrawerButton");
     elementReferences.openProjectItemSheetButton = document.querySelector("#openProjectItemSheetButton");
-    elementReferences.openReportsButton = document.querySelector("#openReportsButton");
-    elementReferences.openSettingsButton = document.querySelector("#openSettingsButton");
     elementReferences.packagePriceInput = document.querySelector("#packagePriceInput");
     elementReferences.packageQuantityInput = document.querySelector("#packageQuantityInput");
-    elementReferences.printDocument = document.querySelector("#printDocument");
+    elementReferences.packageQuantityLabel = document.querySelector("#packageQuantityLabel");
     elementReferences.processCsvButton = document.querySelector("#processCsvButton");
     elementReferences.projectClientInput = document.querySelector("#projectClientInput");
     elementReferences.projectCreationForm = document.querySelector("#projectCreationForm");
@@ -168,8 +198,8 @@ const CalculadoraTattooApp = (() => {
     elementReferences.projectSelect = document.querySelector("#projectSelect");
     elementReferences.projectTotalDetail = document.querySelector("#projectTotalDetail");
     elementReferences.projectTotalValue = document.querySelector("#projectTotalValue");
-    elementReferences.resetApplicationButton = document.querySelector("#resetApplicationButton");
     elementReferences.saveSupplyButton = document.querySelector("#saveSupplyButton");
+    elementReferences.stockModeSelect = document.querySelector("#stockModeSelect");
     elementReferences.stockAdjustmentCurrentValue = document.querySelector("#stockAdjustmentCurrentValue");
     elementReferences.stockAdjustmentForm = document.querySelector("#stockAdjustmentForm");
     elementReferences.stockAdjustmentHelperText = document.querySelector("#stockAdjustmentHelperText");
@@ -183,6 +213,7 @@ const CalculadoraTattooApp = (() => {
     elementReferences.supplyModalTitle = document.querySelector("#supplyModalTitle");
     elementReferences.supplyModal = document.querySelector("#supplyModal");
     elementReferences.supplyNameInput = document.querySelector("#supplyNameInput");
+    elementReferences.supplyUnitCostDetail = document.querySelector("#supplyUnitCostDetail");
     elementReferences.supplyUnitCostPreview = document.querySelector("#supplyUnitCostPreview");
     elementReferences.unitLabelInput = document.querySelector("#unitLabelInput");
   }
@@ -193,9 +224,10 @@ const CalculadoraTattooApp = (() => {
       name: inventoryItem.name,
       category: normalizeInventoryCategory(inventoryItem.category),
       packageQuantity: normalizeNumber(inventoryItem.packageQuantity),
-      unitLabel: inventoryItem.unitLabel || "un",
+      unitLabel: normalizeUnitMeasure(inventoryItem.unitLabel),
       packagePrice: normalizeNumber(inventoryItem.packagePrice),
       currentStock: normalizeNumber(inventoryItem.currentStock || inventoryItem.packageQuantity),
+      stockMode: "fractional",
       brand: inventoryItem.brand || "",
       specification: inventoryItem.specification || "",
       createdAt: new Date().toISOString()
@@ -203,7 +235,7 @@ const CalculadoraTattooApp = (() => {
     const firstProject = createProject("Projeto 1", inventoryData);
 
     return {
-      activeScreen: "home",
+      activeScreen: "inventory",
       activeProjectId: firstProject.id,
       inventoryData,
       projects: [firstProject]
@@ -245,9 +277,10 @@ const CalculadoraTattooApp = (() => {
         name: itemName,
         category: itemCategory,
         packageQuantity,
-        unitLabel: String(inventoryItem.unitLabel || "un"),
+        unitLabel: normalizeUnitMeasure(inventoryItem.unitLabel),
         packagePrice: normalizeNumber(inventoryItem.packagePrice),
         currentStock: normalizeNumber(inventoryItem.currentStock == null ? packageQuantity : inventoryItem.currentStock),
+        stockMode: ["fractional", "sealedPackages"].includes(inventoryItem.stockMode) ? inventoryItem.stockMode : "fractional",
         brand: String(inventoryItem.brand || ""),
         specification: String(inventoryItem.specification || inventoryItem.needleSpecification || inventoryItem.needleType || ""),
         createdAt: inventoryItem.createdAt || new Date().toISOString()
@@ -275,7 +308,7 @@ const CalculadoraTattooApp = (() => {
       : projects[0].id;
 
     return {
-      activeScreen: ["home", "inventory", "projects"].includes(rawState.activeScreen) ? rawState.activeScreen : "home",
+      activeScreen: ["inventory", "projects"].includes(rawState.activeScreen) ? rawState.activeScreen : "inventory",
       activeProjectId,
       inventoryData,
       projects
@@ -326,6 +359,74 @@ const CalculadoraTattooApp = (() => {
     return applicationState.inventoryData.find((inventoryItem) => inventoryItem.id === inventoryItemId);
   }
 
+  function normalizeUnitMeasure(unitMeasure) {
+    const normalizedUnit = normalizeTextForSearch(unitMeasure).replace(/[^a-z0-9]/g, "");
+
+    if (["un", "und", "unid", "unidade", "unidades", "unit", "units"].includes(normalizedUnit)) {
+      return "unidade";
+    }
+
+    if (["g", "grama", "gramas", "gram", "grams"].includes(normalizedUnit)) {
+      return "gramas";
+    }
+
+    if (["metro", "metros", "m"].includes(normalizedUnit)) {
+      return "metros";
+    }
+
+    if (["folha", "folhas"].includes(normalizedUnit)) {
+      return "folhas";
+    }
+
+    if (["ml", "mililitro", "mililitros"].includes(normalizedUnit)) {
+      return "ml";
+    }
+
+    if (["mg", "miligrama", "miligramas"].includes(normalizedUnit)) {
+      return "mg";
+    }
+
+    return UNIT_MEASURE_OPTIONS.includes(unitMeasure) ? unitMeasure : "unidade";
+  }
+
+  function getUnitMeasureLabel(unitMeasure) {
+    return UNIT_MEASURE_LABELS[normalizeUnitMeasure(unitMeasure)] || "unidade";
+  }
+
+  function getStockProgress(inventoryItem) {
+    const packageQuantity = normalizeNumber(inventoryItem.packageQuantity);
+    const availableStock = getAvailableStock(inventoryItem.id);
+
+    if (packageQuantity <= 0) {
+      return 0;
+    }
+
+    return Math.max(0, Math.min(100, (availableStock / packageQuantity) * 100));
+  }
+
+  function getStockStatus(inventoryItem) {
+    const stockProgress = getStockProgress(inventoryItem);
+
+    if (stockProgress <= 0) {
+      return {
+        className: "is-stock-empty",
+        label: "Esgotado"
+      };
+    }
+
+    if (stockProgress <= STOCK_LOW_PERCENTAGE) {
+      return {
+        className: "is-stock-low",
+        label: "Baixo estoque"
+      };
+    }
+
+    return {
+      className: "is-stock-ok",
+      label: "Estoque ok"
+    };
+  }
+
   function escapeHtml(value) {
     return String(value == null ? "" : value)
       .replace(/&/g, "&amp;")
@@ -357,6 +458,7 @@ const CalculadoraTattooApp = (() => {
     renderProjectItemList();
     renderProjectItemSheet();
     updateSupplyCategoryFields();
+    updateSupplyMeasurementFields();
     updateSupplyUnitCostPreview();
   }
 
@@ -395,7 +497,7 @@ const CalculadoraTattooApp = (() => {
         <strong>${formatNumber(inventorySummary.reservedStock)}</strong>
       </article>
       <article class="metric-card">
-        <span>Projetos</span>
+        <span>Orçamentos</span>
         <strong>${applicationState.projects.length}</strong>
       </article>
     `;
@@ -539,31 +641,52 @@ const CalculadoraTattooApp = (() => {
   function createInventoryCardHtml(inventoryItem) {
     const availableStock = getAvailableStock(inventoryItem.id);
     const reservedStock = getTotalUsedQuantity(inventoryItem.id);
-    const isLowStock = availableStock <= 0;
+    const unitMeasureLabel = getUnitMeasureLabel(inventoryItem.unitLabel);
+    const stockProgress = getStockProgress(inventoryItem);
+    const stockStatus = getStockStatus(inventoryItem);
 
     return `
-      <article class="data-card inventory-card ${isLowStock ? "is-low-stock" : ""}" data-inventory-item-id="${escapeHtml(inventoryItem.id)}">
-        <div class="card-header">
-          <div class="card-title-group">
+      <article class="data-card inventory-card ${stockStatus.className}" data-inventory-item-id="${escapeHtml(inventoryItem.id)}">
+        <div class="product-card-topline">
+          <span class="category-pill">${escapeHtml(inventoryItem.category)}</span>
+          <span class="unit-sale-tag">Vendido por ${escapeHtml(unitMeasureLabel)}</span>
+        </div>
+
+        <div class="product-card-identity">
+          <div>
             <h2>${escapeHtml(getInventoryDisplayName(inventoryItem))}</h2>
             <span>${escapeHtml(getInventorySubtitle(inventoryItem))}</span>
           </div>
-          <span class="pill">${formatCurrency(calculateUnitCost(inventoryItem))}/un</span>
+          <div class="product-card-price">
+            <span>Custo unitário</span>
+            <strong>${formatCurrency(calculateUnitCost(inventoryItem))}</strong>
+            <small>por ${escapeHtml(unitMeasureLabel)}</small>
+          </div>
         </div>
 
         <div class="stock-row">
           <div>
             <span>Cadastrado</span>
-            <strong>${formatNumber(inventoryItem.currentStock)} ${escapeHtml(inventoryItem.unitLabel)}</strong>
+            <strong>${formatNumber(inventoryItem.currentStock)} ${escapeHtml(unitMeasureLabel)}</strong>
           </div>
           <div>
             <span>Disponível</span>
-            <strong>${formatNumber(availableStock)} ${escapeHtml(inventoryItem.unitLabel)}</strong>
+            <strong>${formatNumber(availableStock)} ${escapeHtml(unitMeasureLabel)}</strong>
           </div>
           <div>
             <span>Reservado</span>
-            <strong>${formatNumber(reservedStock)} ${escapeHtml(inventoryItem.unitLabel)}</strong>
+            <strong>${formatNumber(reservedStock)} ${escapeHtml(unitMeasureLabel)}</strong>
           </div>
+        </div>
+
+        <div class="stock-meter" aria-label="${escapeHtml(stockStatus.label)}">
+          <div class="stock-meter-label">
+            <span>${escapeHtml(stockStatus.label)}</span>
+            <strong>${formatNumber(stockProgress)}%</strong>
+          </div>
+          <span class="stock-meter-track">
+            <span class="stock-meter-fill" style="width: ${stockProgress}%"></span>
+          </span>
         </div>
 
         <div class="inventory-card-actions">
@@ -585,7 +708,7 @@ const CalculadoraTattooApp = (() => {
   }
 
   function getInventorySubtitle(inventoryItem) {
-    const packageText = `${formatNumber(inventoryItem.packageQuantity)} ${inventoryItem.unitLabel} por embalagem`;
+    const packageText = `${formatNumber(inventoryItem.packageQuantity)} ${getUnitMeasureLabel(inventoryItem.unitLabel)} por embalagem fechada`;
     return `${inventoryItem.category} | ${packageText}`;
   }
 
@@ -609,28 +732,28 @@ const CalculadoraTattooApp = (() => {
     const inventoryItem = projectItem.inventoryItem;
 
     return `
-      <article class="data-card project-item is-selected" data-project-item-id="${escapeHtml(inventoryItem.id)}">
+      <article class="data-card project-item cart-item is-selected" data-project-item-id="${escapeHtml(inventoryItem.id)}">
         <div class="card-header">
           <div class="card-title-group">
             <h3>${escapeHtml(getInventoryDisplayName(inventoryItem))}</h3>
             <span>${escapeHtml(getInventorySubtitle(inventoryItem))}</span>
           </div>
-          <span class="pill">${formatCurrency(projectItem.materialCost)}</span>
+          <span class="pill">Subtotal ${formatCurrency(projectItem.materialCost)}</span>
         </div>
 
         <div class="project-item-control">
           <label class="quantity-field">
-            <span>Quantidade usada</span>
+            <span>Quantidade no carrinho</span>
             <span class="quantity-input-row">
               <input type="text" inputmode="decimal" value="${escapeHtml(projectItem.quantityUsed)}" placeholder="0" data-material-usage />
-              <span>${escapeHtml(inventoryItem.unitLabel)}</span>
+              <span>${escapeHtml(getUnitMeasureLabel(inventoryItem.unitLabel))}</span>
             </span>
           </label>
           <button class="button button-danger" type="button" data-remove-project-item>Remover</button>
         </div>
 
         <div class="line-total">
-          <span>${formatCurrency(projectItem.unitCost)} por unidade</span>
+          <span>${formatCurrency(projectItem.unitCost)} por ${escapeHtml(getUnitMeasureLabel(inventoryItem.unitLabel))}</span>
           <strong data-line-total>${formatCurrency(projectItem.materialCost)}</strong>
         </div>
       </article>
@@ -671,15 +794,16 @@ const CalculadoraTattooApp = (() => {
     const quantityUsed = normalizeNumber(activeProject.materialUsage[inventoryItem.id]);
     const availableStock = getAvailableStock(inventoryItem.id);
     const materialCost = calculateMaterialCost(inventoryItem, quantityUsed);
+    const unitMeasureLabel = getUnitMeasureLabel(inventoryItem.unitLabel);
 
     return `
       <article class="sheet-item ${quantityUsed > 0 ? "is-selected" : ""}" data-sheet-inventory-item-id="${escapeHtml(inventoryItem.id)}">
         <div class="sheet-item-main">
           <div class="card-title-group">
             <h4>${escapeHtml(getInventoryDisplayName(inventoryItem))}</h4>
-            <span>Disponível: ${formatNumber(availableStock)} ${escapeHtml(inventoryItem.unitLabel)}</span>
+            <span>Disponível: ${formatNumber(availableStock)} ${escapeHtml(unitMeasureLabel)}</span>
           </div>
-          <span class="pill">${formatCurrency(calculateUnitCost(inventoryItem))}/un</span>
+          <span class="pill">${formatCurrency(calculateUnitCost(inventoryItem))}/${escapeHtml(unitMeasureLabel)}</span>
         </div>
 
         <div class="sheet-item-control">
@@ -687,7 +811,7 @@ const CalculadoraTattooApp = (() => {
             <span>Usar</span>
             <span class="quantity-input-row">
               <input type="text" inputmode="decimal" value="${quantityUsed > 0 ? escapeHtml(quantityUsed) : ""}" placeholder="0" data-sheet-material-usage />
-              <span>${escapeHtml(inventoryItem.unitLabel)}</span>
+              <span>${escapeHtml(unitMeasureLabel)}</span>
             </span>
           </label>
           <button class="button button-primary" type="button" data-sheet-select-item>${quantityUsed > 0 ? "Atualizar" : "Adicionar"}</button>
@@ -722,7 +846,10 @@ const CalculadoraTattooApp = (() => {
     elementReferences.supplyModalTitle.textContent = "Nova entrada";
     elementReferences.saveSupplyButton.textContent = "Salvar entrada";
     elementReferences.supplyCategorySelect.value = "Outros";
+    elementReferences.unitLabelInput.value = "unidade";
+    elementReferences.stockModeSelect.value = "fractional";
     updateSupplyCategoryFields();
+    updateSupplyMeasurementFields();
     updateSupplyUnitCostPreview();
     openModal(elementReferences.supplyModal);
     elementReferences.supplyNameInput.focus();
@@ -743,14 +870,16 @@ const CalculadoraTattooApp = (() => {
     elementReferences.supplyModalTitle.textContent = "Editar insumo";
     elementReferences.saveSupplyButton.textContent = "Salvar alterações";
     elementReferences.supplyCategorySelect.value = inventoryItem.category;
+    elementReferences.unitLabelInput.value = normalizeUnitMeasure(inventoryItem.unitLabel);
+    elementReferences.stockModeSelect.value = "fractional";
     elementReferences.supplyNameInput.value = inventoryItem.name;
     elementReferences.cartridgeBrandInput.value = inventoryItem.brand || "";
     elementReferences.cartridgeSpecificationInput.value = inventoryItem.specification || "";
     elementReferences.packageQuantityInput.value = formatEditableNumber(inventoryItem.packageQuantity);
     elementReferences.currentStockInput.value = formatEditableNumber(inventoryItem.currentStock);
-    elementReferences.unitLabelInput.value = inventoryItem.unitLabel;
     elementReferences.packagePriceInput.value = formatEditableNumber(inventoryItem.packagePrice);
     updateSupplyCategoryFields();
+    updateSupplyMeasurementFields();
     updateSupplyUnitCostPreview();
     openModal(elementReferences.supplyModal);
 
@@ -790,12 +919,12 @@ const CalculadoraTattooApp = (() => {
     const decreaseQuantity = normalizeNumber(elementReferences.stockDecreaseQuantityInput.value);
     const projectedStock = Math.max(reservedStock, normalizeNumber(inventoryItem.currentStock) - decreaseQuantity);
     const maximumDecrease = getMaximumStockDecrease(inventoryItem.id);
-    const stockTextSuffix = ` ${inventoryItem.unitLabel}`;
+    const stockTextSuffix = ` ${getUnitMeasureLabel(inventoryItem.unitLabel)}`;
 
     elementReferences.stockAdjustmentCurrentValue.textContent = `${formatNumber(inventoryItem.currentStock)}${stockTextSuffix}`;
     elementReferences.stockAdjustmentReservedValue.textContent = `${formatNumber(reservedStock)}${stockTextSuffix}`;
     elementReferences.stockAdjustmentProjectedValue.textContent = `${formatNumber(projectedStock)}${stockTextSuffix}`;
-    elementReferences.stockAdjustmentHelperText.textContent = `Máximo para baixa agora: ${formatNumber(maximumDecrease)} ${inventoryItem.unitLabel}.`;
+    elementReferences.stockAdjustmentHelperText.textContent = `Máximo para baixa agora: ${formatNumber(maximumDecrease)} ${getUnitMeasureLabel(inventoryItem.unitLabel)}.`;
   }
 
   function applyStockDecreaseFromForm() {
@@ -814,7 +943,7 @@ const CalculadoraTattooApp = (() => {
     }
 
     if (decreaseQuantity > maximumDecrease) {
-      elementReferences.stockDecreaseQuantityInput.setCustomValidity(`Você pode diminuir no máximo ${formatNumber(maximumDecrease)} ${inventoryItem.unitLabel}.`);
+      elementReferences.stockDecreaseQuantityInput.setCustomValidity(`Você pode diminuir no máximo ${formatNumber(maximumDecrease)} ${getUnitMeasureLabel(inventoryItem.unitLabel)}.`);
     }
 
     if (decreaseQuantity <= 0 || decreaseQuantity > maximumDecrease) {
@@ -899,6 +1028,18 @@ const CalculadoraTattooApp = (() => {
     }
   }
 
+  function updateSupplyMeasurementFields() {
+    const unitMeasureLabel = getUnitMeasureLabel(elementReferences.unitLabelInput.value);
+    const isSealedPackageStock = elementReferences.stockModeSelect.value === "sealedPackages";
+
+    elementReferences.packageQuantityLabel.textContent = `Quantidade da embalagem fechada (${unitMeasureLabel})`;
+    elementReferences.currentStockLabel.textContent = isSealedPackageStock
+      ? "Embalagens fechadas em estoque"
+      : `Estoque atual (${unitMeasureLabel})`;
+    elementReferences.currentStockInput.placeholder = isSealedPackageStock ? "2" : "50";
+    updateSupplyUnitCostPreview();
+  }
+
   function clearSupplyFormValidation() {
     elementReferences.packageQuantityInput.setCustomValidity("");
     elementReferences.currentStockInput.setCustomValidity("");
@@ -911,6 +1052,7 @@ const CalculadoraTattooApp = (() => {
     });
 
     elementReferences.supplyUnitCostPreview.textContent = formatCurrency(unitCost);
+    elementReferences.supplyUnitCostDetail.textContent = `${formatCurrency(normalizeNumber(elementReferences.packagePriceInput.value))} / ${formatNumber(normalizeNumber(elementReferences.packageQuantityInput.value))} ${getUnitMeasureLabel(elementReferences.unitLabelInput.value)}`;
   }
 
   function syncCurrentStockWithPackageQuantity() {
@@ -925,10 +1067,15 @@ const CalculadoraTattooApp = (() => {
     const itemName = elementReferences.supplyNameInput.value.trim();
     const itemCategory = normalizeInventoryCategory(elementReferences.supplyCategorySelect.value);
     const packageQuantity = normalizeNumber(elementReferences.packageQuantityInput.value);
-    const currentStock = elementReferences.currentStockInput.value.trim()
+    const stockMode = elementReferences.stockModeSelect.value;
+    const defaultCurrentStock = stockMode === "sealedPackages" ? 1 : packageQuantity;
+    const rawCurrentStock = elementReferences.currentStockInput.value.trim()
       ? normalizeNumber(elementReferences.currentStockInput.value)
-      : packageQuantity;
-    const unitLabel = elementReferences.unitLabelInput.value.trim();
+      : defaultCurrentStock;
+    const unitLabel = normalizeUnitMeasure(elementReferences.unitLabelInput.value);
+    const currentStock = stockMode === "sealedPackages"
+      ? rawCurrentStock * packageQuantity
+      : rawCurrentStock;
     const packagePrice = normalizeNumber(elementReferences.packagePriceInput.value);
     const reservedStock = editingInventoryItemId ? getTotalUsedQuantity(editingInventoryItemId) : 0;
 
@@ -960,6 +1107,7 @@ const CalculadoraTattooApp = (() => {
       unitLabel,
       packagePrice,
       currentStock,
+      stockMode,
       brand: itemCategory === CARTRIDGE_CATEGORY_NAME ? elementReferences.cartridgeBrandInput.value.trim() : "",
       specification: itemCategory === CARTRIDGE_CATEGORY_NAME ? elementReferences.cartridgeSpecificationInput.value.trim() : "",
       createdAt: existingInventoryItem ? existingInventoryItem.createdAt : new Date().toISOString(),
@@ -1233,7 +1381,7 @@ const CalculadoraTattooApp = (() => {
     const packageQuantity = normalizeNumber(getCsvColumnValue(csvRow, columnIndexes.packageQuantity));
     const packagePrice = normalizeNumber(getCsvColumnValue(csvRow, columnIndexes.packagePrice));
     const currentStock = normalizeNumber(getCsvColumnValue(csvRow, columnIndexes.currentStock)) || packageQuantity;
-    const unitLabel = getCsvColumnValue(csvRow, columnIndexes.unitLabel).trim() || "un";
+    const unitLabel = normalizeUnitMeasure(getCsvColumnValue(csvRow, columnIndexes.unitLabel).trim() || "unidade");
 
     if (!itemName || packageQuantity <= 0) {
       return null;
@@ -1247,6 +1395,7 @@ const CalculadoraTattooApp = (() => {
       unitLabel,
       packagePrice,
       currentStock,
+      stockMode: "fractional",
       brand: itemCategory === CARTRIDGE_CATEGORY_NAME ? getCsvColumnValue(csvRow, columnIndexes.brand).trim() : "",
       specification: itemCategory === CARTRIDGE_CATEGORY_NAME ? getCsvColumnValue(csvRow, columnIndexes.specification).trim() : "",
       createdAt: new Date().toISOString()
@@ -1444,23 +1593,19 @@ const CalculadoraTattooApp = (() => {
     URL.revokeObjectURL(downloadUrl);
   }
 
-  function showPlaceholderFeedback(label) {
-    closeDrawer();
-    window.alert(`${label} será conectado na próxima etapa.`);
-  }
-
-  function renderPrintDocument() {
+  function renderInvoiceDocument() {
     const activeProject = getActiveProject();
     const activeProjectSummary = getActiveProjectSummary();
     const projectName = activeProject.projectName || "Projeto de tatuagem";
     const clientName = activeProject.clientName || "Cliente não informado";
     const projectNotes = activeProject.projectNotes || "Sem observações.";
+    const invoiceCode = createInvoiceCode(activeProject);
 
     const itemRows = activeProjectSummary.selectedItems.length > 0
       ? activeProjectSummary.selectedItems.map((projectItem) => `
           <tr>
             <td>${escapeHtml(getInventoryDisplayName(projectItem.inventoryItem))}</td>
-            <td>${formatNumber(projectItem.quantityUsed)} ${escapeHtml(projectItem.inventoryItem.unitLabel)}</td>
+            <td>${formatNumber(projectItem.quantityUsed)} ${escapeHtml(getUnitMeasureLabel(projectItem.inventoryItem.unitLabel))}</td>
             <td>${formatCurrency(projectItem.unitCost)}</td>
             <td>${formatCurrency(projectItem.materialCost)}</td>
           </tr>
@@ -1471,61 +1616,262 @@ const CalculadoraTattooApp = (() => {
           </tr>
         `;
 
-    elementReferences.printDocument.innerHTML = `
-      <header class="print-header">
-        <span>CalculadoraTattoo</span>
-        <h1>${escapeHtml(projectName)}</h1>
-        <p>${escapeHtml(clientName)}</p>
-      </header>
-
-      <section class="print-section">
-        <h2>Resumo</h2>
-        <dl class="print-summary">
+    elementReferences.invoiceDocument.innerHTML = `
+      <article class="invoice-template">
+        <header class="invoice-header">
+          <div class="invoice-logo-space">Logo</div>
           <div>
-            <dt>Materiais</dt>
-            <dd>${formatCurrency(activeProjectSummary.materialTotal)}</dd>
+            <span>Invoice</span>
+            <h1>${escapeHtml(projectName)}</h1>
+            <p>${escapeHtml(invoiceCode)}</p>
+          </div>
+        </header>
+
+        <section class="invoice-project-grid">
+          <div>
+            <span>Cliente</span>
+            <strong>${escapeHtml(clientName)}</strong>
           </div>
           <div>
-            <dt>Mão de obra</dt>
-            <dd>${formatCurrency(activeProjectSummary.laborTotal)}</dd>
+            <span>Emitido em</span>
+            <strong>${new Date().toLocaleDateString("pt-BR")}</strong>
           </div>
           <div>
-            <dt>Total</dt>
-            <dd>${formatCurrency(activeProjectSummary.totalCost)}</dd>
+            <span>Total</span>
+            <strong>${formatCurrency(activeProjectSummary.totalCost)}</strong>
           </div>
-        </dl>
-      </section>
+        </section>
 
-      <section class="print-section">
-        <h2>Itens usados</h2>
-        <table class="print-table">
-          <thead>
-            <tr>
-              <th>Insumo</th>
-              <th>Qtd.</th>
-              <th>Custo un.</th>
-              <th>Total</th>
-            </tr>
-          </thead>
-          <tbody>${itemRows}</tbody>
-        </table>
-      </section>
+        <section class="invoice-section">
+          <h2>Insumos calculados</h2>
+          <table class="invoice-table">
+            <thead>
+              <tr>
+                <th>Insumo</th>
+                <th>Uso</th>
+                <th>Custo unitário</th>
+                <th>Subtotal</th>
+              </tr>
+            </thead>
+            <tbody>${itemRows}</tbody>
+          </table>
+        </section>
 
-      <section class="print-section">
-        <h2>Mão de obra</h2>
-        <p>${formatNumber(activeProjectSummary.laborHours)} h x ${formatCurrency(activeProjectSummary.hourlyRate)} por hora = <strong>${formatCurrency(activeProjectSummary.laborTotal)}</strong></p>
-      </section>
+        <section class="invoice-total-panel">
+          <dl>
+            <div>
+              <dt>Materiais</dt>
+              <dd>${formatCurrency(activeProjectSummary.materialTotal)}</dd>
+            </div>
+            <div>
+              <dt>Mão de obra</dt>
+              <dd>${formatCurrency(activeProjectSummary.laborTotal)}</dd>
+            </div>
+            <div>
+              <dt>Total geral</dt>
+              <dd>${formatCurrency(activeProjectSummary.totalCost)}</dd>
+            </div>
+          </dl>
+        </section>
 
-      <section class="print-section">
-        <h2>Observações</h2>
-        <p>${escapeHtml(projectNotes)}</p>
-      </section>
+        <section class="invoice-section">
+          <h2>Observações</h2>
+          <p>${escapeHtml(projectNotes)}</p>
+        </section>
+      </article>
     `;
   }
 
-  function downloadProjectPdf() {
-    renderPrintDocument();
-    window.print();
+  function createInvoiceCode(projectData) {
+    return `INV-${String(projectData.createdAt || new Date().toISOString()).slice(0, 10).replace(/-/g, "")}-${projectData.id.slice(-5).toUpperCase()}`;
+  }
+
+  async function downloadProjectPdf() {
+    renderInvoiceDocument();
+
+    const JsPdfConstructor = await getJsPdfConstructor();
+
+    if (!JsPdfConstructor) {
+      window.alert("Não foi possível carregar o gerador de PDF. Verifique a conexão e tente novamente.");
+      return;
+    }
+
+    const activeProject = getActiveProject();
+    const activeProjectSummary = getActiveProjectSummary();
+    const pdfDocument = new JsPdfConstructor({
+      orientation: "portrait",
+      unit: "pt",
+      format: "a4"
+    });
+
+    drawInvoicePdf(pdfDocument, activeProject, activeProjectSummary);
+    pdfDocument.save(`${createInvoiceCode(activeProject)}.pdf`);
+  }
+
+  async function getJsPdfConstructor() {
+    if (window.jspdf && typeof window.jspdf.jsPDF === "function") {
+      return window.jspdf.jsPDF;
+    }
+
+    try {
+      await loadExternalScript(JSPDF_CDN_URL);
+    } catch {
+      return null;
+    }
+
+    return window.jspdf && typeof window.jspdf.jsPDF === "function" ? window.jspdf.jsPDF : null;
+  }
+
+  function loadExternalScript(scriptUrl) {
+    return new Promise((resolve, reject) => {
+      const existingScript = document.querySelector(`script[src="${scriptUrl}"]`);
+
+      if (existingScript && window.jspdf) {
+        resolve();
+        return;
+      }
+
+      if (existingScript) {
+        existingScript.remove();
+      }
+
+      const scriptElement = document.createElement("script");
+      scriptElement.src = scriptUrl;
+      scriptElement.async = true;
+      scriptElement.crossOrigin = "anonymous";
+      scriptElement.referrerPolicy = "no-referrer";
+      scriptElement.addEventListener("load", resolve, { once: true });
+      scriptElement.addEventListener("error", reject, { once: true });
+      document.head.appendChild(scriptElement);
+    });
+  }
+
+  function drawInvoicePdf(pdfDocument, activeProject, activeProjectSummary) {
+    const pageWidth = pdfDocument.internal.pageSize.getWidth();
+    const pageHeight = pdfDocument.internal.pageSize.getHeight();
+    const margin = 44;
+    let currentY = 48;
+
+    pdfDocument.setFillColor(...PDF_COLORS.PURPLE_DARK);
+    pdfDocument.rect(0, 0, pageWidth, 128, "F");
+    pdfDocument.setFillColor(...PDF_COLORS.WHITE);
+    pdfDocument.roundedRect(margin, 38, 72, 58, 8, 8, "F");
+    pdfDocument.setTextColor(...PDF_COLORS.PURPLE_DARK);
+    pdfDocument.setFont("helvetica", "bold");
+    pdfDocument.setFontSize(14);
+    pdfDocument.text("LOGO", margin + 17, 72);
+
+    pdfDocument.setTextColor(...PDF_COLORS.WHITE);
+    pdfDocument.setFontSize(10);
+    pdfDocument.text("CALCULADORA TATTOO", margin + 92, 54);
+    pdfDocument.setFontSize(24);
+    pdfDocument.text("Invoice", margin + 92, 82);
+    pdfDocument.setFont("helvetica", "normal");
+    pdfDocument.setFontSize(10);
+    pdfDocument.text(createInvoiceCode(activeProject), margin + 92, 101);
+
+    currentY = 164;
+    pdfDocument.setTextColor(...PDF_COLORS.BLACK);
+    pdfDocument.setFont("helvetica", "bold");
+    pdfDocument.setFontSize(18);
+    pdfDocument.text(activeProject.projectName || "Projeto de tatuagem", margin, currentY);
+    currentY += 20;
+
+    pdfDocument.setFont("helvetica", "normal");
+    pdfDocument.setFontSize(10);
+    pdfDocument.text(`Cliente: ${activeProject.clientName || "Cliente não informado"}`, margin, currentY);
+    pdfDocument.text(`Emissão: ${new Date().toLocaleDateString("pt-BR")}`, pageWidth - margin - 112, currentY);
+    currentY += 36;
+
+    currentY = drawPdfSummary(pdfDocument, activeProjectSummary, margin, currentY);
+    currentY += 26;
+
+    pdfDocument.setFont("helvetica", "bold");
+    pdfDocument.setFontSize(12);
+    pdfDocument.setTextColor(...PDF_COLORS.PURPLE);
+    pdfDocument.text("Insumos calculados", margin, currentY);
+    currentY += 18;
+    currentY = drawPdfItems(pdfDocument, activeProjectSummary, margin, currentY, pageWidth, pageHeight);
+    currentY += 24;
+
+    pdfDocument.setFont("helvetica", "bold");
+    pdfDocument.setTextColor(...PDF_COLORS.PURPLE);
+    pdfDocument.text("Observações", margin, currentY);
+    currentY += 16;
+    pdfDocument.setFont("helvetica", "normal");
+    pdfDocument.setTextColor(...PDF_COLORS.BLACK);
+    pdfDocument.text(pdfDocument.splitTextToSize(activeProject.projectNotes || "Sem observações.", pageWidth - margin * 2), margin, currentY);
+  }
+
+  function drawPdfSummary(pdfDocument, activeProjectSummary, margin, startY) {
+    const summaryItems = [
+      ["Materiais", formatCurrency(activeProjectSummary.materialTotal)],
+      ["Mão de obra", formatCurrency(activeProjectSummary.laborTotal)],
+      ["Total", formatCurrency(activeProjectSummary.totalCost)]
+    ];
+    const cardWidth = 156;
+
+    summaryItems.forEach((summaryItem, itemIndex) => {
+      const xPosition = margin + itemIndex * (cardWidth + 18);
+      pdfDocument.setFillColor(...(itemIndex === 2 ? PDF_COLORS.PURPLE : PDF_COLORS.PURPLE_LIGHT));
+      pdfDocument.roundedRect(xPosition, startY, cardWidth, 72, 8, 8, "F");
+      pdfDocument.setTextColor(...(itemIndex === 2 ? PDF_COLORS.WHITE : PDF_COLORS.PURPLE_DARK));
+      pdfDocument.setFont("helvetica", "bold");
+      pdfDocument.setFontSize(9);
+      pdfDocument.text(summaryItem[0].toUpperCase(), xPosition + 14, startY + 24);
+      pdfDocument.setFontSize(15);
+      pdfDocument.text(summaryItem[1], xPosition + 14, startY + 50);
+    });
+
+    return startY + 72;
+  }
+
+  function drawPdfItems(pdfDocument, activeProjectSummary, margin, startY, pageWidth, pageHeight) {
+    let currentY = startY;
+    const tableWidth = pageWidth - margin * 2;
+    const columns = [margin, margin + 220, margin + 312, margin + 420];
+
+    pdfDocument.setFillColor(...PDF_COLORS.PURPLE_DARK);
+    pdfDocument.rect(margin, currentY, tableWidth, 28, "F");
+    pdfDocument.setTextColor(...PDF_COLORS.WHITE);
+    pdfDocument.setFont("helvetica", "bold");
+    pdfDocument.setFontSize(9);
+    ["Insumo", "Uso", "Custo", "Subtotal"].forEach((heading, index) => {
+      pdfDocument.text(heading, columns[index] + 8, currentY + 18);
+    });
+    currentY += 28;
+
+    if (activeProjectSummary.selectedItems.length === 0) {
+      pdfDocument.setTextColor(...PDF_COLORS.BLACK);
+      pdfDocument.setFont("helvetica", "normal");
+      pdfDocument.text("Nenhum insumo selecionado.", margin + 8, currentY + 20);
+      return currentY + 34;
+    }
+
+    activeProjectSummary.selectedItems.forEach((projectItem) => {
+      if (currentY > pageHeight - 96) {
+        pdfDocument.addPage();
+        currentY = 48;
+      }
+
+      const rowHeight = 34;
+      const inventoryItem = projectItem.inventoryItem;
+      pdfDocument.setFillColor(...PDF_COLORS.WHITE);
+      pdfDocument.rect(margin, currentY, tableWidth, rowHeight, "F");
+      pdfDocument.setDrawColor(...PDF_COLORS.PURPLE_LIGHT);
+      pdfDocument.line(margin, currentY + rowHeight, pageWidth - margin, currentY + rowHeight);
+      pdfDocument.setTextColor(...PDF_COLORS.BLACK);
+      pdfDocument.setFont("helvetica", "normal");
+      pdfDocument.setFontSize(9);
+      pdfDocument.text(pdfDocument.splitTextToSize(getInventoryDisplayName(inventoryItem), 190), columns[0] + 8, currentY + 14);
+      pdfDocument.text(`${formatNumber(projectItem.quantityUsed)} ${getUnitMeasureLabel(inventoryItem.unitLabel)}`, columns[1] + 8, currentY + 20);
+      pdfDocument.text(formatCurrency(projectItem.unitCost), columns[2] + 8, currentY + 20);
+      pdfDocument.setFont("helvetica", "bold");
+      pdfDocument.text(formatCurrency(projectItem.materialCost), columns[3] + 8, currentY + 20);
+      currentY += rowHeight;
+    });
+
+    return currentY;
   }
 
   function bindEventListeners() {
@@ -1533,10 +1879,9 @@ const CalculadoraTattooApp = (() => {
     elementReferences.closeDrawerButton.addEventListener("click", closeDrawer);
     elementReferences.drawerBackdrop.addEventListener("click", closeDrawer);
     elementReferences.openCsvImportModalButton.addEventListener("click", openCsvImportModal);
-    elementReferences.openSettingsButton.addEventListener("click", () => showPlaceholderFeedback("Configurações"));
-    elementReferences.openReportsButton.addEventListener("click", () => showPlaceholderFeedback("Relatórios"));
+    elementReferences.openCsvImportBottomButton.addEventListener("click", openCsvImportModal);
     elementReferences.downloadBackupButton.addEventListener("click", downloadBackup);
-    elementReferences.resetApplicationButton.addEventListener("click", resetApplication);
+    elementReferences.downloadBackupBottomButton.addEventListener("click", downloadBackup);
 
     elementReferences.navigationButtons.forEach((navigationButton) => {
       navigationButton.addEventListener("click", () => {
@@ -1547,6 +1892,7 @@ const CalculadoraTattooApp = (() => {
     document.querySelectorAll("[data-screen-shortcut]").forEach((shortcutButton) => {
       shortcutButton.addEventListener("click", () => {
         setActiveScreen(shortcutButton.dataset.screenShortcut);
+        closeDrawer();
       });
     });
 
@@ -1564,6 +1910,15 @@ const CalculadoraTattooApp = (() => {
 
     elementReferences.floatingActionButton.addEventListener("click", openSupplyModal);
     elementReferences.supplyCategorySelect.addEventListener("change", updateSupplyCategoryFields);
+    elementReferences.unitLabelInput.addEventListener("change", updateSupplyMeasurementFields);
+    elementReferences.stockModeSelect.addEventListener("change", () => {
+      shouldSyncCurrentStockWithPackageQuantity = elementReferences.stockModeSelect.value === "fractional";
+      if (!editingInventoryItemId && elementReferences.stockModeSelect.value === "sealedPackages") {
+        elementReferences.currentStockInput.value = "1";
+      }
+      updateSupplyMeasurementFields();
+      syncCurrentStockWithPackageQuantity();
+    });
     elementReferences.packageQuantityInput.addEventListener("input", () => {
       updateSupplyUnitCostPreview();
       syncCurrentStockWithPackageQuantity();

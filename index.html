@@ -25,12 +25,23 @@
       <button class="icon-button" id="closeDrawerButton" type="button" aria-label="Fechar menu">x</button>
     </div>
 
-    <nav class="drawer-navigation" aria-label="Opcoes secundarias">
-      <button class="drawer-action" id="openCsvImportModalButton" type="button">Importar Planilha (CSV)</button>
-      <button class="drawer-action" id="openSettingsButton" type="button">Configurações</button>
-      <button class="drawer-action" id="openReportsButton" type="button">Relatórios</button>
-      <button class="drawer-action" id="downloadBackupButton" type="button">Backup</button>
-      <button class="drawer-action drawer-action-danger" id="resetApplicationButton" type="button">Restaurar Dados</button>
+    <nav class="drawer-navigation" aria-label="Menu principal">
+      <button class="drawer-action" type="button" data-screen-shortcut="inventory">
+        <span class="menu-icon" aria-hidden="true">▦</span>
+        <span>Estoque</span>
+      </button>
+      <button class="drawer-action" type="button" data-screen-shortcut="projects">
+        <span class="menu-icon" aria-hidden="true">R$</span>
+        <span>Orçamentos</span>
+      </button>
+      <button class="drawer-action" id="openCsvImportModalButton" type="button">
+        <span class="menu-icon" aria-hidden="true">CSV</span>
+        <span>Importar Planilha (CSV)</span>
+      </button>
+      <button class="drawer-action" id="downloadBackupButton" type="button">
+        <span class="menu-icon" aria-hidden="true">↓</span>
+        <span>Backup (Exportar Dados)</span>
+      </button>
     </nav>
   </aside>
 
@@ -84,7 +95,7 @@
           </button>
           <button class="quick-action-card" type="button" data-screen-shortcut="projects">
             <span>Orçar sessão</span>
-            <strong>Projetos</strong>
+            <strong>Orçamentos</strong>
           </button>
         </section>
       </section>
@@ -112,7 +123,7 @@
       <section class="screen-panel" id="projectScreen" data-screen-panel="projects" aria-labelledby="projectTitle">
         <div class="screen-heading">
           <div>
-            <span class="section-kicker">Projetos</span>
+            <span class="section-kicker">Orçamentos</span>
             <h1 id="projectTitle">Orçamentos</h1>
           </div>
           <div class="screen-actions">
@@ -191,15 +202,22 @@
 
     <button class="floating-action-button" id="openSupplyModalButton" type="button" aria-label="Nova entrada de estoque">+</button>
 
-    <nav class="bottom-navigation" aria-label="Navegação principal">
-      <button class="navigation-button" type="button" data-screen-target="home" aria-label="Abrir início">
-        <span>Início</span>
-      </button>
+    <nav class="bottom-navigation" aria-label="Menu principal">
       <button class="navigation-button" type="button" data-screen-target="inventory" aria-label="Abrir estoque">
+        <span class="navigation-icon" aria-hidden="true">▦</span>
         <span>Estoque</span>
       </button>
       <button class="navigation-button" type="button" data-screen-target="projects" aria-label="Abrir projetos">
-        <span>Projetos</span>
+        <span class="navigation-icon" aria-hidden="true">R$</span>
+        <span>Orçamentos</span>
+      </button>
+      <button class="navigation-button" id="openCsvImportBottomButton" type="button" aria-label="Importar planilha CSV">
+        <span class="navigation-icon" aria-hidden="true">CSV</span>
+        <span>CSV</span>
+      </button>
+      <button class="navigation-button" id="downloadBackupBottomButton" type="button" aria-label="Exportar backup">
+        <span class="navigation-icon" aria-hidden="true">↓</span>
+        <span>Backup</span>
       </button>
     </nav>
   </div>
@@ -215,59 +233,102 @@
       </div>
 
       <form class="stacked-form" id="supplyForm" autocomplete="off">
-        <label class="form-field">
-          <span>Categoria</span>
-          <select id="supplyCategorySelect" name="category">
-            <option value="Outros">Outros</option>
-            <option value="Cartuchos">Cartuchos</option>
-            <option value="Tintas">Tintas</option>
-            <option value="Biossegurança">Biossegurança</option>
-            <option value="Descartáveis">Descartáveis</option>
-          </select>
-        </label>
+        <ol class="supply-stepper" aria-label="Etapas do cadastro">
+          <li>
+            <span>1</span>
+            <strong>Categoria e medida</strong>
+          </li>
+          <li>
+            <span>2</span>
+            <strong>Valores e estoque</strong>
+          </li>
+        </ol>
 
-        <label class="form-field form-field-wide">
-          <span>Material</span>
-          <input id="supplyNameInput" name="supplyName" type="text" placeholder="Cartucho, tinta, batoque..." required />
-        </label>
+        <section class="form-step-card" aria-labelledby="supplyStepMeasureTitle">
+          <div class="section-header">
+            <span class="section-kicker">Step 1</span>
+            <h2 id="supplyStepMeasureTitle">Categoria e unidade de medida</h2>
+          </div>
 
-        <div class="conditional-fields" id="cartridgeExtraFields" hidden>
+          <div class="responsive-grid">
+            <label class="form-field">
+              <span>Categoria</span>
+              <select id="supplyCategorySelect" name="category">
+                <option value="Outros">Outros</option>
+                <option value="Cartuchos">Cartuchos</option>
+                <option value="Tintas">Tintas</option>
+                <option value="Biossegurança">Biossegurança</option>
+                <option value="Descartáveis">Descartáveis</option>
+              </select>
+            </label>
+
+            <label class="form-field">
+              <span>Unidade de Medida</span>
+              <select id="unitLabelInput" name="unitLabel" required>
+                <option value="ml">ml</option>
+                <option value="gramas">gramas</option>
+                <option value="mg">mg</option>
+                <option value="unidade">unidade</option>
+                <option value="folhas">folhas</option>
+                <option value="metros">metros</option>
+              </select>
+            </label>
+          </div>
+        </section>
+
+        <section class="form-step-card" aria-labelledby="supplyStepValuesTitle">
+          <div class="section-header">
+            <span class="section-kicker">Step 2</span>
+            <h2 id="supplyStepValuesTitle">Valores e estoque</h2>
+          </div>
+
+          <label class="form-field form-field-wide">
+            <span>Material</span>
+            <input id="supplyNameInput" name="supplyName" type="text" placeholder="Cartucho, tinta, batoque..." required />
+          </label>
+
+          <div class="conditional-fields" id="cartridgeExtraFields" hidden>
+            <label class="form-field">
+              <span>Marca</span>
+              <input id="cartridgeBrandInput" name="cartridgeBrand" type="text" placeholder="White Head" />
+            </label>
+
+            <label class="form-field">
+              <span>Especificação</span>
+              <input id="cartridgeSpecificationInput" name="cartridgeSpecification" type="text" placeholder="RL0310" />
+            </label>
+          </div>
+
+          <div class="responsive-grid">
+            <label class="form-field">
+              <span id="packageQuantityLabel">Quantidade da embalagem fechada</span>
+              <input id="packageQuantityInput" name="packageQuantity" type="text" inputmode="decimal" placeholder="50" required />
+            </label>
+
+            <label class="form-field">
+              <span>Como informar o estoque?</span>
+              <select id="stockModeSelect" name="stockMode">
+                <option value="fractional">Quantidade fracionada</option>
+                <option value="sealedPackages">Embalagens fechadas</option>
+              </select>
+            </label>
+
           <label class="form-field">
-            <span>Marca</span>
-            <input id="cartridgeBrandInput" name="cartridgeBrand" type="text" placeholder="White Head" />
+              <span id="currentStockLabel">Estoque atual</span>
+              <input id="currentStockInput" name="currentStock" type="text" inputmode="decimal" placeholder="50" />
           </label>
 
           <label class="form-field">
-            <span>Especificação</span>
-            <input id="cartridgeSpecificationInput" name="cartridgeSpecification" type="text" placeholder="RL0310" />
+              <span>Preço de compra da embalagem</span>
+              <input id="packagePriceInput" name="packagePrice" type="text" inputmode="decimal" placeholder="30,00" required />
           </label>
-        </div>
+          </div>
+        </section>
 
-        <div class="responsive-grid">
-          <label class="form-field">
-            <span>Qtd. embalagem</span>
-            <input id="packageQuantityInput" name="packageQuantity" type="text" inputmode="decimal" placeholder="50" required />
-          </label>
-
-          <label class="form-field">
-            <span>Estoque atual</span>
-            <input id="currentStockInput" name="currentStock" type="text" inputmode="decimal" placeholder="50" />
-          </label>
-
-          <label class="form-field">
-            <span>Unidade</span>
-            <input id="unitLabelInput" name="unitLabel" type="text" placeholder="un, ml, folhas" required />
-          </label>
-
-          <label class="form-field">
-            <span>Preço embalagem</span>
-            <input id="packagePriceInput" name="packagePrice" type="text" inputmode="decimal" placeholder="30,00" required />
-          </label>
-        </div>
-
-        <section class="unit-cost-preview" aria-live="polite">
+        <section class="unit-cost-preview ecommerce-price-preview" aria-live="polite">
           <span>Custo unitário</span>
           <strong id="supplyUnitCostPreview">R$ 0,00</strong>
+          <small id="supplyUnitCostDetail">preço da embalagem / quantidade na embalagem</small>
         </section>
 
         <div class="modal-actions">
@@ -403,8 +464,9 @@
     </article>
   </template>
 
-  <section class="print-document" id="printDocument" aria-hidden="true"></section>
+  <section class="invoice-document" id="invoiceDocument" aria-hidden="true"></section>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <script type="module" src="js/app.js"></script>
 </body>
 </html>
