@@ -13,6 +13,8 @@ const CATEGORY_TINTA = "Tinta";
 const CATEGORY_BIOSSEGURANCA = "Biossegurança";
 const CATEGORY_DESCARTAVEL = "Descartável";
 const CATEGORY_OUTROS = "Outros";
+const UNIT_PRICING_MODE = "unit";
+const FRACTIONAL_PRICING_MODE = "fractional";
 const BASE_INVENTORY_CATEGORIES = [
   CATEGORY_ALL_VALUE,
   CATEGORY_CARTUCHO,
@@ -130,8 +132,9 @@ const DEFAULT_INVENTORY_ITEMS = [
     cartridgeNumber: "0310",
     unitMeasure: "unid",
     packageQuantity: 20,
-    purchasePrice: 300,
-    currentStock: 20
+    purchasePrice: 15,
+    currentStock: 20,
+    pricingMode: UNIT_PRICING_MODE
   },
   {
     id: "item-tinta-preta",
@@ -142,7 +145,8 @@ const DEFAULT_INVENTORY_ITEMS = [
     unitMeasure: "ml",
     packageQuantity: 30,
     purchasePrice: 100,
-    currentStock: 30
+    currentStock: 30,
+    pricingMode: FRACTIONAL_PRICING_MODE
   },
   {
     id: "item-luvas",
@@ -153,7 +157,8 @@ const DEFAULT_INVENTORY_ITEMS = [
     unitMeasure: "unid",
     packageQuantity: 100,
     purchasePrice: 50,
-    currentStock: 100
+    currentStock: 100,
+    pricingMode: FRACTIONAL_PRICING_MODE
   },
   {
     id: "item-stencil",
@@ -164,7 +169,8 @@ const DEFAULT_INVENTORY_ITEMS = [
     unitMeasure: "folhas",
     packageQuantity: 1,
     purchasePrice: 4.5,
-    currentStock: 8
+    currentStock: 8,
+    pricingMode: FRACTIONAL_PRICING_MODE
   }
 ];
 
@@ -240,11 +246,14 @@ function bindElementReferences() {
   elementReferences.openDrawerButton = document.querySelector("#openDrawerButton");
   elementReferences.openItemModalButton = document.querySelector("#openItemModalButton");
   elementReferences.packageQuantityInput = document.querySelector("#packageQuantityInput");
+  elementReferences.packageQuantityLabel = document.querySelector("#packageQuantityLabel");
   elementReferences.purchasePriceInput = document.querySelector("#purchasePriceInput");
+  elementReferences.purchasePriceLabel = document.querySelector("#purchasePriceLabel");
   elementReferences.screens = document.querySelectorAll("[data-screen]");
   elementReferences.sessionHoursInput = document.querySelector("#sessionHoursInput");
   elementReferences.stockPickerList = document.querySelector("#stockPickerList");
   elementReferences.unitCostPreview = document.querySelector("#unitCostPreview");
+  elementReferences.unitCostPreviewLabel = document.querySelector("#unitCostPreviewLabel");
   elementReferences.unitMeasureInput = document.querySelector("#unitMeasureInput");
 }
 
@@ -308,9 +317,11 @@ function bindEventListeners() {
 
   [
     elementReferences.packageQuantityInput,
-    elementReferences.purchasePriceInput
+    elementReferences.purchasePriceInput,
+    elementReferences.unitMeasureInput
   ].forEach((inputElement) => {
     inputElement.addEventListener("input", updateUnitCostPreview);
+    inputElement.addEventListener("change", updateUnitCostPreview);
   });
 
   elementReferences.itemForm.addEventListener("submit", (event) => {
@@ -494,11 +505,14 @@ function normalizeInventoryItem(item) {
   const normalizedCategory = normalizeCategory(item.category);
   const packageQuantity = normalizeNumber(item.packageQuantity);
   const currentStock = normalizeNumber(item.currentStock);
+  const rawPurchasePrice = normalizeNumber(item.purchasePrice || item.packagePrice || item.valor);
+  const pricingMode = isCartridgeCategory(normalizedCategory) ? UNIT_PRICING_MODE : FRACTIONAL_PRICING_MODE;
 
   return {
     id: item.id || createEntityId("item"),
     name: String(item.name || "Novo item"),
     category: normalizedCategory,
+    pricingMode,
     brand: String(item.brand || item.marca || ""),
     description: String(item.description || item.descricao || ""),
     cartridgeType: String(item.cartridgeType || item.tipo || ""),
@@ -506,7 +520,7 @@ function normalizeInventoryItem(item) {
     colorName: String(item.colorName || item.coloration || item.coloracao || ""),
     unitMeasure: normalizeUnitMeasure(item.unitMeasure || item.unitLabel || item.tipoUnidade || "unid"),
     packageQuantity,
-    purchasePrice: normalizeNumber(item.purchasePrice || item.packagePrice || item.valor),
+    purchasePrice: normalizePurchasePriceForPricingMode(item, normalizedCategory, packageQuantity, rawPurchasePrice),
     currentStock: currentStock > 0 ? currentStock : packageQuantity,
     createdAt: item.createdAt || new Date().toISOString(),
     updatedAt: item.updatedAt || item.createdAt || new Date().toISOString()
@@ -630,6 +644,7 @@ function renderItemCategoryFields(categoryName) {
   elementReferences.categoryFormKicker.textContent = schema.kicker;
   elementReferences.categoryFormTitle.textContent = schema.title;
   elementReferences.categoryDynamicFields.innerHTML = schema.fields.map(createDynamicFieldHtml).join("");
+  updatePricingLabels(normalizedCategory);
 }
 
 /**
@@ -647,6 +662,28 @@ function createDynamicFieldHtml(fieldDefinition) {
 }
 
 /**
+ * Atualiza os textos de preco e quantidade conforme a categoria selecionada.
+ * Cartucho usa preco unitario fixo; as demais categorias usam custo fracionado.
+ * @param {string} categoryName Categoria ativa no formulario.
+ * @returns {void}
+ */
+function updatePricingLabels(categoryName) {
+  const normalizedCategory = normalizeCategory(categoryName);
+  const unitMeasure = normalizeUnitMeasure(elementReferences.unitMeasureInput.value);
+
+  if (isCartridgeCategory(normalizedCategory)) {
+    elementReferences.purchasePriceLabel.textContent = "Valor unitário do cartucho";
+    elementReferences.packageQuantityLabel.textContent = "Quantidade em estoque";
+    elementReferences.unitCostPreviewLabel.textContent = "Preço por cartucho";
+    return;
+  }
+
+  elementReferences.purchasePriceLabel.textContent = "Valor da embalagem/frasco";
+  elementReferences.packageQuantityLabel.textContent = `Quantidade total (${unitMeasure})`;
+  elementReferences.unitCostPreviewLabel.textContent = `Custo por ${unitMeasure}`;
+}
+
+/**
  * Cria o HTML de um card premium de estoque.
  * @param {object} item Item de estoque normalizado.
  * @returns {string} HTML seguro do card.
@@ -659,6 +696,8 @@ function createInventoryCardHtml(item) {
   const itemMetaLabel = getInventoryItemMetaLabel(item);
   const brandLabel = getInventoryItemBrandLabel(item);
   const stockCounterTotal = Math.max(normalizeNumber(item.currentStock), normalizeNumber(item.packageQuantity));
+  const unitCostTitle = getUnitCostTitle(item);
+  const packageQuantityLabel = getPackageQuantityLabel(item);
 
   return `
     <article class="inventory-card ${stockStatus.className}" data-inventory-item-id="${escapeHtml(item.id)}">
@@ -682,13 +721,13 @@ function createInventoryCardHtml(item) {
           <h3>${escapeHtml(item.name)}</h3>
           <span>${escapeHtml(brandLabel)}</span>
           <strong class="product-meta-line">${escapeHtml(itemMetaLabel)}</strong>
-          <small>${formatNumber(item.packageQuantity)} ${escapeHtml(item.unitMeasure)} por embalagem</small>
+          <small>${escapeHtml(packageQuantityLabel)}</small>
         </div>
       </div>
 
       <div class="product-details-grid">
         <div class="unit-price is-featured">
-          <span>Unidade fracionada</span>
+          <span>${escapeHtml(unitCostTitle)}</span>
           <strong>${formatCurrency(unitCost)}</strong>
         </div>
         <div class="unit-price">
@@ -753,6 +792,7 @@ function renderStockPicker() {
     const productInitial = getProductInitial(item.name);
     const stockStatus = getStockStatus(calculateStockPercentage(item));
     const itemMetaLabel = getInventoryItemMetaLabel(item);
+    const unitCostLabel = getUnitCostInlineLabel(item);
 
     return `
     <article class="picker-card ${stockStatus.className}" data-inventory-item-id="${escapeHtml(item.id)}">
@@ -761,7 +801,7 @@ function renderStockPicker() {
         <div>
           <h3>${escapeHtml(item.name)}</h3>
           <span>${escapeHtml(item.category)} · ${escapeHtml(itemMetaLabel)}</span>
-          <span>${formatCurrency(unitCost)}/${escapeHtml(item.unitMeasure)}</span>
+          <span>${escapeHtml(unitCostLabel)}</span>
         </div>
       </div>
 
@@ -800,6 +840,7 @@ function renderCart() {
     const unitCost = calculateUnitCost(inventoryItem);
     const subtotal = calculateLineSubtotal(inventoryItem, cartItem.quantityUsed);
     const itemMetaLabel = getInventoryItemMetaLabel(inventoryItem);
+    const unitCostLabel = getUnitCostInlineLabel(inventoryItem);
 
     return `
       <article class="cart-card" data-cart-item-id="${escapeHtml(cartItem.id)}">
@@ -812,7 +853,7 @@ function renderCart() {
         </div>
 
         <div class="cart-calculation">
-          <span>${formatCurrency(unitCost)}</span>
+          <span>${escapeHtml(unitCostLabel)}</span>
           <span>x</span>
           <span>${formatNumber(cartItem.quantityUsed)} ${escapeHtml(inventoryItem.unitMeasure)}</span>
         </div>
@@ -1047,15 +1088,17 @@ function saveInventoryItemFromForm() {
   const hiddenCurrentStock = normalizeNumber(elementReferences.currentStockInput.value);
   const existingItem = editingInventoryItemId ? findInventoryItemById(editingInventoryItemId) : null;
   const dynamicMetadata = getDynamicMetadataFromForm();
+  const shouldSyncStockWithQuantity = isCartridgeCategory(selectedCategory) || !existingItem || hiddenCurrentStock <= 0;
   const inventoryItem = {
     id: editingInventoryItemId || createEntityId("item"),
     name: elementReferences.itemNameInput.value.trim(),
     category: selectedCategory,
+    pricingMode: isCartridgeCategory(selectedCategory) ? UNIT_PRICING_MODE : FRACTIONAL_PRICING_MODE,
     ...dynamicMetadata,
     unitMeasure: normalizeUnitMeasure(elementReferences.unitMeasureInput.value),
     packageQuantity,
     purchasePrice: normalizeNumber(elementReferences.purchasePriceInput.value),
-    currentStock: hiddenCurrentStock > 0 ? hiddenCurrentStock : packageQuantity,
+    currentStock: shouldSyncStockWithQuantity ? packageQuantity : hiddenCurrentStock,
     createdAt: existingItem?.createdAt || new Date().toISOString(),
     updatedAt: new Date().toISOString()
   };
@@ -1151,7 +1194,11 @@ function updateBudgetLaborFromForm() {
  * @returns {void}
  */
 function updateUnitCostPreview() {
+  const selectedCategory = normalizeCategory(elementReferences.itemCategoryInput.value);
+  updatePricingLabels(selectedCategory);
+
   const previewItem = {
+    category: selectedCategory,
     packageQuantity: elementReferences.packageQuantityInput.value,
     purchasePrice: elementReferences.purchasePriceInput.value
   };
@@ -1301,6 +1348,7 @@ function parseCsvInventory(csvText) {
       id: createEntityId("item"),
       name: itemName,
       category: normalizeCategory(row[1] || CATEGORY_OUTROS),
+      pricingMode: isCartridgeCategory(row[1] || CATEGORY_OUTROS) ? UNIT_PRICING_MODE : FRACTIONAL_PRICING_MODE,
       packageQuantity,
       unitMeasure: normalizeUnitMeasure(row[3] || "unid"),
       purchasePrice: normalizeNumber(row[4]),
@@ -1406,7 +1454,7 @@ function renderInvoiceDocument() {
           <strong>${formatCounter(materialEntries.length, activeBudget.items.length)}</strong>
         </div>
         <div>
-          <span>Insumos fracionados</span>
+          <span>Insumos utilizados</span>
           <strong>${formatCurrency(totals.materialCost)}</strong>
         </div>
         <div>
@@ -1440,7 +1488,7 @@ function renderInvoiceDocument() {
 
       <section class="invoice-total-panel">
         <span>Resumo financeiro</span>
-        <strong>Insumos fracionados: ${formatCurrency(totals.materialCost)}</strong>
+        <strong>Insumos utilizados: ${formatCurrency(totals.materialCost)}</strong>
         <strong>Mão de obra: ${formatCurrency(totals.laborCost)}</strong>
         <strong>Total do orçamento: ${formatCurrency(totals.totalCost)}</strong>
       </section>
@@ -1455,6 +1503,10 @@ function renderInvoiceDocument() {
 function calculateUnitCost(item) {
   const packageQuantity = normalizeNumber(item.packageQuantity);
   const purchasePrice = normalizeNumber(item.purchasePrice);
+
+  if (isCartridgeCategory(item.category)) {
+    return purchasePrice;
+  }
 
   if (packageQuantity <= 0) {
     return 0;
@@ -1540,6 +1592,66 @@ function getStockStatus(stockPercentage) {
     className: "is-stock-healthy",
     label: "Estoque saudável"
   };
+}
+
+/**
+ * Ajusta somente o item demonstrativo salvo pela versao anterior, que usava preco total da caixa.
+ * @param {object} item Item bruto persistido.
+ * @param {string} categoryName Categoria normalizada.
+ * @param {number} packageQuantity Quantidade cadastrada.
+ * @param {number} purchasePrice Valor bruto persistido.
+ * @returns {number} Valor compativel com a regra atual.
+ */
+function normalizePurchasePriceForPricingMode(item, categoryName, packageQuantity, purchasePrice) {
+  const isLegacyDefaultCartridge = isCartridgeCategory(categoryName)
+    && item.id === "item-cartucho-rl0310"
+    && purchasePrice === 300
+    && packageQuantity === 20;
+
+  return isLegacyDefaultCartridge ? purchasePrice / packageQuantity : purchasePrice;
+}
+
+/**
+ * Verifica se uma categoria deve usar regra de preco unitario fixo.
+ * @param {string} categoryName Categoria avaliada.
+ * @returns {boolean} Verdadeiro para cartuchos.
+ */
+function isCartridgeCategory(categoryName) {
+  return normalizeCategory(categoryName) === CATEGORY_CARTUCHO;
+}
+
+/**
+ * Retorna o titulo do custo exibido no card conforme a regra de precificacao.
+ * @param {object} item Item de estoque.
+ * @returns {string} Texto de titulo.
+ */
+function getUnitCostTitle(item) {
+  return isCartridgeCategory(item.category) ? "Preço por cartucho" : "Unidade fracionada";
+}
+
+/**
+ * Retorna o custo unitario em texto curto para seletores e carrinho.
+ * @param {object} item Item de estoque.
+ * @returns {string} Texto formatado.
+ */
+function getUnitCostInlineLabel(item) {
+  const unitCost = calculateUnitCost(item);
+
+  if (isCartridgeCategory(item.category)) {
+    return `${formatCurrency(unitCost)} por cartucho`;
+  }
+
+  return `${formatCurrency(unitCost)}/${item.unitMeasure}`;
+}
+
+/**
+ * Retorna a legenda de quantidade cadastrada no item.
+ * @param {object} item Item de estoque.
+ * @returns {string} Texto formatado.
+ */
+function getPackageQuantityLabel(item) {
+  const quantityLabel = `${formatNumber(item.packageQuantity)} ${item.unitMeasure}`;
+  return isCartridgeCategory(item.category) ? `${quantityLabel} em estoque` : `${quantityLabel} por embalagem`;
 }
 
 /**

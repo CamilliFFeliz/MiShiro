@@ -24,13 +24,26 @@ export function normalizeNumber(value) {
 
 export function calculateUnitCost(inventoryItem) {
   const packageQuantity = normalizeNumber(inventoryItem.packageQuantity);
-  const packagePrice = normalizeNumber(inventoryItem.packagePrice);
+  const packagePrice = normalizeNumber(inventoryItem.packagePrice ?? inventoryItem.purchasePrice);
+  const categoryName = normalizeCategoryName(inventoryItem.category);
+
+  if (["cartucho", "cartuchos"].includes(categoryName)) {
+    return packagePrice;
+  }
 
   if (packageQuantity <= 0) {
     return 0;
   }
 
   return packagePrice / packageQuantity;
+}
+
+function normalizeCategoryName(categoryName) {
+  return String(categoryName || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "");
 }
 
 export function calculateMaterialCost(inventoryItem, quantityUsed) {
