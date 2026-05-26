@@ -7,6 +7,15 @@ const NUMBER_FORMATTER = new Intl.NumberFormat("pt-BR", {
   maximumFractionDigits: 2
 });
 const DESKTOP_MEDIA_QUERY = window.matchMedia("(min-width: 1024px)");
+const CATEGORY_ALL_VALUE = "Todos";
+const BASE_INVENTORY_CATEGORIES = [
+  CATEGORY_ALL_VALUE,
+  "Cartuchos",
+  "Tintas",
+  "Biossegurança",
+  "Descartáveis",
+  "Outros"
+];
 
 const DEFAULT_INVENTORY_ITEMS = [
   {
@@ -50,6 +59,8 @@ const DEFAULT_INVENTORY_ITEMS = [
 const DEFAULT_BUDGET = {
   id: "budget-default",
   name: "Novo orçamento",
+  hourlyRate: 0,
+  sessionHours: 0,
   items: []
 };
 
@@ -58,6 +69,8 @@ let applicationState = loadApplicationState();
 let activeScreen = "inventory";
 let inventorySearchTerm = "";
 let budgetSearchTerm = "";
+let activeInventoryCategory = CATEGORY_ALL_VALUE;
+let editingInventoryItemId = null;
 
 /**
  * Inicializa a aplicacao, conecta eventos e renderiza a primeira tela.
@@ -80,6 +93,7 @@ function bindElementReferences() {
   elementReferences.budgetSearchInput = document.querySelector("#budgetSearchInput");
   elementReferences.budgetTotalValue = document.querySelector("#budgetTotalValue");
   elementReferences.cartList = document.querySelector("#cartList");
+  elementReferences.categoryFilterList = document.querySelector("#categoryFilterList");
   elementReferences.closeImportModalButton = document.querySelector("#closeImportModalButton");
   elementReferences.closeItemModalButton = document.querySelector("#closeItemModalButton");
   elementReferences.createBudgetButton = document.querySelector("#createBudgetButton");
@@ -91,6 +105,7 @@ function bindElementReferences() {
   elementReferences.drawerLinks = document.querySelectorAll("[data-drawer-action]");
   elementReferences.exportInvoiceButton = document.querySelector("#exportInvoiceButton");
   elementReferences.budgetItemCounter = document.querySelector("#budgetItemCounter");
+  elementReferences.hourlyRateInput = document.querySelector("#hourlyRateInput");
   elementReferences.importFeedback = document.querySelector("#importFeedback");
   elementReferences.importForm = document.querySelector("#importForm");
   elementReferences.importModal = document.querySelector("#importModal");
@@ -100,13 +115,19 @@ function bindElementReferences() {
   elementReferences.invoiceDocument = document.querySelector("#invoiceDocument");
   elementReferences.itemCategoryInput = document.querySelector("#itemCategoryInput");
   elementReferences.itemForm = document.querySelector("#itemForm");
+  elementReferences.itemModalKicker = document.querySelector("#itemModalKicker");
+  elementReferences.itemModalTitle = document.querySelector("#itemModalTitle");
   elementReferences.itemModal = document.querySelector("#itemModal");
   elementReferences.itemNameInput = document.querySelector("#itemNameInput");
+  elementReferences.itemSubmitButton = document.querySelector("#itemSubmitButton");
+  elementReferences.laborCostValue = document.querySelector("#laborCostValue");
+  elementReferences.materialCostValue = document.querySelector("#materialCostValue");
   elementReferences.openDrawerButton = document.querySelector("#openDrawerButton");
   elementReferences.openItemModalButton = document.querySelector("#openItemModalButton");
   elementReferences.packageQuantityInput = document.querySelector("#packageQuantityInput");
   elementReferences.purchasePriceInput = document.querySelector("#purchasePriceInput");
   elementReferences.screens = document.querySelectorAll("[data-screen]");
+  elementReferences.sessionHoursInput = document.querySelector("#sessionHoursInput");
   elementReferences.stockPickerList = document.querySelector("#stockPickerList");
   elementReferences.unitCostPreview = document.querySelector("#unitCostPreview");
   elementReferences.unitMeasureInput = document.querySelector("#unitMeasureInput");
@@ -138,6 +159,35 @@ function bindEventListeners() {
     renderInventory();
   });
 
+  elementReferences.categoryFilterList.addEventListener("click", (event) => {
+    const categoryButton = event.target.closest("[data-category-filter]");
+
+    if (!categoryButton) {
+      return;
+    }
+
+    setActiveInventoryCategory(categoryButton.dataset.categoryFilter);
+  });
+
+  elementReferences.inventoryGrid.addEventListener("click", (event) => {
+    const editButton = event.target.closest("[data-edit-inventory-item]");
+    const deleteButton = event.target.closest("[data-delete-inventory-item]");
+    const inventoryCard = event.target.closest("[data-inventory-item-id]");
+
+    if (!inventoryCard) {
+      return;
+    }
+
+    if (editButton) {
+      openItemModal(inventoryCard.dataset.inventoryItemId);
+      return;
+    }
+
+    if (deleteButton) {
+      deleteInventoryItem(inventoryCard.dataset.inventoryItemId);
+    }
+  });
+
   elementReferences.budgetSearchInput.addEventListener("input", (event) => {
     budgetSearchTerm = event.target.value;
     renderStockPicker();
@@ -147,6 +197,13 @@ function bindEventListeners() {
     getActiveBudget().name = event.target.value;
     saveApplicationState();
     renderBudget();
+  });
+
+  [
+    elementReferences.hourlyRateInput,
+    elementReferences.sessionHoursInput
+  ].forEach((inputElement) => {
+    inputElement.addEventListener("input", updateBudgetLaborFromForm);
   });
 
   [
@@ -307,6 +364,8 @@ function normalizeBudget(budget) {
   return {
     id: budget.id || createEntityId("budget"),
     name: String(budget.name || budget.projectName || "Novo orçamento"),
+    hourlyRate: normalizeNumber(budget.hourlyRate ?? budget.laborHourlyRate ?? budget.valorMaoDeObra),
+    sessionHours: normalizeNumber(budget.sessionHours ?? budget.laborHours ?? budget.tempoSessao),
     items: Array.isArray(budget.items) ? budget.items.map(normalizeBudgetItem) : []
   };
 }
@@ -338,6 +397,7 @@ function saveApplicationState() {
  */
 function renderApplication() {
   renderActiveScreen();
+  renderCategoryFilters();
   renderInventory();
   renderBudget();
   updateUnitCostPreview();
@@ -365,7 +425,7 @@ function renderActiveScreen() {
  * @returns {void}
  */
 function renderInventory() {
-  const filteredItems = getFilteredInventoryItems(inventorySearchTerm);
+  const filteredItems = getFilteredInventoryItems(inventorySearchTerm, activeInventoryCategory);
   elementReferences.inventoryCounter.textContent = formatCounter(filteredItems.length, applicationState.inventoryItems.length);
 
   if (filteredItems.length === 0) {
@@ -374,6 +434,30 @@ function renderInventory() {
   }
 
   elementReferences.inventoryGrid.innerHTML = filteredItems.map(createInventoryCardHtml).join("");
+}
+
+/**
+ * Renderiza os chips de filtro por categoria do estoque.
+ * @returns {void}
+ */
+function renderCategoryFilters() {
+  const categories = getInventoryCategories();
+
+  if (!categories.includes(activeInventoryCategory)) {
+    activeInventoryCategory = CATEGORY_ALL_VALUE;
+  }
+
+  elementReferences.categoryFilterList.innerHTML = categories.map((categoryName) => {
+    const categoryTotal = countInventoryItemsByCategory(categoryName);
+    const isActive = categoryName === activeInventoryCategory;
+
+    return `
+      <button class="filter-chip ${isActive ? "is-active" : ""}" type="button" data-category-filter="${escapeHtml(categoryName)}">
+        <span>${escapeHtml(categoryName)}</span>
+        <strong>${formatCounter(categoryTotal, applicationState.inventoryItems.length)}</strong>
+      </button>
+    `;
+  }).join("");
 }
 
 /**
@@ -390,8 +474,17 @@ function createInventoryCardHtml(item) {
   return `
     <article class="inventory-card ${stockStatus.className}" data-inventory-item-id="${escapeHtml(item.id)}">
       <div class="product-topline">
-        <span class="category-pill">${escapeHtml(item.category)}</span>
-        <span class="unit-tag">por ${escapeHtml(item.unitMeasure)}</span>
+        <div class="product-tags">
+          <span class="category-pill">${escapeHtml(item.category)}</span>
+          <span class="unit-tag">por ${escapeHtml(item.unitMeasure)}</span>
+        </div>
+        <details class="product-options">
+          <summary aria-label="Abrir opções do item">⋯</summary>
+          <div class="product-options-menu">
+            <button type="button" data-edit-inventory-item>Editar</button>
+            <button type="button" data-delete-inventory-item>Excluir</button>
+          </div>
+        </details>
       </div>
 
       <div class="product-card-hero">
@@ -435,9 +528,22 @@ function renderBudget() {
   const totals = calculateBudgetTotals(activeBudget);
 
   elementReferences.budgetNameInput.value = activeBudget.name;
-  elementReferences.budgetTotalValue.textContent = formatCurrency(totals.totalCost);
+  elementReferences.hourlyRateInput.value = formatEditableNumber(activeBudget.hourlyRate);
+  elementReferences.sessionHoursInput.value = formatEditableNumber(activeBudget.sessionHours);
+  renderBudgetTotals(totals);
   renderStockPicker();
   renderCart();
+}
+
+/**
+ * Renderiza os totais financeiros do orcamento ativo.
+ * @param {{materialCost: number, laborCost: number, totalCost: number}} totals Totais calculados.
+ * @returns {void}
+ */
+function renderBudgetTotals(totals) {
+  elementReferences.materialCostValue.textContent = formatCurrency(totals.materialCost);
+  elementReferences.laborCostValue.textContent = formatCurrency(totals.laborCost);
+  elementReferences.budgetTotalValue.textContent = formatCurrency(totals.totalCost);
 }
 
 /**
@@ -445,7 +551,7 @@ function renderBudget() {
  * @returns {void}
  */
 function renderStockPicker() {
-  const filteredItems = getFilteredInventoryItems(budgetSearchTerm);
+  const filteredItems = getFilteredInventoryItems(budgetSearchTerm, CATEGORY_ALL_VALUE);
 
   if (filteredItems.length === 0) {
     elementReferences.stockPickerList.innerHTML = createEmptyStateHtml("Nenhum item disponível no estoque.");
@@ -575,15 +681,73 @@ function setActiveScreen(screenName) {
 }
 
 /**
- * Abre o modal de cadastro de insumo.
+ * Abre o modal de cadastro ou edicao de insumo.
+ * @param {string=} inventoryItemId Identificador opcional para edicao.
  * @returns {void}
  */
-function openItemModal() {
-  elementReferences.itemForm.reset();
-  elementReferences.unitMeasureInput.value = "ml";
+function openItemModal(inventoryItemId) {
+  const inventoryItem = inventoryItemId ? findInventoryItemById(inventoryItemId) : null;
+
+  if (inventoryItem) {
+    populateItemFormForEditing(inventoryItem);
+  } else {
+    resetItemFormForCreation();
+  }
+
   updateUnitCostPreview();
   openModal(elementReferences.itemModal);
   elementReferences.itemNameInput.focus();
+}
+
+/**
+ * Prepara o formulario de insumo para criar um novo registro.
+ * @returns {void}
+ */
+function resetItemFormForCreation() {
+  editingInventoryItemId = null;
+  elementReferences.itemForm.reset();
+  elementReferences.unitMeasureInput.value = "ml";
+  elementReferences.itemModalKicker.textContent = "Novo insumo";
+  elementReferences.itemModalTitle.textContent = "Adicionar item";
+  elementReferences.itemSubmitButton.textContent = "Salvar item";
+}
+
+/**
+ * Preenche o formulario de insumo com dados de um item existente.
+ * @param {object} inventoryItem Item de estoque que sera editado.
+ * @returns {void}
+ */
+function populateItemFormForEditing(inventoryItem) {
+  editingInventoryItemId = inventoryItem.id;
+  ensureCategoryOptionExists(inventoryItem.category);
+  elementReferences.itemNameInput.value = inventoryItem.name;
+  elementReferences.itemCategoryInput.value = inventoryItem.category;
+  elementReferences.packageQuantityInput.value = formatEditableNumber(inventoryItem.packageQuantity);
+  elementReferences.unitMeasureInput.value = inventoryItem.unitMeasure;
+  elementReferences.purchasePriceInput.value = formatEditableNumber(inventoryItem.purchasePrice);
+  elementReferences.currentStockInput.value = formatEditableNumber(inventoryItem.currentStock);
+  elementReferences.itemModalKicker.textContent = "Editar insumo";
+  elementReferences.itemModalTitle.textContent = "Atualizar item";
+  elementReferences.itemSubmitButton.textContent = "Salvar alterações";
+}
+
+/**
+ * Garante que uma categoria existente no estoque apareca no select de edicao.
+ * @param {string} categoryName Categoria que precisa estar disponivel.
+ * @returns {void}
+ */
+function ensureCategoryOptionExists(categoryName) {
+  const categoryExists = [...elementReferences.itemCategoryInput.options]
+    .some((optionElement) => optionElement.value === categoryName);
+
+  if (categoryExists) {
+    return;
+  }
+
+  const categoryOption = document.createElement("option");
+  categoryOption.value = categoryName;
+  categoryOption.textContent = categoryName;
+  elementReferences.itemCategoryInput.append(categoryOption);
 }
 
 /**
@@ -625,12 +789,12 @@ function closeModal(modalElement) {
 }
 
 /**
- * Salva um novo insumo a partir dos campos do formulario.
+ * Salva um insumo novo ou atualiza um insumo existente a partir do formulario.
  * @returns {void}
  */
 function saveInventoryItemFromForm() {
-  const newItem = {
-    id: createEntityId("item"),
+  const inventoryItem = {
+    id: editingInventoryItemId || createEntityId("item"),
     name: elementReferences.itemNameInput.value.trim(),
     category: elementReferences.itemCategoryInput.value,
     unitMeasure: normalizeUnitMeasure(elementReferences.unitMeasureInput.value),
@@ -640,15 +804,91 @@ function saveInventoryItemFromForm() {
     createdAt: new Date().toISOString()
   };
 
-  if (!newItem.name || newItem.packageQuantity <= 0 || newItem.purchasePrice <= 0) {
+  if (!inventoryItem.name || inventoryItem.packageQuantity <= 0 || inventoryItem.purchasePrice <= 0) {
     elementReferences.itemForm.reportValidity();
     return;
   }
 
-  applicationState.inventoryItems.unshift(newItem);
+  if (editingInventoryItemId) {
+    updateInventoryItem(inventoryItem);
+  } else {
+    applicationState.inventoryItems.unshift(inventoryItem);
+  }
+
   saveApplicationState();
   closeModal(elementReferences.itemModal);
+  editingInventoryItemId = null;
+  renderCategoryFilters();
   renderApplication();
+}
+
+/**
+ * Atualiza um insumo existente no estado local.
+ * @param {object} updatedItem Item de estoque com dados atualizados.
+ * @returns {void}
+ */
+function updateInventoryItem(updatedItem) {
+  applicationState.inventoryItems = applicationState.inventoryItems.map((inventoryItem) => (
+    inventoryItem.id === updatedItem.id
+      ? {
+        ...inventoryItem,
+        ...updatedItem,
+        createdAt: inventoryItem.createdAt || updatedItem.createdAt
+      }
+      : inventoryItem
+  ));
+}
+
+/**
+ * Exclui um insumo do estoque e remove suas referencias dos orcamentos.
+ * @param {string} inventoryItemId Identificador do insumo.
+ * @returns {void}
+ */
+function deleteInventoryItem(inventoryItemId) {
+  const inventoryItem = findInventoryItemById(inventoryItemId);
+
+  if (!inventoryItem) {
+    return;
+  }
+
+  const shouldDeleteItem = window.confirm(`Excluir "${inventoryItem.name}" do estoque?`);
+
+  if (!shouldDeleteItem) {
+    return;
+  }
+
+  applicationState.inventoryItems = applicationState.inventoryItems.filter((item) => item.id !== inventoryItemId);
+  applicationState.budgets = applicationState.budgets.map((budget) => ({
+    ...budget,
+    items: budget.items.filter((cartItem) => cartItem.inventoryItemId !== inventoryItemId)
+  }));
+
+  saveApplicationState();
+  renderApplication();
+}
+
+/**
+ * Define a categoria ativa usada na filtragem do estoque.
+ * @param {string} categoryName Nome da categoria selecionada.
+ * @returns {void}
+ */
+function setActiveInventoryCategory(categoryName) {
+  activeInventoryCategory = categoryName || CATEGORY_ALL_VALUE;
+  renderCategoryFilters();
+  renderInventory();
+}
+
+/**
+ * Atualiza os dados de mao de obra do orcamento ativo.
+ * @returns {void}
+ */
+function updateBudgetLaborFromForm() {
+  const activeBudget = getActiveBudget();
+
+  activeBudget.hourlyRate = normalizeNumber(elementReferences.hourlyRateInput.value);
+  activeBudget.sessionHours = normalizeNumber(elementReferences.sessionHoursInput.value);
+  saveApplicationState();
+  renderBudgetTotals(calculateBudgetTotals(activeBudget));
 }
 
 /**
@@ -734,6 +974,8 @@ function createNewBudget() {
   const newBudget = {
     id: createEntityId("budget"),
     name: "Novo orçamento",
+    hourlyRate: 0,
+    sessionHours: 0,
     items: []
   };
 
@@ -889,13 +1131,26 @@ function renderInvoiceDocument() {
           <strong>${new Date().toLocaleDateString("pt-BR")}</strong>
         </div>
         <div>
-          <span>Itens</span>
+          <span>Materiais</span>
           <strong>${formatCounter(activeBudget.items.length, activeBudget.items.length)}</strong>
+        </div>
+        <div>
+          <span>Insumos</span>
+          <strong>${formatCurrency(totals.materialCost)}</strong>
+        </div>
+        <div>
+          <span>Mão de obra</span>
+          <strong>${formatCurrency(totals.laborCost)}</strong>
         </div>
         <div>
           <span>Total</span>
           <strong>${formatCurrency(totals.totalCost)}</strong>
         </div>
+      </section>
+
+      <section class="invoice-labor-panel">
+        <span>Mão de obra</span>
+        <strong>${formatNumber(activeBudget.sessionHours)} h x ${formatCurrency(activeBudget.hourlyRate)} = ${formatCurrency(totals.laborCost)}</strong>
       </section>
 
       <table class="invoice-table">
@@ -911,6 +1166,9 @@ function renderInvoiceDocument() {
       </table>
 
       <section class="invoice-total-panel">
+        <span>Resumo financeiro</span>
+        <strong>Insumos: ${formatCurrency(totals.materialCost)}</strong>
+        <strong>Mão de obra: ${formatCurrency(totals.laborCost)}</strong>
         <strong>Total do orçamento: ${formatCurrency(totals.totalCost)}</strong>
       </section>
     </article>
@@ -946,17 +1204,29 @@ function calculateLineSubtotal(item, quantityUsed) {
 /**
  * Calcula os totais agregados do orcamento.
  * @param {object} budget Orcamento ativo.
- * @returns {{totalCost: number}} Totais calculados.
+ * @returns {{materialCost: number, laborCost: number, totalCost: number}} Totais calculados.
  */
 function calculateBudgetTotals(budget) {
-  const totalCost = budget.items.reduce((total, cartItem) => {
+  const materialCost = budget.items.reduce((total, cartItem) => {
     const inventoryItem = findInventoryItemById(cartItem.inventoryItemId);
     return inventoryItem ? total + calculateLineSubtotal(inventoryItem, cartItem.quantityUsed) : total;
   }, 0);
+  const laborCost = calculateLaborCost(budget);
 
   return {
-    totalCost
+    materialCost,
+    laborCost,
+    totalCost: materialCost + laborCost
   };
+}
+
+/**
+ * Calcula o valor de mao de obra do orcamento.
+ * @param {object} budget Orcamento com horas e valor por hora.
+ * @returns {number} Custo total de mao de obra.
+ */
+function calculateLaborCost(budget) {
+  return normalizeNumber(budget.sessionHours) * normalizeNumber(budget.hourlyRate);
 }
 
 /**
@@ -1028,17 +1298,42 @@ function findInventoryItemById(itemId) {
 }
 
 /**
- * Filtra itens de estoque por texto de busca.
+ * Filtra itens de estoque por texto de busca e categoria.
  * @param {string} searchTerm Termo digitado pelo usuario.
+ * @param {string=} categoryName Categoria selecionada.
  * @returns {Array<object>} Itens filtrados.
  */
-function getFilteredInventoryItems(searchTerm) {
+function getFilteredInventoryItems(searchTerm, categoryName = CATEGORY_ALL_VALUE) {
   const normalizedSearchTerm = normalizeSearchText(searchTerm);
 
   return applicationState.inventoryItems.filter((item) => {
     const searchableText = normalizeSearchText(`${item.name} ${item.category} ${item.unitMeasure}`);
-    return !normalizedSearchTerm || searchableText.includes(normalizedSearchTerm);
+    const matchesSearch = !normalizedSearchTerm || searchableText.includes(normalizedSearchTerm);
+    const matchesCategory = categoryName === CATEGORY_ALL_VALUE || item.category === categoryName;
+    return matchesSearch && matchesCategory;
   });
+}
+
+/**
+ * Retorna categorias base e categorias cadastradas no estoque.
+ * @returns {Array<string>} Categorias sem repeticao.
+ */
+function getInventoryCategories() {
+  const inventoryCategories = applicationState.inventoryItems.map((item) => item.category);
+  return [...new Set([...BASE_INVENTORY_CATEGORIES, ...inventoryCategories])];
+}
+
+/**
+ * Conta quantos itens existem em uma categoria.
+ * @param {string} categoryName Categoria avaliada.
+ * @returns {number} Quantidade de itens da categoria.
+ */
+function countInventoryItemsByCategory(categoryName) {
+  if (categoryName === CATEGORY_ALL_VALUE) {
+    return applicationState.inventoryItems.length;
+  }
+
+  return applicationState.inventoryItems.filter((item) => item.category === categoryName).length;
 }
 
 /**

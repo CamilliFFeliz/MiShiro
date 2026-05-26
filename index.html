@@ -60,6 +60,8 @@
           <input id="inventorySearchInput" type="search" placeholder="Ex: tinta, luva, cartucho" />
         </label>
 
+        <section class="filter-chip-row" id="categoryFilterList" aria-label="Filtrar estoque por categoria"></section>
+
         <section class="inventory-grid" id="inventoryGrid" aria-label="Insumos cadastrados"></section>
       </section>
 
@@ -77,6 +79,27 @@
             <span>Nome do orçamento</span>
             <input id="budgetNameInput" type="text" placeholder="Fechamento braço - Cliente" />
           </label>
+
+          <label class="form-field">
+            <span>Valor mão de obra por hora</span>
+            <input id="hourlyRateInput" type="text" inputmode="decimal" placeholder="150,00" />
+          </label>
+
+          <label class="form-field">
+            <span>Tempo estimado da sessão</span>
+            <input id="sessionHoursInput" type="text" inputmode="decimal" placeholder="3" />
+          </label>
+
+          <div class="budget-breakdown-grid" aria-live="polite">
+            <div class="budget-breakdown-box">
+              <span>Insumos</span>
+              <strong id="materialCostValue">R$ 0,00</strong>
+            </div>
+            <div class="budget-breakdown-box">
+              <span>Mão de obra</span>
+              <strong id="laborCostValue">R$ 0,00</strong>
+            </div>
+          </div>
 
           <div class="budget-total-box">
             <span>Total do orçamento</span>
@@ -119,7 +142,7 @@
     <form class="modal-card" id="itemForm" autocomplete="off">
       <div class="modal-header">
         <div>
-          <span>Novo insumo</span>
+          <span id="itemModalKicker">Novo insumo</span>
           <h2 id="itemModalTitle">Adicionar item</h2>
         </div>
         <button class="icon-button" id="closeItemModalButton" type="button" aria-label="Fechar">×</button>
@@ -177,7 +200,7 @@
         <strong id="unitCostPreview">R$ 0,00</strong>
       </section>
 
-      <button class="primary-button" type="submit">Salvar item</button>
+      <button class="primary-button" id="itemSubmitButton" type="submit">Salvar item</button>
     </form>
   </dialog>
 
