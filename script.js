@@ -345,6 +345,18 @@ function bindEventListeners() {
   });
 
   elementReferences.stockPickerList.addEventListener("click", (event) => {
+    const quantityButton = event.target.closest("[data-picker-quantity-action]");
+
+    if (quantityButton) {
+      const pickerCard = quantityButton.closest("[data-inventory-item-id]");
+      adjustPickerQuantity(
+        pickerCard.dataset.inventoryItemId,
+        quantityButton.dataset.pickerQuantityAction,
+        pickerCard.querySelector("[data-picker-quantity]")
+      );
+      return;
+    }
+
     const addButton = event.target.closest("[data-add-inventory-item]");
 
     if (!addButton) {
@@ -356,7 +368,7 @@ function bindEventListeners() {
     addItemToBudget(pickerCard.dataset.inventoryItemId, quantityInput.value);
   });
 
-  elementReferences.cartList.addEventListener("input", (event) => {
+  elementReferences.cartList.addEventListener("change", (event) => {
     if (!event.target.matches("[data-cart-quantity]")) {
       return;
     }
@@ -366,6 +378,14 @@ function bindEventListeners() {
   });
 
   elementReferences.cartList.addEventListener("click", (event) => {
+    const quantityButton = event.target.closest("[data-cart-quantity-action]");
+
+    if (quantityButton) {
+      const cartCard = quantityButton.closest("[data-cart-item-id]");
+      adjustBudgetItemQuantity(cartCard.dataset.cartItemId, quantityButton.dataset.cartQuantityAction);
+      return;
+    }
+
     const removeButton = event.target.closest("[data-remove-cart-item]");
 
     if (!removeButton) {
@@ -608,7 +628,7 @@ function renderActiveScreen() {
  */
 function renderInventory() {
   const filteredItems = getFilteredInventoryItems(inventorySearchTerm, activeInventoryCategory);
-  elementReferences.inventoryCounter.textContent = formatCounter(filteredItems.length, applicationState.inventoryItems.length);
+  elementReferences.inventoryCounter.textContent = formatListSummary(filteredItems.length, applicationState.inventoryItems.length, "insumo");
 
   if (filteredItems.length === 0) {
     elementReferences.inventoryGrid.innerHTML = createEmptyStateHtml("Nenhum insumo encontrado.");
@@ -636,7 +656,7 @@ function renderCategoryFilters() {
     return `
       <button class="filter-chip ${isActive ? "is-active" : ""}" type="button" data-category-filter="${escapeHtml(categoryName)}">
         <span>${escapeHtml(categoryName)}</span>
-        <strong>${formatCounter(categoryTotal, applicationState.inventoryItems.length)}</strong>
+        <strong>${formatCategoryCount(categoryTotal)}</strong>
       </button>
     `;
   }).join("");
@@ -700,6 +720,7 @@ function updatePricingLabels(categoryName) {
  */
 function createInventoryCardHtml(item) {
   const unitCost = calculateUnitCost(item);
+  const stockValue = calculateInventoryStockValue(item);
   const stockPercentage = calculateStockPercentage(item);
   const stockStatus = getStockStatus(stockPercentage);
   const productInitial = getProductInitial(item.name);
@@ -707,7 +728,7 @@ function createInventoryCardHtml(item) {
   const brandLabel = getInventoryItemBrandLabel(item);
   const unitCostTitle = getUnitCostTitle(item);
   const packageQuantityLabel = getPackageQuantityLabel(item);
-  const secondaryMetricHtml = createInventorySecondaryMetricHtml(item);
+  const unitCostMetricHtml = createInventoryUnitCostMetricHtml(item, unitCost);
   const stockMeterHtml = createStockMeterHtml(item, stockPercentage, stockStatus);
 
   return `
@@ -738,10 +759,10 @@ function createInventoryCardHtml(item) {
 
       <div class="product-details-grid">
         <div class="unit-price is-featured">
-          <span>${escapeHtml(unitCostTitle)}</span>
-          <strong>${formatCurrency(unitCost)}</strong>
+          <span>Valor total em estoque</span>
+          <strong>${formatCurrency(stockValue)}</strong>
         </div>
-        ${secondaryMetricHtml}
+        ${unitCostMetricHtml}
       </div>
 
       ${stockMeterHtml}
@@ -749,30 +770,18 @@ function createInventoryCardHtml(item) {
   `;
 }
 /**
- * Cria a metrica secundaria do card de estoque.
- * Cartucho nao usa contador progressivo de estoque, pois o valor unitario e fixo.
+ * Cria a metrica secundaria do card de estoque com o custo de uso.
+ * A metrica principal do card sempre fica reservada ao valor total em estoque.
  * @param {object} item Item de estoque.
+ * @param {number} unitCost Custo unitario ou fracionado calculado.
  * @returns {string} HTML da metrica secundaria.
  */
-function createInventorySecondaryMetricHtml(item) {
-  if (isCartridgeCategory(item.category)) {
-    const stockValue = calculateInventoryStockValue(item);
-
-    return `
-        <div class="unit-price">
-          <span>Valor total em estoque</span>
-          <strong>${formatCurrency(stockValue)}</strong>
-          <small>${escapeHtml(getStockAvailabilityLabel(item))}</small>
-        </div>`;
-  }
-
-  const stockCounterTotal = Math.max(normalizeNumber(item.currentStock), normalizeNumber(item.packageQuantity));
-
+function createInventoryUnitCostMetricHtml(item, unitCost) {
   return `
         <div class="unit-price">
-          <span>Estoque</span>
-          <strong>${formatCounter(item.currentStock, stockCounterTotal)}</strong>
-          <small>${escapeHtml(getStockAvailabilityLabel(item))}</small>
+          <span>${escapeHtml(getUnitCostTitle(item))}</span>
+          <strong>${formatCurrency(unitCost)}</strong>
+          <small>${escapeHtml(getUnitCostHelpText(item))}</small>
         </div>`;
 }
 
@@ -798,7 +807,7 @@ function createStockMeterHtml(item, stockPercentage, stockStatus) {
       <div class="stock-meter">
         <div class="stock-meter-text">
           <span>${escapeHtml(stockStatus.label)}</span>
-          <strong>${formatNumber(stockPercentage)}%</strong>
+          <strong>${escapeHtml(getStockAvailabilityLabel(item))}</strong>
         </div>
         <span class="stock-meter-track">
           <span class="stock-meter-fill" style="width: ${stockPercentage}%"></span>
@@ -853,6 +862,7 @@ function renderStockPicker() {
     const unitCostLabel = getUnitCostInlineLabel(item);
     const stockAvailabilityLabel = getStockAvailabilityLabel(item);
     const usageLabel = getUsageLabel(item);
+    const stockValueLabel = formatCurrency(calculateInventoryStockValue(item));
 
     return `
     <article class="picker-card ${stockStatus.className}" data-inventory-item-id="${escapeHtml(item.id)}">
@@ -866,13 +876,18 @@ function renderStockPicker() {
       </div>
 
       <div class="picker-meta-row">
-        <span class="stock-availability-pill">${escapeHtml(stockAvailabilityLabel)}</span>
+        <span class="stock-availability-pill">Estoque físico: ${escapeHtml(stockAvailabilityLabel)}</span>
+        <span class="stock-value-pill">Valor em estoque: ${stockValueLabel}</span>
       </div>
 
       <div class="picker-action-row">
-        <label class="compact-field">
+        <label class="compact-field quantity-stepper-field">
           <span>${escapeHtml(usageLabel)}</span>
-          <input data-picker-quantity type="text" inputmode="decimal" placeholder="0" />
+          <div class="quantity-stepper" data-quantity-stepper>
+            <button type="button" aria-label="Diminuir quantidade" data-picker-quantity-action="decrease">−</button>
+            <input data-picker-quantity type="text" inputmode="decimal" placeholder="0" value="1" />
+            <button type="button" aria-label="Aumentar quantidade" data-picker-quantity-action="increase">+</button>
+          </div>
         </label>
         <button class="primary-button" type="button" data-add-inventory-item>Adicionar</button>
       </div>
@@ -893,7 +908,7 @@ function renderCart() {
       inventoryItem: findInventoryItemById(cartItem.inventoryItemId)
     }))
     .filter((entry) => entry.inventoryItem);
-  elementReferences.budgetItemCounter.textContent = formatCounter(visibleItems.length, activeBudget.items.length);
+  elementReferences.budgetItemCounter.textContent = formatListSummary(visibleItems.length, activeBudget.items.length, "item");
 
   if (visibleItems.length === 0) {
     elementReferences.cartList.innerHTML = createEmptyStateHtml("Nenhum item no orçamento.");
@@ -923,9 +938,13 @@ function renderCart() {
           <span>${formatNumber(cartItem.quantityUsed)} ${escapeHtml(getUsageUnitLabel(inventoryItem))}</span>
         </div>
 
-        <label class="cart-quantity-field">
+        <label class="cart-quantity-field quantity-stepper-field">
           <span>${escapeHtml(usageLabel)}</span>
-          <input class="cart-quantity-input" data-cart-quantity type="text" inputmode="decimal" value="${escapeHtml(formatEditableNumber(cartItem.quantityUsed))}" />
+          <div class="quantity-stepper cart-quantity-stepper" data-quantity-stepper>
+            <button type="button" aria-label="Diminuir quantidade" data-cart-quantity-action="decrease">−</button>
+            <input class="cart-quantity-input" data-cart-quantity type="text" inputmode="decimal" value="${escapeHtml(formatEditableNumber(cartItem.quantityUsed))}" />
+            <button type="button" aria-label="Aumentar quantidade" data-cart-quantity-action="increase">+</button>
+          </div>
         </label>
 
         <button class="danger-button" type="button" data-remove-cart-item>Remover</button>
@@ -1316,9 +1335,75 @@ function updateBudgetItemQuantity(cartItemId, rawQuantity) {
     return;
   }
 
-  cartItem.quantityUsed = normalizeNumber(rawQuantity);
+  const quantityUsed = normalizeNumber(rawQuantity);
+
+  if (quantityUsed <= 0) {
+    activeBudget.items = activeBudget.items.filter((item) => item.id !== cartItemId);
+  } else {
+    cartItem.quantityUsed = quantityUsed;
+  }
+
   saveApplicationState();
   renderBudget();
+}
+
+/**
+ * Ajusta a quantidade ainda antes de adicionar o item ao orçamento.
+ * @param {string} inventoryItemId Identificador do item de estoque.
+ * @param {string} action Acao solicitada: increase ou decrease.
+ * @param {HTMLInputElement} quantityInput Campo que recebera o novo valor.
+ * @returns {void}
+ */
+function adjustPickerQuantity(inventoryItemId, action, quantityInput) {
+  const inventoryItem = findInventoryItemById(inventoryItemId);
+
+  if (!inventoryItem || !quantityInput) {
+    return;
+  }
+
+  const nextQuantity = calculateAdjustedQuantity(inventoryItem, quantityInput.value, action, 0);
+  quantityInput.value = nextQuantity > 0 ? formatEditableNumber(nextQuantity) : "";
+}
+
+/**
+ * Ajusta a quantidade usada em um item ja adicionado ao orçamento.
+ * @param {string} cartItemId Identificador do item no orçamento.
+ * @param {string} action Acao solicitada: increase ou decrease.
+ * @returns {void}
+ */
+function adjustBudgetItemQuantity(cartItemId, action) {
+  const activeBudget = getActiveBudget();
+  const cartItem = activeBudget.items.find((item) => item.id === cartItemId);
+
+  if (!cartItem) {
+    return;
+  }
+
+  const inventoryItem = findInventoryItemById(cartItem.inventoryItemId);
+
+  if (!inventoryItem) {
+    return;
+  }
+
+  const nextQuantity = calculateAdjustedQuantity(inventoryItem, cartItem.quantityUsed, action, 0);
+  updateBudgetItemQuantity(cartItemId, nextQuantity);
+}
+
+/**
+ * Calcula a nova quantidade respeitando a categoria do item.
+ * @param {object} inventoryItem Item usado como referência para o passo.
+ * @param {string|number} currentValue Valor atual.
+ * @param {string} action Acao solicitada.
+ * @param {number} minimumValue Menor valor permitido.
+ * @returns {number} Nova quantidade.
+ */
+function calculateAdjustedQuantity(inventoryItem, currentValue, action, minimumValue) {
+  const currentQuantity = normalizeNumber(currentValue);
+  const stepValue = getQuantityStep(inventoryItem);
+  const operationSignal = action === "decrease" ? -1 : 1;
+  const nextQuantity = currentQuantity + (stepValue * operationSignal);
+
+  return Math.max(minimumValue, roundQuantity(nextQuantity));
 }
 
 /**
@@ -1719,6 +1804,19 @@ function getUnitCostInlineLabel(item) {
 }
 
 /**
+ * Retorna o texto de apoio para explicar o custo unitario/fracionado.
+ * @param {object} item Item de estoque.
+ * @returns {string} Texto de apoio.
+ */
+function getUnitCostHelpText(item) {
+  if (isCartridgeCategory(item.category)) {
+    return "valor de 1 cartucho";
+  }
+
+  return `custo por ${item.unitMeasure}`;
+}
+
+/**
  * Retorna a disponibilidade fisica do item sem usar contador progressivo para cartuchos.
  * @param {object} item Item de estoque.
  * @returns {string} Texto de disponibilidade.
@@ -1998,13 +2096,59 @@ function formatNumber(value) {
 }
 
 /**
- * Formata contadores no padrao obrigatorio Atual de Total.
+ * Define o passo dos controles de mais e menos conforme a categoria.
+ * @param {object} inventoryItem Item de estoque.
+ * @returns {number} Passo aplicado no seletor de quantidade.
+ */
+function getQuantityStep(inventoryItem) {
+  return isCartridgeCategory(inventoryItem.category) ? 1 : 1;
+}
+
+/**
+ * Arredonda quantidades para evitar sobras de ponto flutuante no seletor.
+ * @param {number} value Quantidade calculada.
+ * @returns {number} Quantidade arredondada.
+ */
+function roundQuantity(value) {
+  return Math.round(normalizeNumber(value) * 100) / 100;
+}
+
+/**
+ * Formata o resumo visual de listas sem usar o padrão X de X.
+ * @param {number} currentValue Quantidade visível.
+ * @param {number} totalValue Quantidade total.
+ * @param {string} singularLabel Nome no singular.
+ * @returns {string} Texto de resumo.
+ */
+function formatListSummary(currentValue, totalValue, singularLabel) {
+  const normalizedCurrent = normalizeNumber(currentValue);
+  const normalizedTotal = normalizeNumber(totalValue);
+  const pluralLabel = normalizedTotal === 1 ? singularLabel : `${singularLabel}s`;
+
+  if (normalizedCurrent === normalizedTotal) {
+    return `${formatNumber(normalizedTotal)} ${pluralLabel}`;
+  }
+
+  return `${formatNumber(normalizedCurrent)} exibidos · ${formatNumber(normalizedTotal)} ${pluralLabel}`;
+}
+
+/**
+ * Formata a quantidade simples usada nos chips de categoria.
+ * @param {number} value Total da categoria.
+ * @returns {string} Total formatado.
+ */
+function formatCategoryCount(value) {
+  return formatNumber(value);
+}
+
+/**
+ * Formata contadores de progresso em formato compacto.
  * @param {string|number} currentValue Valor atual.
  * @param {string|number} totalValue Valor total.
- * @returns {string} Contador no formato Atual de Total.
+ * @returns {string} Contador compacto.
  */
 function formatCounter(currentValue, totalValue) {
-  return `${formatNumber(normalizeNumber(currentValue))} de ${formatNumber(normalizeNumber(totalValue))}`;
+  return `${formatNumber(normalizeNumber(currentValue))}/${formatNumber(normalizeNumber(totalValue))}`;
 }
 
 /**

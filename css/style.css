@@ -1778,3 +1778,192 @@ body::after {
 .budget-workspace-grid .cart-list {
   grid-template-columns: 1fr;
 }
+
+/* Ajuste final: cards financeiros e controles de quantidade no orçamento */
+.screen-counter {
+  min-width: max-content;
+  border-color: rgba(225, 190, 231, 0.34);
+  background:
+    linear-gradient(135deg, rgba(106, 27, 154, 0.38), rgba(18, 18, 18, 0.4)),
+    rgba(18, 18, 18, 0.58);
+}
+
+.product-details-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.18fr) minmax(0, 0.82fr);
+}
+
+.unit-price.is-featured {
+  min-height: 118px;
+  align-content: center;
+  border-color: rgba(255, 255, 255, 0.42);
+  background:
+    radial-gradient(circle at 100% 0%, rgba(255, 255, 255, 0.2), transparent 34%),
+    linear-gradient(145deg, rgba(106, 27, 154, 0.82), rgba(45, 11, 64, 0.82)),
+    var(--color-purple-dark);
+}
+
+.unit-price.is-featured strong {
+  font-size: clamp(1.38rem, 4.8vw, 2.35rem);
+  letter-spacing: -0.055em;
+}
+
+.stock-value-pill,
+.stock-availability-pill {
+  display: inline-flex;
+  width: fit-content;
+  min-height: 32px;
+  align-items: center;
+  border: 1px solid rgba(225, 190, 231, 0.28);
+  border-radius: var(--radius-pill);
+  background: rgba(225, 190, 231, 0.1);
+  color: var(--color-purple-light) !important;
+  padding: 0 10px;
+  font-size: 0.72rem !important;
+  font-weight: 950 !important;
+}
+
+.stock-value-pill {
+  border-color: rgba(255, 255, 255, 0.3);
+  background: rgba(106, 27, 154, 0.28);
+  color: var(--color-white) !important;
+}
+
+.budget-dashboard-grid {
+  grid-template-columns: minmax(0, 1.18fr) minmax(280px, 0.82fr);
+  align-items: stretch;
+}
+
+.budget-workspace-grid {
+  align-items: start;
+}
+
+.budget-summary-card,
+.cart-section,
+.budget-guide-card {
+  border-color: rgba(225, 190, 231, 0.28);
+  background:
+    radial-gradient(circle at top right, rgba(225, 190, 231, 0.12), transparent 38%),
+    linear-gradient(145deg, rgba(45, 11, 64, 0.76), rgba(18, 18, 18, 0.68));
+}
+
+.budget-breakdown-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.picker-action-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(122px, auto);
+  align-items: end;
+  gap: 10px;
+}
+
+.quantity-stepper-field {
+  display: grid;
+  gap: 8px;
+}
+
+.quantity-stepper {
+  display: grid;
+  grid-template-columns: 44px minmax(64px, 1fr) 44px;
+  min-height: 48px;
+  overflow: hidden;
+  border: 1px solid rgba(225, 190, 231, 0.28);
+  border-radius: 18px;
+  background: rgba(18, 18, 18, 0.62);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.quantity-stepper button {
+  border: 0;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0)),
+    rgba(106, 27, 154, 0.54);
+  color: var(--color-white);
+  font-size: 1.28rem;
+  font-weight: 950;
+  cursor: pointer;
+  transition: transform 180ms ease, background 180ms ease;
+}
+
+.quantity-stepper button:hover,
+.quantity-stepper button:focus-visible {
+  background: var(--color-purple);
+  transform: translateY(-1px);
+}
+
+.quantity-stepper input {
+  width: 100%;
+  border: 0;
+  border-left: 1px solid rgba(225, 190, 231, 0.18);
+  border-right: 1px solid rgba(225, 190, 231, 0.18);
+  border-radius: 0;
+  background: rgba(18, 18, 18, 0.42);
+  color: var(--color-white);
+  font-size: 1.05rem;
+  font-weight: 950;
+  text-align: center;
+}
+
+.cart-quantity-field {
+  display: grid;
+  gap: 8px;
+}
+
+.cart-quantity-stepper {
+  max-width: 280px;
+}
+
+.cart-card {
+  gap: 16px;
+}
+
+.cart-card-header {
+  padding-bottom: 4px;
+  border-bottom: 1px solid rgba(225, 190, 231, 0.13);
+}
+
+.cart-calculation {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  background:
+    linear-gradient(135deg, rgba(106, 27, 154, 0.22), rgba(18, 18, 18, 0.26)),
+    rgba(18, 18, 18, 0.48);
+}
+
+.cart-calculation span:last-child {
+  text-align: right;
+}
+
+@media (max-width: 900px) {
+  .budget-dashboard-grid,
+  .product-details-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 520px) {
+  .picker-action-row {
+    grid-template-columns: 1fr;
+  }
+
+  .cart-calculation {
+    grid-template-columns: 1fr;
+  }
+
+  .cart-calculation span:last-child {
+    text-align: left;
+  }
+}
+
+.budget-helper-copy {
+  margin: 0;
+  padding: 12px;
+  border: 1px solid rgba(225, 190, 231, 0.16);
+  border-radius: 18px;
+  background: rgba(18, 18, 18, 0.36);
+  color: var(--text-soft);
+  font-size: 0.9rem;
+  font-weight: 760;
+  line-height: 1.45;
+}

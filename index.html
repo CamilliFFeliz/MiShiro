@@ -120,7 +120,7 @@
             <span>Vitrine de insumos</span>
             <h2 id="inventoryTitle">Estoque</h2>
           </div>
-          <strong class="screen-counter" id="inventoryCounter">0 de 0</strong>
+          <strong class="screen-counter" id="inventoryCounter">0 insumos</strong>
         </div>
 
         <label class="search-field">
@@ -139,7 +139,7 @@
             <span>Projeto financeiro</span>
             <h2 id="budgetsTitle">Orçamentos</h2>
           </div>
-          <strong class="screen-counter" id="budgetItemCounter">0 de 0</strong>
+          <strong class="screen-counter" id="budgetItemCounter">0 itens</strong>
         </div>
 
         <div class="budget-dashboard-grid">
@@ -184,7 +184,7 @@
           <aside class="budget-guide-card" aria-label="Regras do cálculo">
             <span>Como o app calcula</span>
             <h3>Preço final = insumos usados + mão de obra</h3>
-            <p>Cartuchos entram pelo valor unitário real. Materiais fracionáveis entram pelo custo por unidade de medida. A mão de obra é calculada por horas multiplicadas pelo valor por hora.</p>
+            <p>Cartuchos entram pelo valor unitário real. Materiais fracionáveis entram pelo custo por unidade de medida. Use os botões de mais e menos para definir a quantidade usada no projeto; a mão de obra é calculada por horas multiplicadas pelo valor por hora.</p>
             <div class="budget-formula-box">
               <strong>Materiais</strong>
               <span>+</span>
@@ -192,6 +192,7 @@
               <span>=</span>
               <strong>Total</strong>
             </div>
+            <p class="budget-helper-copy">No carrinho, ajuste cada insumo pelos controles − e + antes de gerar o PDF.</p>
           </aside>
         </div>
 
@@ -310,7 +311,7 @@
       </label>
 
       <p class="helper-text">Colunas aceitas: nome, categoria, quantidade, unidade, preço, estoque, marca, descrição, tipo, numeração, coloração.</p>
-      <div class="import-feedback" id="importFeedback">0 de 0</div>
+      <div class="import-feedback" id="importFeedback">0/0</div>
       <button class="primary-button" type="submit">Importar</button>
     </form>
   </dialog>
