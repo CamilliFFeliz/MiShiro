@@ -21,6 +21,7 @@ const MEASURE_METER = "m";
 const INTEGER_STEP = 1;
 const DECIMAL_STEP = 0.5;
 const MAX_IMAGE_SIZE_BYTES = 1800000;
+const LOW_STOCK_THRESHOLD = 2;
 const BACKUP_APP_NAME = "CalculadoraTattoo";
 const BACKUP_SCHEMA = "calculadora-tattoo-inventory-backup";
 const BACKUP_VERSION = 1;
@@ -40,6 +41,14 @@ const NUMBER_FORMATTER = new Intl.NumberFormat("pt-BR", {
   minimumFractionDigits: 0,
   maximumFractionDigits: 2
 });
+const CATEGORY_ICON_MAP = {
+  [CATEGORY_ALL]: "layout-grid",
+  [CATEGORY_NEEDLES]: "package",
+  [CATEGORY_INKS]: "droplets",
+  [CATEGORY_PASTES]: "paintbrush",
+  [CATEGORY_DISPOSABLES]: "shield-check",
+  [CATEGORY_LINEAR]: "ruler"
+};
 const CATEGORY_DEFINITIONS = {
   [CATEGORY_NEEDLES]: {
     label: CATEGORY_NEEDLES,
@@ -322,6 +331,7 @@ const DEFAULT_BUDGET = {
   clientName: "",
   hourlyRate: 0,
   sessionDuration: 0,
+  profitMarginPercent: 0,
   referenceImage: "",
   referenceImageName: "",
   items: []
@@ -375,12 +385,15 @@ function bindDomReferences() {
   dom.clientNameInput = document.querySelector("#clientNameInput");
   dom.hourlyRateInput = document.querySelector("#hourlyRateInput");
   dom.sessionDurationInput = document.querySelector("#sessionDurationInput");
+  dom.profitMarginInput = document.querySelector("#profitMarginInput");
   dom.referenceImageInput = document.querySelector("#referenceImageInput");
   dom.removeReferenceImageButton = document.querySelector("#removeReferenceImageButton");
   dom.referencePreview = document.querySelector("#referencePreview");
   dom.materialTotalValue = document.querySelector("#materialTotalValue");
   dom.laborTotalValue = document.querySelector("#laborTotalValue");
   dom.budgetTotalValue = document.querySelector("#budgetTotalValue");
+  dom.suggestedPriceValue = document.querySelector("#suggestedPriceValue");
+  dom.duplicateBudgetButton = document.querySelector("#duplicateBudgetButton");
   dom.newBudgetButton = document.querySelector("#newBudgetButton");
   dom.exportPdfButton = document.querySelector("#exportPdfButton");
   dom.clearBudgetSearchButton = document.querySelector("#clearBudgetSearchButton");
@@ -434,8 +447,10 @@ function bindEvents() {
   dom.clientNameInput.addEventListener("input", updateBudgetIdentity);
   dom.hourlyRateInput.addEventListener("input", updateBudgetLabor);
   dom.sessionDurationInput.addEventListener("input", updateBudgetLabor);
+  dom.profitMarginInput.addEventListener("input", updateBudgetProfitMargin);
   dom.referenceImageInput.addEventListener("change", handleReferenceImageChange);
   dom.removeReferenceImageButton.addEventListener("click", removeReferenceImage);
+  dom.duplicateBudgetButton.addEventListener("click", duplicateActiveBudget);
   dom.newBudgetButton.addEventListener("click", createNewBudget);
   dom.exportPdfButton.addEventListener("click", exportPdf);
   dom.budgetSearchInput.addEventListener("input", (event) => {
@@ -652,6 +667,7 @@ function normalizeBudget(budget) {
     clientName: sanitizeText(budget.clientName || budget.customerName || budget.nomeCliente),
     hourlyRate: normalizeNumber(budget.hourlyRate || budget.laborHourlyRate || budget.valorHora),
     sessionDuration: normalizeNumber(budget.sessionDuration || budget.sessionHours || budget.laborHours || budget.duracao),
+    profitMarginPercent: normalizeNumber(budget.profitMarginPercent || budget.marginPercent || budget.margemLucro),
     referenceImage: isImageDataUrl(budget.referenceImage || budget.tattooImage) ? (budget.referenceImage || budget.tattooImage) : "",
     referenceImageName: sanitizeText(budget.referenceImageName || budget.tattooImageName),
     items: Array.isArray(budget.items) ? budget.items.map(normalizeBudgetItem) : []
@@ -916,6 +932,7 @@ function renderApp() {
   renderInventory();
   renderBudget();
   renderDashboard();
+  renderLucideIcons();
 }
 
 function renderActiveScreen() {
@@ -937,11 +954,13 @@ function renderCategoryChoices() {
     const isActive = selectedFormCategory === categoryName;
     return `
       <button class="category-choice ${isActive ? "is-active" : ""}" type="button" data-form-category="${escapeHtml(categoryName)}">
+        <span class="category-choice-icon">${createIconHtml(getCategoryIconName(categoryName))}</span>
         <strong>${escapeHtml(categoryDefinition.label)}</strong>
         <span>${escapeHtml(categoryDefinition.helper)}</span>
       </button>
     `;
   }).join("");
+  renderLucideIcons();
 }
 
 function renderDynamicForm(item = null) {
@@ -1058,11 +1077,13 @@ function renderFilterGroup(container, activeCategory, dataAttributeName) {
     const isActive = categoryName === activeCategory;
     return `
       <button class="filter-chip ${isActive ? "is-active" : ""}" type="button" data-${dataAttributeName}="${escapeHtml(categoryName)}">
+        ${createIconHtml(getCategoryIconName(categoryName), "chip-icon")}
         <span>${escapeHtml(categoryName)}</span>
         <strong>${formatCompactCount(categoryCount)}</strong>
       </button>
     `;
   }).join("");
+  renderLucideIcons();
 }
 
 function renderInventory() {
@@ -1071,10 +1092,12 @@ function renderInventory() {
 
   if (filteredItems.length === 0) {
     dom.inventoryGrid.innerHTML = createEmptyStateHtml("Nenhum item encontrado no estoque.");
+    renderLucideIcons();
     return;
   }
 
   dom.inventoryGrid.innerHTML = filteredItems.map(createInventoryCardHtml).join("");
+  renderLucideIcons();
 }
 
 function renderDashboard() {
@@ -1120,16 +1143,17 @@ function createInventoryCardHtml(item) {
   const unitCost = calculateUnitCost(item);
   const totalValue = calculateTotalInventoryValue(item);
   const specification = getItemSpecification(item);
+  const lowStockTag = createLowStockTagHtml(item);
 
   return `
     <article class="inventory-card" data-inventory-item-id="${escapeHtml(item.id)}">
       <div class="card-topline">
-        <span class="category-pill">${escapeHtml(item.category)}</span>
+        <span class="category-pill">${createIconHtml(getCategoryIconName(item.category))}${escapeHtml(item.category)}</span>
         <details class="card-menu">
-          <summary aria-label="Abrir opções">⋯</summary>
+          <summary aria-label="Abrir opções">${createIconHtml("more-horizontal")}</summary>
           <div>
-            <button type="button" data-inventory-action="edit">Editar</button>
-            <button type="button" data-inventory-action="delete">Excluir</button>
+            <button type="button" data-inventory-action="edit">${createIconHtml("pencil")}Editar</button>
+            <button type="button" data-inventory-action="delete">${createIconHtml("trash-2")}Excluir</button>
           </div>
         </details>
       </div>
@@ -1147,9 +1171,37 @@ function createInventoryCardHtml(item) {
           <strong>${item.category === CATEGORY_NEEDLES ? escapeHtml(specification) : formatCurrency(unitCost)}</strong>
         </div>
       </div>
+      ${lowStockTag}
       <p class="card-note">${escapeHtml(getCalculationDescription(item))}</p>
     </article>
   `;
+}
+
+/**
+ * Creates low-stock visual indicator for inventory cards.
+ * @param {object} item - Normalized inventory item.
+ * @returns {string} HTML tag when stock is low, otherwise empty string.
+ */
+function createLowStockTagHtml(item) {
+  if (!isLowStockItem(item)) {
+    return "";
+  }
+
+  return `
+    <span class="low-stock-tag">
+      ${createIconHtml("alert-triangle")}
+      Estoque Baixo
+    </span>
+  `;
+}
+
+/**
+ * Checks whether an item has reached the low-stock threshold.
+ * @param {object} item - Normalized inventory item.
+ * @returns {boolean} True when stock quantity is at or below threshold.
+ */
+function isLowStockItem(item) {
+  return normalizeNumber(item.stockQuantity) <= LOW_STOCK_THRESHOLD;
 }
 
 
@@ -1160,13 +1212,16 @@ function renderBudget() {
   dom.clientNameInput.value = activeBudget.clientName;
   dom.hourlyRateInput.value = activeBudget.hourlyRate > 0 ? formatEditableNumber(activeBudget.hourlyRate) : "";
   dom.sessionDurationInput.value = activeBudget.sessionDuration > 0 ? formatEditableNumber(activeBudget.sessionDuration) : "";
+  dom.profitMarginInput.value = activeBudget.profitMarginPercent > 0 ? formatEditableNumber(activeBudget.profitMarginPercent) : "";
   dom.materialTotalValue.textContent = formatCurrency(budgetTotals.materialCost);
   dom.laborTotalValue.textContent = formatCurrency(budgetTotals.laborCost);
   dom.budgetTotalValue.textContent = formatCurrency(budgetTotals.totalCost);
+  dom.suggestedPriceValue.textContent = formatCurrency(budgetTotals.suggestedPrice);
   dom.budgetCounter.textContent = formatItemsCounter(activeBudget.items.length, activeBudget.items.length);
   renderReferencePreview();
   renderStockPicker();
   renderCart();
+  renderLucideIcons();
 }
 
 function renderReferencePreview() {
@@ -1190,6 +1245,7 @@ function renderStockPicker() {
 
   if (filteredItems.length === 0) {
     dom.stockPickerList.innerHTML = createEmptyStateHtml("Nenhum insumo encontrado para adicionar ao orçamento.");
+    renderLucideIcons();
     return;
   }
 
@@ -1207,16 +1263,17 @@ function renderStockPicker() {
           <label class="stepper-field">
             <span>Quantidade usada</span>
             <div class="quantity-stepper ${suffix ? "has-suffix" : ""}" data-suffix="${escapeHtml(suffix)}">
-              <button type="button" data-picker-step="decrease" aria-label="Diminuir quantidade">−</button>
+              <button type="button" data-picker-step="decrease" aria-label="Diminuir quantidade">${createIconHtml("minus")}</button>
               <input data-picker-quantity type="text" inputmode="${usageRules.inputMode}" value="${formatEditableNumber(usageRules.defaultValue)}" />
-              <button type="button" data-picker-step="increase" aria-label="Aumentar quantidade">+</button>
+              <button type="button" data-picker-step="increase" aria-label="Aumentar quantidade">${createIconHtml("plus")}</button>
             </div>
           </label>
-          <button class="primary-button" type="button" data-add-to-budget>Adicionar</button>
+          <button class="primary-button" type="button" data-add-to-budget>${createIconHtml("shopping-cart")}Adicionar</button>
         </div>
       </article>
     `;
   }).join("");
+  renderLucideIcons();
 }
 
 function renderCart() {
@@ -1227,6 +1284,7 @@ function renderCart() {
 
   if (cartEntries.length === 0) {
     dom.cartList.innerHTML = createEmptyStateHtml("Nenhum insumo adicionado ao orçamento.");
+    renderLucideIcons();
     return;
   }
 
@@ -1243,16 +1301,17 @@ function renderCart() {
         <label class="stepper-field compact-stepper-field">
           <span>Uso</span>
           <div class="quantity-stepper ${suffix ? "has-suffix" : ""}" data-suffix="${escapeHtml(suffix)}">
-            <button type="button" data-cart-step="decrease" aria-label="Diminuir quantidade">−</button>
+            <button type="button" data-cart-step="decrease" aria-label="Diminuir quantidade">${createIconHtml("minus")}</button>
             <input data-cart-quantity type="text" inputmode="${usageRules.inputMode}" value="${formatEditableNumber(cartItem.quantityUsed)}" />
-            <button type="button" data-cart-step="increase" aria-label="Aumentar quantidade">+</button>
+            <button type="button" data-cart-step="increase" aria-label="Aumentar quantidade">${createIconHtml("plus")}</button>
           </div>
         </label>
         <strong class="line-subtotal">${formatCurrency(subtotal)}</strong>
-        <button class="ghost-button" type="button" data-remove-cart-item>Remover</button>
+        <button class="ghost-button" type="button" data-remove-cart-item>${createIconHtml("trash-2")}Remover</button>
       </article>
     `;
   }).join("");
+  renderLucideIcons();
 }
 
 function setActiveScreen(screenName) {
@@ -1570,6 +1629,7 @@ function updateBudgetIdentity() {
   activeBudget.name = sanitizeText(dom.budgetNameInput.value) || "Novo orçamento";
   activeBudget.clientName = sanitizeText(dom.clientNameInput.value);
   saveAppState();
+  renderDashboard();
 }
 
 function updateBudgetLabor() {
@@ -1578,6 +1638,19 @@ function updateBudgetLabor() {
   activeBudget.sessionDuration = normalizeNumber(dom.sessionDurationInput.value);
   saveAppState();
   renderBudgetTotalsOnly();
+  renderDashboard();
+}
+
+/**
+ * Persists profit/fixed-cost margin and refreshes budget totals.
+ * @returns {void}
+ */
+function updateBudgetProfitMargin() {
+  const activeBudget = getActiveBudget();
+  activeBudget.profitMarginPercent = normalizeNumber(dom.profitMarginInput.value);
+  saveAppState();
+  renderBudgetTotalsOnly();
+  renderDashboard();
 }
 
 function renderBudgetTotalsOnly() {
@@ -1585,6 +1658,7 @@ function renderBudgetTotalsOnly() {
   dom.materialTotalValue.textContent = formatCurrency(totals.materialCost);
   dom.laborTotalValue.textContent = formatCurrency(totals.laborCost);
   dom.budgetTotalValue.textContent = formatCurrency(totals.totalCost);
+  dom.suggestedPriceValue.textContent = formatCurrency(totals.suggestedPrice);
 }
 
 function handleReferenceImageChange(event) {
@@ -1625,6 +1699,29 @@ function createNewBudget() {
   appState.activeBudgetId = newBudget.id;
   saveAppState();
   renderBudget();
+  renderDashboard();
+}
+
+/**
+ * Duplicates the active budget with independent cart item identifiers.
+ * @returns {void}
+ */
+function duplicateActiveBudget() {
+  const activeBudget = getActiveBudget();
+  const duplicatedBudget = {
+    ...activeBudget,
+    id: createId("budget"),
+    name: `${sanitizeText(activeBudget.name) || DEFAULT_BUDGET.name} - cópia`,
+    items: activeBudget.items.map((item) => ({
+      ...item,
+      id: createId("cart")
+    }))
+  };
+  appState.budgets.unshift(duplicatedBudget);
+  appState.activeBudgetId = duplicatedBudget.id;
+  saveAppState();
+  renderBudget();
+  renderDashboard();
 }
 
 function addItemToBudget(itemId, rawQuantity) {
@@ -1650,6 +1747,7 @@ function addItemToBudget(itemId, rawQuantity) {
 
   saveAppState();
   renderBudget();
+  renderDashboard();
 }
 
 function adjustCartQuantity(cartItemId, action) {
@@ -1672,6 +1770,7 @@ function adjustCartQuantity(cartItemId, action) {
 
   saveAppState();
   renderBudget();
+  renderDashboard();
 }
 
 function updateCartQuantity(cartItemId, rawQuantity) {
@@ -1693,6 +1792,7 @@ function updateCartQuantity(cartItemId, rawQuantity) {
 
   saveAppState();
   renderBudget();
+  renderDashboard();
 }
 
 function removeCartItem(cartItemId) {
@@ -1700,6 +1800,7 @@ function removeCartItem(cartItemId) {
   activeBudget.items = activeBudget.items.filter((item) => item.id !== cartItemId);
   saveAppState();
   renderBudget();
+  renderDashboard();
 }
 
 function adjustQuantity(item, currentValue, action, minimumValue) {
@@ -1794,11 +1895,32 @@ function getCounterTotal(categoryName) {
   return categoryName === CATEGORY_ALL ? appState.inventoryItems.length : appState.inventoryItems.length;
 }
 
+/**
+ * Calculates the usable unit/fraction cost according to the business category.
+ * @param {object} item - Normalized inventory item.
+ * @returns {number} Cost per unit, ml, gram or linear meter.
+ */
 function calculateUnitCost(item) {
-  return calculateRawUnitCost(item.packagePrice, item.packageQuantity);
+  const packagePrice = normalizeNumber(item.packagePrice);
+  const packageQuantity = normalizeNumber(item.packageQuantity);
+
+  if ([CATEGORY_NEEDLES, CATEGORY_DISPOSABLES].includes(item.category) && item.purchaseMode === PURCHASE_MODE_SINGLE) {
+    return packagePrice;
+  }
+
+  if ([CATEGORY_NEEDLES, CATEGORY_DISPOSABLES, CATEGORY_INKS, CATEGORY_PASTES, CATEGORY_LINEAR].includes(item.category)) {
+    return calculateRawUnitCost(packagePrice, packageQuantity);
+  }
+
+  return calculateRawUnitCost(packagePrice, packageQuantity);
 }
 
-
+/**
+ * Divides purchase price by package quantity without mutating inputs.
+ * @param {number|string} price - Purchase price of the full package.
+ * @param {number|string} quantity - Internal package quantity, volume, weight or linear measure.
+ * @returns {number} Fractional cost.
+ */
 function calculateRawUnitCost(price, quantity) {
   const normalizedPrice = normalizeNumber(price);
   const normalizedQuantity = normalizeNumber(quantity);
@@ -1810,26 +1932,45 @@ function calculateRawUnitCost(price, quantity) {
   return normalizedPrice / normalizedQuantity;
 }
 
+/**
+ * Calculates financial value currently locked in stock.
+ * @param {object} item - Normalized inventory item.
+ * @returns {number} Full purchase price multiplied by closed packages or loose units in stock.
+ */
 function calculateTotalInventoryValue(item) {
   return normalizeNumber(item.packagePrice) * normalizeNumber(item.stockQuantity);
 }
 
-
+/**
+ * Calculates subtotal for one budget line using the exact fractional cost.
+ * @param {object} item - Normalized inventory item.
+ * @param {number|string} quantityUsed - Quantity used in units, ml, grams or meters.
+ * @returns {number} Line subtotal.
+ */
 function calculateLineSubtotal(item, quantityUsed) {
   return calculateUnitCost(item) * normalizeNumber(quantityUsed);
 }
 
+/**
+ * Calculates budget totals and suggested selling price with optional margin.
+ * @param {object} budget - Active budget state.
+ * @returns {{materialCost: number, laborCost: number, totalCost: number, marginCost: number, suggestedPrice: number}} Budget totals.
+ */
 function calculateBudgetTotals(budget) {
   const materialCost = budget.items.reduce((total, cartItem) => {
     const inventoryItem = findInventoryItem(cartItem.inventoryItemId);
     return inventoryItem ? total + calculateLineSubtotal(inventoryItem, cartItem.quantityUsed) : total;
   }, 0);
   const laborCost = normalizeNumber(budget.hourlyRate) * normalizeNumber(budget.sessionDuration);
+  const totalCost = materialCost + laborCost;
+  const marginCost = totalCost * (normalizeNumber(budget.profitMarginPercent) / 100);
 
   return {
     materialCost,
     laborCost,
-    totalCost: materialCost + laborCost
+    totalCost,
+    marginCost,
+    suggestedPrice: totalCost + marginCost
   };
 }
 
@@ -1864,6 +2005,7 @@ function isGeneratedBudget(budget) {
     || Boolean(budgetName && budgetName !== DEFAULT_BUDGET.name)
     || normalizeNumber(budget.hourlyRate) > 0
     || normalizeNumber(budget.sessionDuration) > 0
+    || normalizeNumber(budget.profitMarginPercent) > 0
     || Boolean(sanitizeText(budget.referenceImage))
     || (Array.isArray(budget.items) && budget.items.length > 0);
 }
@@ -2080,6 +2222,42 @@ function formatItemsCounter(currentValue, totalValue) {
   return `${current} ${current === 1 ? "item" : "itens"} filtrado${current === 1 ? "" : "s"}`;
 }
 
+/**
+ * Creates Lucide-compatible icon markup with a safe no-script fallback.
+ * @param {string} iconName - Lucide icon name.
+ * @param {string} className - Optional CSS class.
+ * @returns {string} Inline icon placeholder HTML.
+ */
+function createIconHtml(iconName, className = "") {
+  return `<i class="inline-icon ${escapeAttribute(className)}" data-lucide="${escapeAttribute(iconName)}" aria-hidden="true"></i>`;
+}
+
+/**
+ * Resolves category-specific icon names.
+ * @param {string} categoryName - Inventory category name.
+ * @returns {string} Lucide icon name.
+ */
+function getCategoryIconName(categoryName) {
+  return CATEGORY_ICON_MAP[categoryName] || "package";
+}
+
+/**
+ * Safely hydrates Lucide icons when the CDN script is available.
+ * @returns {void}
+ */
+function renderLucideIcons() {
+  if (!window.lucide || typeof window.lucide.createIcons !== "function") {
+    return;
+  }
+
+  window.lucide.createIcons({
+    attrs: {
+      "stroke-width": 2,
+      "aria-hidden": "true"
+    }
+  });
+}
+
 function createEmptyStateHtml(message) {
   return `
     <article class="empty-state">
@@ -2155,11 +2333,16 @@ function createInvoiceHtml() {
         <div><span>Insumos</span><strong>${formatCurrency(totals.materialCost)}</strong></div>
         <div><span>Mão de obra</span><strong>${formatCurrency(totals.laborCost)}</strong></div>
         <div><span>Total</span><strong>${formatCurrency(totals.totalCost)}</strong></div>
+        <div><span>Margem</span><strong>${formatNumber(activeBudget.profitMarginPercent)}%</strong></div>
+        <div><span>Preço sugerido</span><strong>${formatCurrency(totals.suggestedPrice)}</strong></div>
       </section>
 
       <section class="invoice-labor-line">
         <strong>Mão de obra:</strong>
         ${formatNumber(activeBudget.sessionDuration)} h × ${formatCurrency(activeBudget.hourlyRate)} = ${formatCurrency(totals.laborCost)}
+        <br />
+        <strong>Margem:</strong>
+        ${formatNumber(activeBudget.profitMarginPercent)}% = ${formatCurrency(totals.marginCost)}
       </section>
 
       <table class="invoice-table">
@@ -2178,7 +2361,7 @@ function createInvoiceHtml() {
 
       <footer class="invoice-footer">
         <span>Orçamento gerado localmente no navegador.</span>
-        <strong>Total final: ${formatCurrency(totals.totalCost)}</strong>
+        <strong>Preço sugerido: ${formatCurrency(totals.suggestedPrice)}</strong>
       </footer>
     </article>
   `;

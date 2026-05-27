@@ -16,9 +16,9 @@
   --purple-light: #E1BEE7;
   --black: #121212;
   --white: #FFFFFF;
-  --background: #0F0A18;
-  --card-solid: #1E1528;
-  --glass-surface: rgba(30, 21, 40, 0.6);
+  --background: #0A0612;
+  --card-solid: #161022;
+  --glass-surface: rgba(22, 16, 34, 0.72);
   --glass-surface-strong: rgba(45, 11, 64, 0.78);
   --glass-surface-soft: rgba(255, 255, 255, 0.05);
   --glass-border: rgba(255, 255, 255, 0.08);
@@ -212,6 +212,34 @@ canvas {
   max-width: 100%;
 }
 
+.lucide,
+[data-lucide] {
+  display: inline-block;
+  flex-shrink: 0;
+  width: 18px;
+  min-width: 18px;
+  height: 18px;
+  stroke-width: 2;
+  vertical-align: middle;
+}
+
+.primary-button .lucide,
+.secondary-button .lucide,
+.ghost-button .lucide,
+.sidebar-tool-button .lucide,
+.filter-chip .lucide,
+.category-pill .lucide,
+.card-menu button .lucide,
+.low-stock-tag .lucide {
+  margin-right: 8px;
+}
+
+.icon-button .lucide,
+.quantity-stepper .lucide,
+.card-menu summary .lucide {
+  margin: 0;
+}
+
 strong,
 h1,
 h2,
@@ -389,7 +417,8 @@ p {
   display: flex;
   min-height: var(--touch-target);
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
+  gap: 10px;
   padding: 0 14px;
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-medium);
@@ -402,6 +431,7 @@ p {
 
 .sidebar-tool-button::after {
   content: "›";
+  margin-left: auto;
   color: var(--purple-light);
   font-size: 1.15rem;
   line-height: 1;
@@ -527,8 +557,8 @@ p {
   border: 1px solid var(--glass-border);
   background: var(--glass-surface);
   box-shadow: var(--shadow-card);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 .glass-panel:hover,
@@ -629,6 +659,7 @@ label.secondary-button {
   text-align: center;
   text-decoration: none;
   white-space: nowrap;
+  gap: 8px;
   transition: var(--ease-standard);
 }
 
@@ -839,6 +870,14 @@ label.secondary-button:hover {
   min-width: 0;
 }
 
+.search-field > span,
+.form-field > span,
+.stepper-field > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
 .toolbar-grid .secondary-button {
   width: 100%;
 }
@@ -950,6 +989,7 @@ label.secondary-button:hover {
   min-width: 0;
   min-height: 34px;
   align-items: center;
+  gap: 8px;
   padding: 0 12px;
   overflow: hidden;
   border: 1px solid var(--glass-border-strong);
@@ -1012,6 +1052,9 @@ label.secondary-button:hover {
 }
 
 .card-menu button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   justify-content: flex-start;
   border-radius: var(--radius-small);
   background: transparent;
@@ -1100,6 +1143,21 @@ label.secondary-button:hover {
 
 .card-note {
   margin-top: 16px;
+}
+
+.low-stock-tag {
+  display: inline-flex;
+  width: fit-content;
+  min-height: 34px;
+  align-items: center;
+  margin-top: 16px;
+  padding: 0 12px;
+  border: 1px solid rgba(255, 126, 85, 0.34);
+  border-radius: 999px;
+  background: rgba(255, 126, 85, 0.12);
+  color: #ffb38f;
+  font-size: clamp(0.76rem, 2.6vw, 0.84rem);
+  font-weight: 850;
 }
 
 .budget-layout {
@@ -1195,6 +1253,17 @@ label.secondary-button:hover {
   background:
     linear-gradient(135deg, rgba(106, 27, 154, 0.34), rgba(255, 255, 255, 0.06)),
     rgba(106, 27, 154, 0.18) !important;
+}
+
+.suggested-price-card {
+  border-color: rgba(225, 190, 231, 0.34) !important;
+  background:
+    linear-gradient(135deg, rgba(225, 190, 231, 0.18), rgba(106, 27, 154, 0.18)),
+    rgba(22, 16, 34, 0.8) !important;
+}
+
+.suggested-price-card strong {
+  color: var(--purple-light);
 }
 
 .end-actions {
@@ -1424,6 +1493,18 @@ label.secondary-button:hover {
   text-align: left;
 }
 
+.category-choice-icon {
+  display: grid !important;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  margin-bottom: 12px;
+  border: 1px solid var(--glass-border);
+  border-radius: 14px;
+  background: rgba(106, 27, 154, 0.28);
+  color: var(--purple-light);
+}
+
 .category-choice strong,
 .category-choice span {
   display: block;
@@ -1525,6 +1606,7 @@ label.secondary-button:hover {
   min-width: 108px;
   min-height: var(--touch-target);
   padding: 0 14px;
+  border-radius: 8px;
   box-shadow: 0 12px 28px rgba(106, 27, 154, 0.28);
   font-size: clamp(0.82rem, 2.8vw, 0.9rem);
 }
@@ -1538,7 +1620,7 @@ label.secondary-button:hover {
 #inventoryScreen .search-field input {
   min-height: var(--touch-target);
   padding: 0 12px;
-  border-radius: 16px;
+  border-radius: 8px;
 }
 
 #inventoryScreen #clearInventorySearchButton {
@@ -1546,6 +1628,7 @@ label.secondary-button:hover {
   min-width: 74px;
   min-height: var(--touch-target);
   padding: 0 12px;
+  border-radius: 8px;
   font-size: clamp(0.8rem, 2.6vw, 0.88rem);
 }
 
@@ -1563,8 +1646,8 @@ label.secondary-button:hover {
   border-radius: var(--radius-extra);
   background: var(--glass-surface);
   box-shadow: var(--shadow-card);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   transition: var(--ease-standard);
 }
 
@@ -1713,6 +1796,8 @@ label.secondary-button:hover {
   .budget-picker-card,
   .cart-card,
   .form-step-panel,
+  .report-card,
+  .report-chart-card,
   .empty-state {
     background: rgba(30, 21, 40, 0.94);
   }
@@ -1905,6 +1990,10 @@ label.secondary-button:hover {
   .feature-grid,
   .total-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .budget-form-card .total-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 
   .inventory-grid {

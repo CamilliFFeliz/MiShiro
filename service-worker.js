@@ -1,5 +1,8 @@
-const CACHE_NAME = "calculadora-tattoo-v5.3.0";
+const CACHE_NAME = "calculadora-tattoo-v5.4.0";
 const APP_SHELL_URL = "./index.html";
+const RUNTIME_CACHE_NAME = "calculadora-tattoo-runtime-v5.4.0";
+const LUCIDE_CDN_HOSTNAME = "unpkg.com";
+const LUCIDE_CDN_URL = "https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js";
 const APP_ASSETS = [
   "./",
   APP_SHELL_URL,
@@ -27,20 +30,51 @@ self.addEventListener("fetch", (event) => {
   event.respondWith(handleRequest(event.request));
 });
 
+/**
+ * Stores the local application shell for instant startup and offline access.
+ * @returns {Promise<void>} Resolves when the shell cache is refreshed.
+ */
 async function cacheApplicationShell() {
   const cache = await caches.open(CACHE_NAME);
   await cache.addAll(APP_ASSETS);
+  await cacheExternalAsset(LUCIDE_CDN_URL);
 }
 
+/**
+ * Attempts to cache an approved external asset without blocking installation.
+ * @param {string} assetUrl - External asset URL.
+ * @returns {Promise<void>} Resolves even when the external CDN is unavailable.
+ */
+async function cacheExternalAsset(assetUrl) {
+  try {
+    const response = await fetch(assetUrl, { mode: "cors" });
+
+    if (response && response.ok) {
+      const cache = await caches.open(RUNTIME_CACHE_NAME);
+      await cache.put(assetUrl, response);
+    }
+  } catch {
+  }
+}
+
+/**
+ * Removes stale caches while preserving the current shell and runtime icon cache.
+ * @returns {Promise<void>} Resolves when outdated caches are deleted.
+ */
 async function deleteOldCaches() {
   const cacheNames = await caches.keys();
   await Promise.all(
     cacheNames
-      .filter((cacheName) => cacheName !== CACHE_NAME)
+      .filter((cacheName) => ![CACHE_NAME, RUNTIME_CACHE_NAME].includes(cacheName))
       .map((cacheName) => caches.delete(cacheName))
   );
 }
 
+/**
+ * Routes navigation, local assets and approved external assets through cache strategies.
+ * @param {Request} request - Incoming fetch request.
+ * @returns {Promise<Response>} Resolved response from cache or network.
+ */
 async function handleRequest(request) {
   if (request.mode === "navigate") {
     return getNavigationResponse(request);
@@ -49,12 +83,44 @@ async function handleRequest(request) {
   const requestUrl = new URL(request.url);
 
   if (requestUrl.origin !== self.location.origin) {
-    return fetch(request);
+    return getExternalAssetResponse(request, requestUrl);
   }
 
   return getCachedAssetResponse(request);
 }
 
+/**
+ * Caches Lucide icon assets at runtime without affecting unrelated external requests.
+ * @param {Request} request - External asset request.
+ * @param {URL} requestUrl - Parsed request URL.
+ * @returns {Promise<Response>} Cached or network response.
+ */
+async function getExternalAssetResponse(request, requestUrl) {
+  if (requestUrl.hostname !== LUCIDE_CDN_HOSTNAME) {
+    return fetch(request);
+  }
+
+  const cachedResponse = await caches.match(request);
+
+  if (cachedResponse) {
+    return cachedResponse;
+  }
+
+  const networkResponse = await fetch(request);
+
+  if (networkResponse && networkResponse.ok) {
+    const cache = await caches.open(RUNTIME_CACHE_NAME);
+    await cache.put(request, networkResponse.clone());
+  }
+
+  return networkResponse;
+}
+
+/**
+ * Uses a network-first strategy for SPA navigation with app shell fallback.
+ * @param {Request} request - Navigation request.
+ * @returns {Promise<Response>} Network page or cached app shell.
+ */
 async function getNavigationResponse(request) {
   try {
     const networkResponse = await fetch(request);
@@ -71,6 +137,11 @@ async function getNavigationResponse(request) {
   }
 }
 
+/**
+ * Uses cache-first strategy for local static assets.
+ * @param {Request} request - Local asset request.
+ * @returns {Promise<Response>} Cached asset, network response or app shell fallback.
+ */
 async function getCachedAssetResponse(request) {
   const cachedResponse = await caches.match(request);
 
