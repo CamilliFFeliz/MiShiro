@@ -229,6 +229,10 @@
                 <span><i data-lucide="percent" aria-hidden="true"></i>Margem de Lucro / Custos Fixos (%)</span>
                 <input id="profitMarginInput" type="text" inputmode="decimal" placeholder="30" />
               </label>
+              <label class="form-field">
+                <span><i data-lucide="badge-percent" aria-hidden="true"></i>Desconto (%)</span>
+                <input id="discountPercentInput" type="text" inputmode="decimal" placeholder="10" />
+              </label>
             </div>
 
             <section class="image-upload-card">
@@ -259,8 +263,16 @@
                 <strong id="budgetTotalValue">R$ 0,00</strong>
               </article>
               <article class="suggested-price-card">
-                <span>Preço sugerido</span>
+                <span>Valor Original</span>
                 <strong id="suggestedPriceValue">R$ 0,00</strong>
+              </article>
+              <article class="discount-card">
+                <span>Desconto aplicado</span>
+                <strong id="discountAmountValue">R$ 0,00</strong>
+              </article>
+              <article class="final-price-card">
+                <span>Valor Final</span>
+                <strong id="finalPriceValue">R$ 0,00</strong>
               </article>
             </div>
 

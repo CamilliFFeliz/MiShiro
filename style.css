@@ -14,6 +14,8 @@
   --purple-dark: #2D0B40;
   --purple: #6A1B9A;
   --purple-light: #E1BEE7;
+  --accent-teal: #7DD3C7;
+  --accent-gold: #F4C86A;
   --black: #121212;
   --white: #FFFFFF;
   --background: #0A0612;
@@ -29,10 +31,10 @@
   --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.4);
   --shadow-deep: 0 24px 80px rgba(0, 0, 0, 0.55);
   --shadow-purple: 0 18px 48px rgba(106, 27, 154, 0.36);
-  --radius-small: 14px;
-  --radius-medium: 18px;
-  --radius-large: 24px;
-  --radius-extra: 30px;
+  --radius-small: 8px;
+  --radius-medium: 8px;
+  --radius-large: 8px;
+  --radius-extra: 8px;
   --sidebar-width: 304px;
   --touch-target: 48px;
   --ease-standard: all 0.3s ease;
@@ -56,10 +58,7 @@ html {
 body {
   min-width: 320px;
   color: var(--text-primary);
-  background:
-    radial-gradient(circle at 12% -8%, rgba(106, 27, 154, 0.38), transparent 26rem),
-    radial-gradient(circle at 100% 18%, rgba(45, 11, 64, 0.42), transparent 25rem),
-    linear-gradient(180deg, var(--background), var(--black));
+  background: linear-gradient(135deg, var(--background), #111821 48%, var(--black));
   font-size: clamp(0.875rem, 2vw, 1rem);
   line-height: 1.5;
   text-rendering: geometricPrecision;
@@ -606,18 +605,6 @@ p {
   isolation: isolate;
 }
 
-.hero-card::before {
-  content: "";
-  position: absolute;
-  inset: -90px -80px auto auto;
-  z-index: -1;
-  width: 220px;
-  height: 220px;
-  border-radius: 999px;
-  background: rgba(106, 27, 154, 0.32);
-  filter: blur(10px);
-}
-
 .hero-card h2 {
   margin-top: 14px;
   color: var(--white);
@@ -963,15 +950,7 @@ label.secondary-button:hover {
 }
 
 .inventory-card::before {
-  content: "";
-  position: absolute;
-  inset: -84px auto auto -82px;
-  z-index: -1;
-  width: 190px;
-  height: 190px;
-  border-radius: 999px;
-  background: rgba(106, 27, 154, 0.26);
-  filter: blur(4px);
+  display: none;
 }
 
 .inventory-card::after {
@@ -1228,6 +1207,7 @@ label.secondary-button:hover {
 
 .total-grid {
   gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 142px), 1fr));
   margin-top: 18px;
 }
 
@@ -1264,6 +1244,28 @@ label.secondary-button:hover {
 
 .suggested-price-card strong {
   color: var(--purple-light);
+}
+
+.discount-card {
+  border-color: rgba(244, 200, 106, 0.34) !important;
+  background:
+    linear-gradient(135deg, rgba(244, 200, 106, 0.14), rgba(255, 255, 255, 0.045)),
+    rgba(22, 16, 34, 0.8) !important;
+}
+
+.discount-card strong {
+  color: var(--accent-gold);
+}
+
+.final-price-card {
+  border-color: rgba(125, 211, 199, 0.42) !important;
+  background:
+    linear-gradient(135deg, rgba(125, 211, 199, 0.16), rgba(106, 27, 154, 0.12)),
+    rgba(22, 16, 34, 0.82) !important;
+}
+
+.final-price-card strong {
+  color: var(--accent-teal);
 }
 
 .end-actions {
@@ -1659,15 +1661,7 @@ label.secondary-button:hover {
 }
 
 .report-card::before {
-  content: "";
-  position: absolute;
-  inset: -88px -88px auto auto;
-  width: 176px;
-  height: 176px;
-  border-radius: 999px;
-  background: rgba(106, 27, 154, 0.26);
-  filter: blur(5px);
-  pointer-events: none;
+  display: none;
 }
 
 .report-card:hover,
@@ -1757,6 +1751,10 @@ label.secondary-button:hover {
 }
 
 @media (max-width: 360px) {
+  .total-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
   #inventoryScreen .header-actions {
     gap: 7px;
   }
@@ -1815,6 +1813,29 @@ label.secondary-button:hover {
 
   .content-shell {
     padding-inline: 10px;
+  }
+
+  .budget-form-card,
+  .budget-picker-card,
+  .cart-card,
+  .inventory-card,
+  .picker-card,
+  .cart-line {
+    padding: 14px;
+  }
+
+  .total-grid {
+    gap: 8px;
+  }
+
+  .total-grid article {
+    min-height: 92px;
+    padding: 12px;
+  }
+
+  .total-grid strong {
+    margin-top: 8px;
+    font-size: 1.08rem;
   }
 
   .primary-button,
@@ -1901,7 +1922,6 @@ label.secondary-button:hover {
   .feature-grid,
   .form-grid.two-columns,
   .dynamic-fields-grid,
-  .total-grid,
   .category-choice-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -1987,13 +2007,8 @@ label.secondary-button:hover {
     gap: 22px;
   }
 
-  .feature-grid,
-  .total-grid {
+  .feature-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
-  .budget-form-card .total-grid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 
   .inventory-grid {

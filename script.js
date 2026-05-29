@@ -9,7 +9,9 @@ const CATEGORY_NEEDLES = "Agulhas e Cartuchos";
 const CATEGORY_INKS = "Tintas";
 const CATEGORY_PASTES = "Pastosos";
 const CATEGORY_DISPOSABLES = "Biossegurança e Descartáveis";
+const CATEGORY_CLEANING = "Limpeza e Finalização";
 const CATEGORY_LINEAR = "Materiais de Extensão";
+const UNIT_PURCHASE_CATEGORIES = [CATEGORY_NEEDLES, CATEGORY_DISPOSABLES, CATEGORY_CLEANING];
 const CALCULATION_UNIT_BOX = "unitBox";
 const CALCULATION_FRACTIONAL = "fractional";
 const PURCHASE_MODE_BOX = "box";
@@ -26,7 +28,7 @@ const BACKUP_APP_NAME = "CalculadoraTattoo";
 const BACKUP_SCHEMA = "calculadora-tattoo-inventory-backup";
 const BACKUP_VERSION = 1;
 const BACKUP_FILE_PREFIX = "backup_estoque";
-const REFERENCE_STOCK_CREATED_AT = "2026-05-26T00:00:00.000Z";
+const REFERENCE_STOCK_CREATED_AT = "2026-05-29T00:00:00.000Z";
 const SCREEN_META = {
   home: { title: "Início", eyebrow: "Visão geral" },
   reports: { title: "Relatórios", eyebrow: "Indicadores" },
@@ -47,6 +49,7 @@ const CATEGORY_ICON_MAP = {
   [CATEGORY_INKS]: "droplets",
   [CATEGORY_PASTES]: "paintbrush",
   [CATEGORY_DISPOSABLES]: "shield-check",
+  [CATEGORY_CLEANING]: "sparkles",
   [CATEGORY_LINEAR]: "ruler"
 };
 const CATEGORY_DEFINITIONS = {
@@ -114,6 +117,24 @@ const CATEGORY_DEFINITIONS = {
       { key: "stockQuantity", label: "Quantidade em estoque", type: "number", inputMode: "numeric", placeholder: "15", required: true }
     ]
   },
+  [CATEGORY_CLEANING]: {
+    label: CATEGORY_CLEANING,
+    helper: "Itens de limpeza, transferência e finalização cobrados por uso, folha ou porção.",
+    calculationType: CALCULATION_UNIT_BOX,
+    defaultMeasure: MEASURE_UNIT,
+    fields: [
+      { key: "name", label: "Nome", type: "text", placeholder: "Ex: Papel toalha, transfer, manteiga", required: true },
+      { key: "brand", label: "Marca", type: "text", placeholder: "Ex: Hornet, Reilly, Spirit", required: false },
+      { key: "purchaseMode", label: "Formato de compra", type: "select", required: true, options: [
+        { value: PURCHASE_MODE_BOX, label: "Comprado por Pacote/Caixa" },
+        { value: PURCHASE_MODE_SINGLE, label: "Comprado por Uso/Unidade" }
+      ] },
+      { key: "packageQuantity", label: "Qtd no pacote/embalagem", type: "number", inputMode: "numeric", placeholder: "20", required: true, visibleWhen: { key: "purchaseMode", value: PURCHASE_MODE_BOX } },
+      { key: "packagePrice", label: "Preço do pacote/embalagem", type: "currency", inputMode: "decimal", placeholder: "35,00", required: true, visibleWhen: { key: "purchaseMode", value: PURCHASE_MODE_BOX } },
+      { key: "singleUnitPrice", label: "Preço por uso/unidade", type: "currency", inputMode: "decimal", placeholder: "3,00", required: true, visibleWhen: { key: "purchaseMode", value: PURCHASE_MODE_SINGLE } },
+      { key: "stockQuantity", label: "Quantidade em estoque", type: "number", inputMode: "numeric", placeholder: "10", required: true }
+    ]
+  },
   [CATEGORY_LINEAR]: {
     label: CATEGORY_LINEAR,
     helper: "Rolos medidos exclusivamente por metros.",
@@ -134,17 +155,114 @@ const CATEGORY_ORDER = [
   CATEGORY_INKS,
   CATEGORY_PASTES,
   CATEGORY_DISPOSABLES,
+  CATEGORY_CLEANING,
   CATEGORY_LINEAR
 ];
 const DEFAULT_REFERENCE_STOCK = [
   {
-    id: "reference-sabonete-liquido",
-    category: CATEGORY_PASTES,
-    name: "Sabonete Líquido",
+    id: "reference-cartucho-rl-uso-medio",
+    category: CATEGORY_NEEDLES,
+    name: "Cartucho RL (Traço)",
     brand: "",
-    color: "",
-    packageQuantity: 400,
-    packagePrice: 37,
+    lineType: "Cartucho RL (Traço)",
+    numbering: "",
+    purchaseMode: PURCHASE_MODE_SINGLE,
+    packageQuantity: 1,
+    packagePrice: 15,
+    stockQuantity: 20,
+    measureUnit: MEASURE_UNIT,
+    calculationType: CALCULATION_UNIT_BOX,
+    createdAt: REFERENCE_STOCK_CREATED_AT,
+    updatedAt: REFERENCE_STOCK_CREATED_AT
+  },
+  {
+    id: "reference-cartucho-rm-mg-uso-medio",
+    category: CATEGORY_NEEDLES,
+    name: "Cartucho RM/MG (Pintura/Sombra)",
+    brand: "",
+    lineType: "Cartucho RM/MG (Pintura/Sombra)",
+    numbering: "",
+    purchaseMode: PURCHASE_MODE_SINGLE,
+    packageQuantity: 1,
+    packagePrice: 15,
+    stockQuantity: 20,
+    measureUnit: MEASURE_UNIT,
+    calculationType: CALCULATION_UNIT_BOX,
+    createdAt: REFERENCE_STOCK_CREATED_AT,
+    updatedAt: REFERENCE_STOCK_CREATED_AT
+  },
+  {
+    id: "reference-agulha-tradicional-haste",
+    category: CATEGORY_NEEDLES,
+    name: "Agulha Tradicional Haste",
+    brand: "",
+    lineType: "Agulha Tradicional Haste",
+    numbering: "",
+    purchaseMode: PURCHASE_MODE_SINGLE,
+    packageQuantity: 1,
+    packagePrice: 3,
+    stockQuantity: 50,
+    measureUnit: MEASURE_UNIT,
+    calculationType: CALCULATION_UNIT_BOX,
+    createdAt: REFERENCE_STOCK_CREATED_AT,
+    updatedAt: REFERENCE_STOCK_CREATED_AT
+  },
+  {
+    id: "reference-aston-premium-rl-caixa",
+    category: CATEGORY_NEEDLES,
+    name: "Aston Premium Cartucho RL 1007RL",
+    brand: "Aston Premium",
+    lineType: "Cartucho RL",
+    numbering: "1007RL",
+    purchaseMode: PURCHASE_MODE_BOX,
+    packageQuantity: 20,
+    packagePrice: 122,
+    stockQuantity: 1,
+    measureUnit: MEASURE_UNIT,
+    calculationType: CALCULATION_UNIT_BOX,
+    createdAt: REFERENCE_STOCK_CREATED_AT,
+    updatedAt: REFERENCE_STOCK_CREATED_AT
+  },
+  {
+    id: "reference-radiant-mr-caixa",
+    category: CATEGORY_NEEDLES,
+    name: "Radiant Cartucho Magnum Round MR",
+    brand: "Radiant",
+    lineType: "Cartucho Magnum Round",
+    numbering: "MR 0.30",
+    purchaseMode: PURCHASE_MODE_BOX,
+    packageQuantity: 20,
+    packagePrice: 150,
+    stockQuantity: 1,
+    measureUnit: MEASURE_UNIT,
+    calculationType: CALCULATION_UNIT_BOX,
+    createdAt: REFERENCE_STOCK_CREATED_AT,
+    updatedAt: REFERENCE_STOCK_CREATED_AT
+  },
+  {
+    id: "reference-kwadron-rl-caixa",
+    category: CATEGORY_NEEDLES,
+    name: "Kwadron Cartucho RL",
+    brand: "Kwadron",
+    lineType: "Cartucho RL",
+    numbering: "Traço",
+    purchaseMode: PURCHASE_MODE_BOX,
+    packageQuantity: 20,
+    packagePrice: 200,
+    stockQuantity: 1,
+    measureUnit: MEASURE_UNIT,
+    calculationType: CALCULATION_UNIT_BOX,
+    createdAt: REFERENCE_STOCK_CREATED_AT,
+    updatedAt: REFERENCE_STOCK_CREATED_AT
+  },
+  {
+    id: "reference-tinta-preta-linha",
+    category: CATEGORY_INKS,
+    name: "Tinta Preta Linha (Black Lining)",
+    brand: "Dynamic Color Co",
+    color: "Preto Linha",
+    packageQuantity: 240,
+    packagePrice: 419.9,
     stockQuantity: 1,
     measureUnit: MEASURE_ML,
     calculationType: CALCULATION_FRACTIONAL,
@@ -152,25 +270,166 @@ const DEFAULT_REFERENCE_STOCK = [
     updatedAt: REFERENCE_STOCK_CREATED_AT
   },
   {
-    id: "reference-bandagem",
-    category: CATEGORY_LINEAR,
-    name: "Bandagem",
-    brand: "",
-    packageQuantity: 4.5,
-    packagePrice: 10,
+    id: "reference-tinta-preta-preenchimento",
+    category: CATEGORY_INKS,
+    name: "Tinta Preta Preenchimento",
+    brand: "The Ink",
+    color: "Maximum's Black",
+    packageQuantity: 260,
+    packagePrice: 235,
     stockQuantity: 1,
-    measureUnit: MEASURE_METER,
+    measureUnit: MEASURE_ML,
     calculationType: CALCULATION_FRACTIONAL,
     createdAt: REFERENCE_STOCK_CREATED_AT,
     updatedAt: REFERENCE_STOCK_CREATED_AT
   },
   {
-    id: "reference-lamina",
+    id: "reference-tinta-colorida",
+    category: CATEGORY_INKS,
+    name: "Tinta Colorida",
+    brand: "Electric Ink",
+    color: "Cores variadas",
+    packageQuantity: 30,
+    packagePrice: 78,
+    stockQuantity: 4,
+    measureUnit: MEASURE_ML,
+    calculationType: CALCULATION_FRACTIONAL,
+    createdAt: REFERENCE_STOCK_CREATED_AT,
+    updatedAt: REFERENCE_STOCK_CREATED_AT
+  },
+  {
+    id: "reference-electric-raven-black-30ml",
+    category: CATEGORY_INKS,
+    name: "Tinta Raven Black 30ml",
+    brand: "Electric Ink",
+    color: "Raven Black",
+    packageQuantity: 30,
+    packagePrice: 85,
+    stockQuantity: 1,
+    measureUnit: MEASURE_ML,
+    calculationType: CALCULATION_FRACTIONAL,
+    createdAt: REFERENCE_STOCK_CREATED_AT,
+    updatedAt: REFERENCE_STOCK_CREATED_AT
+  },
+  {
+    id: "reference-iron-works-colorida-30ml",
+    category: CATEGORY_INKS,
+    name: "Tinta Colorida 30ml",
+    brand: "Iron Works",
+    color: "Cores variadas",
+    packageQuantity: 30,
+    packagePrice: 93.5,
+    stockQuantity: 3,
+    measureUnit: MEASURE_ML,
+    calculationType: CALCULATION_FRACTIONAL,
+    createdAt: REFERENCE_STOCK_CREATED_AT,
+    updatedAt: REFERENCE_STOCK_CREATED_AT
+  },
+  {
+    id: "reference-par-luvas-nitrilicas",
     category: CATEGORY_DISPOSABLES,
-    name: "Lâmina",
+    name: "Par de Luvas Nitrílicas",
     brand: "",
     purchaseMode: PURCHASE_MODE_SINGLE,
     packageQuantity: 1,
+    packagePrice: 2.5,
+    stockQuantity: 50,
+    measureUnit: MEASURE_UNIT,
+    calculationType: CALCULATION_UNIT_BOX,
+    createdAt: REFERENCE_STOCK_CREATED_AT,
+    updatedAt: REFERENCE_STOCK_CREATED_AT
+  },
+  {
+    id: "reference-mascara-descartavel",
+    category: CATEGORY_DISPOSABLES,
+    name: "Máscara Descartável",
+    brand: "",
+    purchaseMode: PURCHASE_MODE_SINGLE,
+    packageQuantity: 1,
+    packagePrice: 1,
+    stockQuantity: 50,
+    measureUnit: MEASURE_UNIT,
+    calculationType: CALCULATION_UNIT_BOX,
+    createdAt: REFERENCE_STOCK_CREATED_AT,
+    updatedAt: REFERENCE_STOCK_CREATED_AT
+  },
+  {
+    id: "reference-protetor-maca-lencol",
+    category: CATEGORY_DISPOSABLES,
+    name: "Protetor de Maca (Lençol)",
+    brand: "",
+    purchaseMode: PURCHASE_MODE_SINGLE,
+    packageQuantity: 1,
+    packagePrice: 3.5,
+    stockQuantity: 20,
+    measureUnit: MEASURE_UNIT,
+    calculationType: CALCULATION_UNIT_BOX,
+    createdAt: REFERENCE_STOCK_CREATED_AT,
+    updatedAt: REFERENCE_STOCK_CREATED_AT
+  },
+  {
+    id: "reference-plastico-filme-uso",
+    category: CATEGORY_DISPOSABLES,
+    name: "Plástico Filme (Uso na maca/bancada)",
+    brand: "",
+    purchaseMode: PURCHASE_MODE_SINGLE,
+    packageQuantity: 1,
+    packagePrice: 2,
+    stockQuantity: 30,
+    measureUnit: MEASURE_UNIT,
+    calculationType: CALCULATION_UNIT_BOX,
+    createdAt: REFERENCE_STOCK_CREATED_AT,
+    updatedAt: REFERENCE_STOCK_CREATED_AT
+  },
+  {
+    id: "reference-batoques-pmg",
+    category: CATEGORY_DISPOSABLES,
+    name: "Batoques P/M/G",
+    brand: "",
+    purchaseMode: PURCHASE_MODE_SINGLE,
+    packageQuantity: 1,
+    packagePrice: 0.5,
+    stockQuantity: 100,
+    measureUnit: MEASURE_UNIT,
+    calculationType: CALCULATION_UNIT_BOX,
+    createdAt: REFERENCE_STOCK_CREATED_AT,
+    updatedAt: REFERENCE_STOCK_CREATED_AT
+  },
+  {
+    id: "reference-luvas-nitrilicas-caixa",
+    category: CATEGORY_DISPOSABLES,
+    name: "Par de Luvas Nitrílicas Caixa 100",
+    brand: "Descarpack",
+    purchaseMode: PURCHASE_MODE_BOX,
+    packageQuantity: 50,
+    packagePrice: 39.45,
+    stockQuantity: 1,
+    measureUnit: MEASURE_UNIT,
+    calculationType: CALCULATION_UNIT_BOX,
+    createdAt: REFERENCE_STOCK_CREATED_AT,
+    updatedAt: REFERENCE_STOCK_CREATED_AT
+  },
+  {
+    id: "reference-mascaras-caixa-50",
+    category: CATEGORY_DISPOSABLES,
+    name: "Máscara Tripla TNT Caixa 50",
+    brand: "Descarpack",
+    purchaseMode: PURCHASE_MODE_BOX,
+    packageQuantity: 50,
+    packagePrice: 14.19,
+    stockQuantity: 1,
+    measureUnit: MEASURE_UNIT,
+    calculationType: CALCULATION_UNIT_BOX,
+    createdAt: REFERENCE_STOCK_CREATED_AT,
+    updatedAt: REFERENCE_STOCK_CREATED_AT
+  },
+  {
+    id: "reference-batoque-jordan-100",
+    category: CATEGORY_DISPOSABLES,
+    name: "Batoque Solto P 100 unidades",
+    brand: "Jordan Tattoo Supply",
+    purchaseMode: PURCHASE_MODE_BOX,
+    packageQuantity: 100,
     packagePrice: 7,
     stockQuantity: 1,
     measureUnit: MEASURE_UNIT,
@@ -179,13 +438,55 @@ const DEFAULT_REFERENCE_STOCK = [
     updatedAt: REFERENCE_STOCK_CREATED_AT
   },
   {
-    id: "reference-batoque",
-    category: CATEGORY_DISPOSABLES,
-    name: "Batoque",
+    id: "reference-papel-toalha-uso-medio",
+    category: CATEGORY_CLEANING,
+    name: "Papel Toalha (Uso médio)",
     brand: "",
+    purchaseMode: PURCHASE_MODE_SINGLE,
+    packageQuantity: 1,
+    packagePrice: 3,
+    stockQuantity: 30,
+    measureUnit: MEASURE_UNIT,
+    calculationType: CALCULATION_UNIT_BOX,
+    createdAt: REFERENCE_STOCK_CREATED_AT,
+    updatedAt: REFERENCE_STOCK_CREATED_AT
+  },
+  {
+    id: "reference-vaselina-manteiga-porcao",
+    category: CATEGORY_CLEANING,
+    name: "Vaselina / Manteiga Deslizante",
+    brand: "",
+    purchaseMode: PURCHASE_MODE_SINGLE,
+    packageQuantity: 1,
+    packagePrice: 3,
+    stockQuantity: 30,
+    measureUnit: MEASURE_UNIT,
+    calculationType: CALCULATION_UNIT_BOX,
+    createdAt: REFERENCE_STOCK_CREATED_AT,
+    updatedAt: REFERENCE_STOCK_CREATED_AT
+  },
+  {
+    id: "reference-papel-hectografico-folha",
+    category: CATEGORY_CLEANING,
+    name: "Papel Hectográfico (Transfer)",
+    brand: "",
+    purchaseMode: PURCHASE_MODE_SINGLE,
+    packageQuantity: 1,
+    packagePrice: 3.5,
+    stockQuantity: 20,
+    measureUnit: MEASURE_UNIT,
+    calculationType: CALCULATION_UNIT_BOX,
+    createdAt: REFERENCE_STOCK_CREATED_AT,
+    updatedAt: REFERENCE_STOCK_CREATED_AT
+  },
+  {
+    id: "reference-papel-hectografico-u20-20",
+    category: CATEGORY_CLEANING,
+    name: "Papel Hectográfico Roxo U20",
+    brand: "U20",
     purchaseMode: PURCHASE_MODE_BOX,
-    packageQuantity: 50,
-    packagePrice: 30,
+    packageQuantity: 20,
+    packagePrice: 25.99,
     stockQuantity: 1,
     measureUnit: MEASURE_UNIT,
     calculationType: CALCULATION_UNIT_BOX,
@@ -193,12 +494,26 @@ const DEFAULT_REFERENCE_STOCK = [
     updatedAt: REFERENCE_STOCK_CREATED_AT
   },
   {
-    id: "reference-vaselina",
+    id: "reference-papel-toalha-elite-1000",
+    category: CATEGORY_CLEANING,
+    name: "Papel Toalha Interfolha 1000 folhas",
+    brand: "Elite",
+    purchaseMode: PURCHASE_MODE_BOX,
+    packageQuantity: 1000,
+    packagePrice: 24.9,
+    stockQuantity: 1,
+    measureUnit: MEASURE_UNIT,
+    calculationType: CALCULATION_UNIT_BOX,
+    createdAt: REFERENCE_STOCK_CREATED_AT,
+    updatedAt: REFERENCE_STOCK_CREATED_AT
+  },
+  {
+    id: "reference-vaselina-hornet-500g",
     category: CATEGORY_PASTES,
-    name: "Vaselina",
-    brand: "",
-    packageQuantity: 150,
-    packagePrice: 30,
+    name: "Vaselina Hornet White Premium 500g",
+    brand: "Hornet",
+    packageQuantity: 500,
+    packagePrice: 65,
     stockQuantity: 1,
     measureUnit: MEASURE_GRAM,
     calculationType: CALCULATION_FRACTIONAL,
@@ -206,68 +521,25 @@ const DEFAULT_REFERENCE_STOCK = [
     updatedAt: REFERENCE_STOCK_CREATED_AT
   },
   {
-    id: "reference-transfer",
+    id: "reference-manteiga-reilly-500g",
     category: CATEGORY_PASTES,
-    name: "Transfer",
-    brand: "",
-    color: "",
-    packageQuantity: 30,
-    packagePrice: 28,
+    name: "Manteiga Blend Especial Reilly 500g",
+    brand: "Reilly Tattoo",
+    packageQuantity: 500,
+    packagePrice: 89,
     stockQuantity: 1,
-    measureUnit: MEASURE_ML,
+    measureUnit: MEASURE_GRAM,
     calculationType: CALCULATION_FRACTIONAL,
     createdAt: REFERENCE_STOCK_CREATED_AT,
     updatedAt: REFERENCE_STOCK_CREATED_AT
   },
   {
-    id: "reference-folha-estencil",
-    category: CATEGORY_DISPOSABLES,
-    name: "Folha Estêncil",
-    brand: "",
-    purchaseMode: PURCHASE_MODE_SINGLE,
-    packageQuantity: 1,
-    packagePrice: 4.5,
-    stockQuantity: 1,
-    measureUnit: MEASURE_UNIT,
-    calculationType: CALCULATION_UNIT_BOX,
-    createdAt: REFERENCE_STOCK_CREATED_AT,
-    updatedAt: REFERENCE_STOCK_CREATED_AT
-  },
-  {
-    id: "reference-papel-toalha",
-    category: CATEGORY_DISPOSABLES,
-    name: "Papel Toalha",
-    brand: "",
-    purchaseMode: PURCHASE_MODE_BOX,
-    packageQuantity: 200,
-    packagePrice: 12,
-    stockQuantity: 1,
-    measureUnit: MEASURE_UNIT,
-    calculationType: CALCULATION_UNIT_BOX,
-    createdAt: REFERENCE_STOCK_CREATED_AT,
-    updatedAt: REFERENCE_STOCK_CREATED_AT
-  },
-  {
-    id: "reference-mascara",
-    category: CATEGORY_DISPOSABLES,
-    name: "Máscara",
-    brand: "",
-    purchaseMode: PURCHASE_MODE_BOX,
-    packageQuantity: 100,
-    packagePrice: 25,
-    stockQuantity: 1,
-    measureUnit: MEASURE_UNIT,
-    calculationType: CALCULATION_UNIT_BOX,
-    createdAt: REFERENCE_STOCK_CREATED_AT,
-    updatedAt: REFERENCE_STOCK_CREATED_AT
-  },
-  {
-    id: "reference-plastico-filme",
+    id: "reference-plastico-filme-pvc-300m",
     category: CATEGORY_LINEAR,
-    name: "Plástico Filme",
-    brand: "",
-    packageQuantity: 70,
-    packagePrice: 15,
+    name: "Plástico Filme PVC 28cm x 300m",
+    brand: "Tecfilm",
+    packageQuantity: 300,
+    packagePrice: 30.51,
     stockQuantity: 1,
     measureUnit: MEASURE_METER,
     calculationType: CALCULATION_FRACTIONAL,
@@ -275,43 +547,14 @@ const DEFAULT_REFERENCE_STOCK = [
     updatedAt: REFERENCE_STOCK_CREATED_AT
   },
   {
-    id: "reference-palito-descartavel",
-    category: CATEGORY_DISPOSABLES,
-    name: "Palito Descartável",
-    brand: "",
-    purchaseMode: PURCHASE_MODE_BOX,
-    packageQuantity: 100,
-    packagePrice: 6,
+    id: "reference-tropicalderm-filme-5m",
+    category: CATEGORY_LINEAR,
+    name: "Filme Protetor Para Tatuagem 10cm x 5m",
+    brand: "TropicalDerm",
+    packageQuantity: 5,
+    packagePrice: 130,
     stockQuantity: 1,
-    measureUnit: MEASURE_UNIT,
-    calculationType: CALCULATION_UNIT_BOX,
-    createdAt: REFERENCE_STOCK_CREATED_AT,
-    updatedAt: REFERENCE_STOCK_CREATED_AT
-  },
-  {
-    id: "reference-luvas",
-    category: CATEGORY_DISPOSABLES,
-    name: "Luvas",
-    brand: "",
-    purchaseMode: PURCHASE_MODE_BOX,
-    packageQuantity: 100,
-    packagePrice: 30,
-    stockQuantity: 1,
-    measureUnit: MEASURE_UNIT,
-    calculationType: CALCULATION_UNIT_BOX,
-    createdAt: REFERENCE_STOCK_CREATED_AT,
-    updatedAt: REFERENCE_STOCK_CREATED_AT
-  },
-  {
-    id: "reference-tinta-preto-linha",
-    category: CATEGORY_INKS,
-    name: "Tinta Preto Linha",
-    brand: "",
-    color: "Preto Linha",
-    packageQuantity: 20,
-    packagePrice: 50,
-    stockQuantity: 1,
-    measureUnit: MEASURE_ML,
+    measureUnit: MEASURE_METER,
     calculationType: CALCULATION_FRACTIONAL,
     createdAt: REFERENCE_STOCK_CREATED_AT,
     updatedAt: REFERENCE_STOCK_CREATED_AT
@@ -332,6 +575,7 @@ const DEFAULT_BUDGET = {
   hourlyRate: 0,
   sessionDuration: 0,
   profitMarginPercent: 0,
+  discountPercent: 0,
   referenceImage: "",
   referenceImageName: "",
   items: []
@@ -386,6 +630,7 @@ function bindDomReferences() {
   dom.hourlyRateInput = document.querySelector("#hourlyRateInput");
   dom.sessionDurationInput = document.querySelector("#sessionDurationInput");
   dom.profitMarginInput = document.querySelector("#profitMarginInput");
+  dom.discountPercentInput = document.querySelector("#discountPercentInput");
   dom.referenceImageInput = document.querySelector("#referenceImageInput");
   dom.removeReferenceImageButton = document.querySelector("#removeReferenceImageButton");
   dom.referencePreview = document.querySelector("#referencePreview");
@@ -393,6 +638,8 @@ function bindDomReferences() {
   dom.laborTotalValue = document.querySelector("#laborTotalValue");
   dom.budgetTotalValue = document.querySelector("#budgetTotalValue");
   dom.suggestedPriceValue = document.querySelector("#suggestedPriceValue");
+  dom.discountAmountValue = document.querySelector("#discountAmountValue");
+  dom.finalPriceValue = document.querySelector("#finalPriceValue");
   dom.duplicateBudgetButton = document.querySelector("#duplicateBudgetButton");
   dom.newBudgetButton = document.querySelector("#newBudgetButton");
   dom.exportPdfButton = document.querySelector("#exportPdfButton");
@@ -448,6 +695,7 @@ function bindEvents() {
   dom.hourlyRateInput.addEventListener("input", updateBudgetLabor);
   dom.sessionDurationInput.addEventListener("input", updateBudgetLabor);
   dom.profitMarginInput.addEventListener("input", updateBudgetProfitMargin);
+  dom.discountPercentInput.addEventListener("input", updateBudgetDiscount);
   dom.referenceImageInput.addEventListener("change", handleReferenceImageChange);
   dom.removeReferenceImageButton.addEventListener("click", removeReferenceImage);
   dom.duplicateBudgetButton.addEventListener("click", duplicateActiveBudget);
@@ -583,7 +831,7 @@ function getNormalizedItemName(item, category) {
 }
 
 function getNormalizedPurchaseMode(item, category) {
-  if (![CATEGORY_NEEDLES, CATEGORY_DISPOSABLES].includes(category)) {
+  if (!UNIT_PURCHASE_CATEGORIES.includes(category)) {
     return "";
   }
 
@@ -645,7 +893,7 @@ function getNormalizedStockQuantity(item) {
 }
 
 function getNormalizedMeasureUnit(item, category, fallbackUnit) {
-  if ([CATEGORY_NEEDLES, CATEGORY_DISPOSABLES].includes(category)) {
+  if (UNIT_PURCHASE_CATEGORIES.includes(category)) {
     return MEASURE_UNIT;
   }
 
@@ -668,6 +916,7 @@ function normalizeBudget(budget) {
     hourlyRate: normalizeNumber(budget.hourlyRate || budget.laborHourlyRate || budget.valorHora),
     sessionDuration: normalizeNumber(budget.sessionDuration || budget.sessionHours || budget.laborHours || budget.duracao),
     profitMarginPercent: normalizeNumber(budget.profitMarginPercent || budget.marginPercent || budget.margemLucro),
+    discountPercent: normalizePercent(budget.discountPercent || budget.descontoPercentual || budget.desconto),
     referenceImage: isImageDataUrl(budget.referenceImage || budget.tattooImage) ? (budget.referenceImage || budget.tattooImage) : "",
     referenceImageName: sanitizeText(budget.referenceImageName || budget.tattooImageName),
     items: Array.isArray(budget.items) ? budget.items.map(normalizeBudgetItem) : []
@@ -784,7 +1033,7 @@ function isValidBackupInventoryItem(item) {
     return false;
   }
 
-  if ([CATEGORY_NEEDLES, CATEGORY_DISPOSABLES].includes(category)) {
+  if (UNIT_PURCHASE_CATEGORIES.includes(category)) {
     return [PURCHASE_MODE_BOX, PURCHASE_MODE_SINGLE].includes(sanitizeText(item.purchaseMode));
   }
 
@@ -1213,10 +1462,13 @@ function renderBudget() {
   dom.hourlyRateInput.value = activeBudget.hourlyRate > 0 ? formatEditableNumber(activeBudget.hourlyRate) : "";
   dom.sessionDurationInput.value = activeBudget.sessionDuration > 0 ? formatEditableNumber(activeBudget.sessionDuration) : "";
   dom.profitMarginInput.value = activeBudget.profitMarginPercent > 0 ? formatEditableNumber(activeBudget.profitMarginPercent) : "";
+  dom.discountPercentInput.value = activeBudget.discountPercent > 0 ? formatEditableNumber(activeBudget.discountPercent) : "";
   dom.materialTotalValue.textContent = formatCurrency(budgetTotals.materialCost);
   dom.laborTotalValue.textContent = formatCurrency(budgetTotals.laborCost);
   dom.budgetTotalValue.textContent = formatCurrency(budgetTotals.totalCost);
   dom.suggestedPriceValue.textContent = formatCurrency(budgetTotals.suggestedPrice);
+  dom.discountAmountValue.textContent = formatCurrency(budgetTotals.discountAmount);
+  dom.finalPriceValue.textContent = formatCurrency(budgetTotals.finalPrice);
   dom.budgetCounter.textContent = formatItemsCounter(activeBudget.items.length, activeBudget.items.length);
   renderReferencePreview();
   renderStockPicker();
@@ -1524,7 +1776,7 @@ function buildInventoryItemFromForm() {
   const categoryDefinition = CATEGORY_DEFINITIONS[selectedFormCategory];
   const fieldData = readDynamicFormData();
   const existingItem = editingItemId ? findInventoryItem(editingItemId) : null;
-  const purchaseMode = [CATEGORY_NEEDLES, CATEGORY_DISPOSABLES].includes(selectedFormCategory) ? sanitizeText(fieldData.purchaseMode || PURCHASE_MODE_BOX) : "";
+  const purchaseMode = UNIT_PURCHASE_CATEGORIES.includes(selectedFormCategory) ? sanitizeText(fieldData.purchaseMode || PURCHASE_MODE_BOX) : "";
   const isSinglePurchase = purchaseMode === PURCHASE_MODE_SINGLE;
   const packageQuantity = isSinglePurchase ? 1 : normalizeNumber(fieldData.packageQuantity);
   const packagePrice = isSinglePurchase ? normalizeNumber(fieldData.singleUnitPrice) : normalizeNumber(fieldData.packagePrice);
@@ -1584,7 +1836,7 @@ function buildItemName(categoryName, fieldData) {
 function updateUnitCostPreview() {
   const fieldData = readDynamicFormData();
   const categoryDefinition = CATEGORY_DEFINITIONS[selectedFormCategory];
-  const purchaseMode = [CATEGORY_NEEDLES, CATEGORY_DISPOSABLES].includes(selectedFormCategory) ? sanitizeText(fieldData.purchaseMode || PURCHASE_MODE_BOX) : "";
+  const purchaseMode = UNIT_PURCHASE_CATEGORIES.includes(selectedFormCategory) ? sanitizeText(fieldData.purchaseMode || PURCHASE_MODE_BOX) : "";
   const isSinglePurchase = purchaseMode === PURCHASE_MODE_SINGLE;
   const packageQuantity = isSinglePurchase ? 1 : normalizeNumber(fieldData.packageQuantity);
   const packagePrice = isSinglePurchase ? normalizeNumber(fieldData.singleUnitPrice) : normalizeNumber(fieldData.packagePrice);
@@ -1606,7 +1858,7 @@ function getPreviewLabel(categoryName, measureUnit) {
     return "Custo por cartucho/agulha";
   }
 
-  if (categoryName === CATEGORY_DISPOSABLES) {
+  if ([CATEGORY_DISPOSABLES, CATEGORY_CLEANING].includes(categoryName)) {
     return "Custo por unidade";
   }
 
@@ -1653,12 +1905,22 @@ function updateBudgetProfitMargin() {
   renderDashboard();
 }
 
+function updateBudgetDiscount() {
+  const activeBudget = getActiveBudget();
+  activeBudget.discountPercent = normalizePercent(dom.discountPercentInput.value);
+  saveAppState();
+  renderBudgetTotalsOnly();
+  renderDashboard();
+}
+
 function renderBudgetTotalsOnly() {
   const totals = calculateBudgetTotals(getActiveBudget());
   dom.materialTotalValue.textContent = formatCurrency(totals.materialCost);
   dom.laborTotalValue.textContent = formatCurrency(totals.laborCost);
   dom.budgetTotalValue.textContent = formatCurrency(totals.totalCost);
   dom.suggestedPriceValue.textContent = formatCurrency(totals.suggestedPrice);
+  dom.discountAmountValue.textContent = formatCurrency(totals.discountAmount);
+  dom.finalPriceValue.textContent = formatCurrency(totals.finalPrice);
 }
 
 function handleReferenceImageChange(event) {
@@ -1904,11 +2166,11 @@ function calculateUnitCost(item) {
   const packagePrice = normalizeNumber(item.packagePrice);
   const packageQuantity = normalizeNumber(item.packageQuantity);
 
-  if ([CATEGORY_NEEDLES, CATEGORY_DISPOSABLES].includes(item.category) && item.purchaseMode === PURCHASE_MODE_SINGLE) {
+  if (UNIT_PURCHASE_CATEGORIES.includes(item.category) && item.purchaseMode === PURCHASE_MODE_SINGLE) {
     return packagePrice;
   }
 
-  if ([CATEGORY_NEEDLES, CATEGORY_DISPOSABLES, CATEGORY_INKS, CATEGORY_PASTES, CATEGORY_LINEAR].includes(item.category)) {
+  if ([CATEGORY_NEEDLES, CATEGORY_DISPOSABLES, CATEGORY_CLEANING, CATEGORY_INKS, CATEGORY_PASTES, CATEGORY_LINEAR].includes(item.category)) {
     return calculateRawUnitCost(packagePrice, packageQuantity);
   }
 
@@ -1952,9 +2214,9 @@ function calculateLineSubtotal(item, quantityUsed) {
 }
 
 /**
- * Calculates budget totals and suggested selling price with optional margin.
+ * Calculates budget totals and final selling price with optional margin and discount.
  * @param {object} budget - Active budget state.
- * @returns {{materialCost: number, laborCost: number, totalCost: number, marginCost: number, suggestedPrice: number}} Budget totals.
+ * @returns {{materialCost: number, laborCost: number, totalCost: number, marginCost: number, suggestedPrice: number, discountAmount: number, finalPrice: number}} Budget totals.
  */
 function calculateBudgetTotals(budget) {
   const materialCost = budget.items.reduce((total, cartItem) => {
@@ -1964,13 +2226,17 @@ function calculateBudgetTotals(budget) {
   const laborCost = normalizeNumber(budget.hourlyRate) * normalizeNumber(budget.sessionDuration);
   const totalCost = materialCost + laborCost;
   const marginCost = totalCost * (normalizeNumber(budget.profitMarginPercent) / 100);
+  const suggestedPrice = totalCost + marginCost;
+  const discountAmount = suggestedPrice * (normalizePercent(budget.discountPercent) / 100);
 
   return {
     materialCost,
     laborCost,
     totalCost,
     marginCost,
-    suggestedPrice: totalCost + marginCost
+    suggestedPrice,
+    discountAmount,
+    finalPrice: Math.max(suggestedPrice - discountAmount, 0)
   };
 }
 
@@ -2006,6 +2272,7 @@ function isGeneratedBudget(budget) {
     || normalizeNumber(budget.hourlyRate) > 0
     || normalizeNumber(budget.sessionDuration) > 0
     || normalizeNumber(budget.profitMarginPercent) > 0
+    || normalizeNumber(budget.discountPercent) > 0
     || Boolean(sanitizeText(budget.referenceImage))
     || (Array.isArray(budget.items) && budget.items.length > 0);
 }
@@ -2045,11 +2312,11 @@ function getCalculationDescription(item) {
     return `${stockQuantity} caixa(s) em estoque. Caixa com ${formatNumber(item.packageQuantity)} unidades. Valor financeiro total: ${totalValue}.`;
   }
 
-  if (item.category === CATEGORY_DISPOSABLES && item.purchaseMode === PURCHASE_MODE_SINGLE) {
+  if ([CATEGORY_DISPOSABLES, CATEGORY_CLEANING].includes(item.category) && item.purchaseMode === PURCHASE_MODE_SINGLE) {
     return `${stockQuantity} unidade(s) em estoque. Uso inteiro no orçamento.`;
   }
 
-  if (item.category === CATEGORY_DISPOSABLES) {
+  if ([CATEGORY_DISPOSABLES, CATEGORY_CLEANING].includes(item.category)) {
     return `${stockQuantity} pacote(s)/caixa(s) em estoque. Pacote com ${formatNumber(item.packageQuantity)} unidades.`;
   }
 
@@ -2146,6 +2413,16 @@ function normalizeCategory(categoryValue) {
     avulso: CATEGORY_DISPOSABLES,
     avulsa: CATEGORY_DISPOSABLES,
     outros: CATEGORY_DISPOSABLES,
+    limpeza: CATEGORY_CLEANING,
+    finalizacao: CATEGORY_CLEANING,
+    finalização: CATEGORY_CLEANING,
+    "limpeza e finalizacao": CATEGORY_CLEANING,
+    "limpeza e finalização": CATEGORY_CLEANING,
+    acabamento: CATEGORY_CLEANING,
+    hectografico: CATEGORY_CLEANING,
+    hectográfico: CATEGORY_CLEANING,
+    stencil: CATEGORY_CLEANING,
+    "papel toalha": CATEGORY_CLEANING,
     "materiais de área/extensão": CATEGORY_LINEAR,
     "materiais de area/extensao": CATEGORY_LINEAR,
     "materiais de área": CATEGORY_LINEAR,
@@ -2176,6 +2453,10 @@ function normalizeNumber(value) {
     : compactValue;
   const parsedValue = Number.parseFloat(sanitizedValue);
   return Number.isFinite(parsedValue) ? parsedValue : 0;
+}
+
+function normalizePercent(value) {
+  return Math.min(Math.max(normalizeNumber(value), 0), 100);
 }
 
 function normalizeSearch(value) {
@@ -2334,7 +2615,9 @@ function createInvoiceHtml() {
         <div><span>Mão de obra</span><strong>${formatCurrency(totals.laborCost)}</strong></div>
         <div><span>Total</span><strong>${formatCurrency(totals.totalCost)}</strong></div>
         <div><span>Margem</span><strong>${formatNumber(activeBudget.profitMarginPercent)}%</strong></div>
-        <div><span>Preço sugerido</span><strong>${formatCurrency(totals.suggestedPrice)}</strong></div>
+        <div><span>Valor original</span><strong>${formatCurrency(totals.suggestedPrice)}</strong></div>
+        <div><span>Desconto</span><strong>${formatNumber(activeBudget.discountPercent)}%</strong></div>
+        <div><span>Valor final</span><strong>${formatCurrency(totals.finalPrice)}</strong></div>
       </section>
 
       <section class="invoice-labor-line">
@@ -2343,6 +2626,9 @@ function createInvoiceHtml() {
         <br />
         <strong>Margem:</strong>
         ${formatNumber(activeBudget.profitMarginPercent)}% = ${formatCurrency(totals.marginCost)}
+        <br />
+        <strong>Desconto:</strong>
+        ${formatNumber(activeBudget.discountPercent)}% = -${formatCurrency(totals.discountAmount)}
       </section>
 
       <table class="invoice-table">
@@ -2361,7 +2647,7 @@ function createInvoiceHtml() {
 
       <footer class="invoice-footer">
         <span>Orçamento gerado localmente no navegador.</span>
-        <strong>Preço sugerido: ${formatCurrency(totals.suggestedPrice)}</strong>
+        <strong>Valor final: ${formatCurrency(totals.finalPrice)}</strong>
       </footer>
     </article>
   `;
