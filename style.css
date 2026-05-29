@@ -1926,6 +1926,157 @@ html[data-theme="light"] .card-menu button {
   display: none;
 }
 
+.app-update-toast {
+  position: fixed;
+  right: calc(16px + env(safe-area-inset-right, 0px));
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  z-index: 400;
+  width: min(360px, calc(100vw - 32px));
+  min-height: 54px;
+  padding: 0 18px;
+  border: 1px solid var(--glass-border-strong);
+  border-radius: var(--radius-large);
+  background: var(--glass-surface-strong);
+  box-shadow: var(--shadow-deep);
+  color: var(--text-primary);
+  font-weight: 850;
+  text-align: left;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.app-update-toast:hover {
+  border-color: var(--purple-light);
+  transform: translateY(-2px);
+}
+
+.pdf-render-root {
+  position: fixed;
+  top: 0;
+  left: -10000px;
+  z-index: -1;
+  width: 794px;
+  min-height: 1123px;
+  padding: 0;
+  overflow: hidden;
+  background: #FFFFFF;
+  color: #121212;
+}
+
+.pdf-render-root .invoice-page {
+  width: 100%;
+  padding: 28px;
+  color: #121212;
+  background: #FFFFFF;
+  font-family: Arial, sans-serif;
+}
+
+.pdf-render-root .invoice-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 130px;
+  gap: 18px;
+  align-items: start;
+  padding-bottom: 16px;
+  border-bottom: 3px solid var(--purple-dark);
+}
+
+.pdf-render-root .invoice-header span,
+.pdf-render-root .invoice-summary-grid span {
+  display: block;
+  color: var(--purple);
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.pdf-render-root .invoice-header h1 {
+  margin-top: 8px;
+  color: #121212;
+  font-size: 28px;
+  line-height: 1.08;
+}
+
+.pdf-render-root .invoice-header p {
+  margin-top: 8px;
+  color: #121212;
+}
+
+.pdf-render-root .invoice-reference-image,
+.pdf-render-root .invoice-reference-placeholder {
+  width: 130px;
+  height: 130px;
+  border: 1px solid rgba(18, 18, 18, 0.18);
+  border-radius: 16px;
+}
+
+.pdf-render-root .invoice-reference-image {
+  object-fit: cover;
+}
+
+.pdf-render-root .invoice-reference-placeholder {
+  display: grid;
+  place-items: center;
+  padding: 10px;
+  color: rgba(18, 18, 18, 0.7);
+  font-size: 11px;
+  text-align: center;
+}
+
+.pdf-render-root .invoice-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin: 18px 0;
+}
+
+.pdf-render-root .invoice-summary-grid div,
+.pdf-render-root .invoice-labor-line,
+.pdf-render-root .invoice-footer {
+  padding: 13px;
+  border: 1px solid rgba(18, 18, 18, 0.14);
+  border-radius: 14px;
+  background: rgba(225, 190, 231, 0.22);
+  color: #121212;
+}
+
+.pdf-render-root .invoice-summary-grid strong {
+  display: block;
+  margin-top: 6px;
+  color: #121212;
+  font-size: 17px;
+}
+
+.pdf-render-root .invoice-labor-line {
+  margin-bottom: 16px;
+}
+
+.pdf-render-root .invoice-table {
+  width: 100%;
+  border-collapse: collapse;
+  color: #121212;
+  font-size: 10.5px;
+}
+
+.pdf-render-root .invoice-table th {
+  background: var(--purple-dark);
+  color: #FFFFFF;
+  text-align: left;
+}
+
+.pdf-render-root .invoice-table th,
+.pdf-render-root .invoice-table td {
+  padding: 9px;
+  border: 1px solid rgba(18, 18, 18, 0.14);
+  vertical-align: top;
+}
+
+.pdf-render-root .invoice-footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 18px;
+}
+
 @supports not (backdrop-filter: blur(12px)) {
   .topbar,
   .sidebar,

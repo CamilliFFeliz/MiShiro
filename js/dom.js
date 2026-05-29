@@ -1,3 +1,9 @@
+import { calculateBudgetTotals as calculateBudgetTotalsCore } from "./budget.js";
+import { calculateLineSubtotal as calculateLineSubtotalCore, calculateRawUnitCost as calculateRawUnitCostCore, calculateTotalInventoryValue as calculateTotalInventoryValueCore, calculateUnitCost as calculateUnitCostCore } from "./inventory.js";
+import { exportBudgetPdf } from "./pdf.js";
+import { createReactiveState, loadAppState as loadPersistedAppState, scheduleSaveAppState } from "./state.js";
+import { readStorageItem, writeStorageItem } from "./utils.js";
+
 const STORAGE_KEY = "CALCULADORA_TATTOO_STATE_V5";
 const THEME_STORAGE_KEY = "CALCULADORA_TATTOO_THEME";
 const LEGACY_STORAGE_KEYS = [
@@ -29,7 +35,7 @@ const MEASURE_GRAM = "g";
 const MEASURE_METER = "m";
 const INTEGER_STEP = 1;
 const DECIMAL_STEP = 0.5;
-const MAX_IMAGE_SIZE_BYTES = 1800000;
+const MAX_IMAGE_SIZE_BYTES = 8000000;
 const LOW_STOCK_THRESHOLD = 2;
 const BACKUP_APP_NAME = "CalculadoraTattoo";
 const BACKUP_SCHEMA = "calculadora-tattoo-inventory-backup";
@@ -589,7 +595,7 @@ const DEFAULT_BUDGET = {
 };
 
 const dom = {};
-let appState = loadAppState();
+let appState = null;
 let activeTheme = getInitialTheme();
 let activeScreen = "home";
 let activeInventoryCategory = CATEGORY_ALL;
@@ -599,13 +605,22 @@ let budgetSearchTerm = "";
 let selectedFormCategory = CATEGORY_NEEDLES;
 let editingItemId = null;
 let backupStatusTimeoutId = 0;
+let isReactiveRenderingEnabled = false;
+let pendingRenderAreas = new Set();
+let reactiveRenderFrameId = 0;
 
-function initializeApp() {
+export async function initializeApp() {
   bindDomReferences();
-  bindEvents();
+  appState = createReactiveState(await loadPersistedAppState({
+    storageKey: STORAGE_KEY,
+    legacyStorageKeys: LEGACY_STORAGE_KEYS,
+    createInitialState,
+    normalizeAppState
+  }), handleReactiveStateChange);
   applyTheme(activeTheme);
+  bindEvents();
   renderApp();
-  registerServiceWorker();
+  isReactiveRenderingEnabled = true;
 }
 
 function bindDomReferences() {
@@ -734,23 +749,6 @@ function bindEvents() {
   dom.restoreReferenceStockButton.addEventListener("click", restoreReferenceStock);
 }
 
-function readStorageItem(storageKey) {
-  try {
-    return localStorage.getItem(storageKey) || "";
-  } catch {
-    return "";
-  }
-}
-
-function writeStorageItem(storageKey, value) {
-  try {
-    localStorage.setItem(storageKey, value);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
 function getInitialTheme() {
   const storedTheme = readStorageItem(THEME_STORAGE_KEY);
 
@@ -791,31 +789,55 @@ function applyTheme(themeName) {
   renderLucideIcons();
 }
 
-function loadAppState() {
-  const savedState = readStorageItem(STORAGE_KEY) || getLegacyState();
-
-  if (!savedState) {
-    return persistInitialState(createInitialState());
+function handleReactiveStateChange(path) {
+  if (!isReactiveRenderingEnabled || !appState) {
+    return;
   }
 
-  try {
-    return normalizeAppState(JSON.parse(savedState));
-  } catch {
-    return persistInitialState(createInitialState());
+  scheduleSaveAppState(appState);
+  pendingRenderAreas.add(getRenderAreaForStatePath(path));
+
+  if (!reactiveRenderFrameId) {
+    reactiveRenderFrameId = window.requestAnimationFrame(flushReactiveRenders);
   }
 }
 
-function persistInitialState(initialState) {
-  if (!writeStorageItem(STORAGE_KEY, JSON.stringify(initialState))) {
-    return initialState;
+function getRenderAreaForStatePath(path) {
+  const rootKey = path[0];
+
+  if (rootKey === "inventoryItems") {
+    return "inventory";
   }
 
-  return initialState;
+  if (rootKey === "budgets" || rootKey === "activeBudgetId") {
+    return "budget";
+  }
+
+  return "app";
 }
 
-function getLegacyState() {
-  const legacyKey = LEGACY_STORAGE_KEYS.find((storageKey) => readStorageItem(storageKey));
-  return legacyKey ? readStorageItem(legacyKey) : "";
+function flushReactiveRenders() {
+  const renderAreas = new Set(pendingRenderAreas);
+  pendingRenderAreas = new Set();
+  reactiveRenderFrameId = 0;
+
+  if (renderAreas.has("app")) {
+    renderApp();
+    return;
+  }
+
+  if (renderAreas.has("inventory")) {
+    renderInventoryFilters();
+    renderBudgetFilters();
+    renderInventory();
+    renderStockPicker();
+    renderDashboard();
+  }
+
+  if (renderAreas.has("budget")) {
+    renderBudget();
+    renderDashboard();
+  }
 }
 
 function createInitialState() {
@@ -1237,7 +1259,7 @@ function showBackupStatus(message) {
 }
 
 function saveAppState() {
-  writeStorageItem(STORAGE_KEY, JSON.stringify(appState));
+  scheduleSaveAppState(appState);
 }
 
 function renderApp() {
@@ -2231,18 +2253,7 @@ function getCounterTotal(categoryName) {
  * @returns {number} Cost per unit, ml, gram or linear meter.
  */
 function calculateUnitCost(item) {
-  const packagePrice = normalizeNumber(item.packagePrice);
-  const packageQuantity = normalizeNumber(item.packageQuantity);
-
-  if (UNIT_PURCHASE_CATEGORIES.includes(item.category) && item.purchaseMode === PURCHASE_MODE_SINGLE) {
-    return packagePrice;
-  }
-
-  if ([CATEGORY_NEEDLES, CATEGORY_DISPOSABLES, CATEGORY_CLEANING, CATEGORY_INKS, CATEGORY_PASTES, CATEGORY_LINEAR].includes(item.category)) {
-    return calculateRawUnitCost(packagePrice, packageQuantity);
-  }
-
-  return calculateRawUnitCost(packagePrice, packageQuantity);
+  return calculateUnitCostCore(item, getInventoryCalculationContext());
 }
 
 /**
@@ -2252,14 +2263,7 @@ function calculateUnitCost(item) {
  * @returns {number} Fractional cost.
  */
 function calculateRawUnitCost(price, quantity) {
-  const normalizedPrice = normalizeNumber(price);
-  const normalizedQuantity = normalizeNumber(quantity);
-
-  if (normalizedPrice <= 0 || normalizedQuantity <= 0) {
-    return 0;
-  }
-
-  return normalizedPrice / normalizedQuantity;
+  return calculateRawUnitCostCore(price, quantity, normalizeNumber);
 }
 
 /**
@@ -2268,7 +2272,7 @@ function calculateRawUnitCost(price, quantity) {
  * @returns {number} Full purchase price multiplied by closed packages or loose units in stock.
  */
 function calculateTotalInventoryValue(item) {
-  return normalizeNumber(item.packagePrice) * normalizeNumber(item.stockQuantity);
+  return calculateTotalInventoryValueCore(item, normalizeNumber);
 }
 
 /**
@@ -2278,7 +2282,7 @@ function calculateTotalInventoryValue(item) {
  * @returns {number} Line subtotal.
  */
 function calculateLineSubtotal(item, quantityUsed) {
-  return calculateUnitCost(item) * normalizeNumber(quantityUsed);
+  return calculateLineSubtotalCore(item, quantityUsed, getInventoryCalculationContext());
 }
 
 /**
@@ -2287,25 +2291,21 @@ function calculateLineSubtotal(item, quantityUsed) {
  * @returns {{materialCost: number, laborCost: number, totalCost: number, marginCost: number, suggestedPrice: number, discountAmount: number, finalPrice: number}} Budget totals.
  */
 function calculateBudgetTotals(budget) {
-  const materialCost = budget.items.reduce((total, cartItem) => {
-    const inventoryItem = findInventoryItem(cartItem.inventoryItemId);
-    return inventoryItem ? total + calculateLineSubtotal(inventoryItem, cartItem.quantityUsed) : total;
-  }, 0);
-  const laborCost = normalizeNumber(budget.hourlyRate) * normalizeNumber(budget.sessionDuration);
-  const totalCost = materialCost + laborCost;
-  const marginCost = totalCost * (normalizeNumber(budget.profitMarginPercent) / 100);
-  const suggestedPrice = totalCost + marginCost;
-  const discountAmount = suggestedPrice * (normalizePercent(budget.discountPercent) / 100);
-  const finalPrice = Math.max(suggestedPrice - discountAmount, 0);
+  return calculateBudgetTotalsCore(budget, {
+    findInventoryItem,
+    calculateLineSubtotal,
+    normalizeNumber,
+    normalizePercent,
+    roundMoneyValue
+  });
+}
 
+function getInventoryCalculationContext() {
   return {
-    materialCost: roundMoneyValue(materialCost),
-    laborCost: roundMoneyValue(laborCost),
-    totalCost: roundMoneyValue(totalCost),
-    marginCost: roundMoneyValue(marginCost),
-    suggestedPrice: roundMoneyValue(suggestedPrice),
-    discountAmount: roundMoneyValue(discountAmount),
-    finalPrice: roundMoneyValue(finalPrice)
+    normalizeNumber,
+    purchaseModeSingle: PURCHASE_MODE_SINGLE,
+    unitPurchaseCategories: UNIT_PURCHASE_CATEGORIES,
+    supportedCategories: [CATEGORY_NEEDLES, CATEGORY_DISPOSABLES, CATEGORY_CLEANING, CATEGORY_INKS, CATEGORY_PASTES, CATEGORY_LINEAR]
   };
 }
 
@@ -2638,13 +2638,25 @@ function escapeAttribute(value) {
   return escapeHtml(value).replace(/`/g, "&#096;");
 }
 
+function sanitizeFileName(value) {
+  return normalizeSearch(value)
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "")
+    .slice(0, 80) || "orcamento-tattoo";
+}
+
 function isImageDataUrl(value) {
   return /^data:image\/(png|jpeg|jpg|webp);base64,/i.test(String(value || ""));
 }
 
 function exportPdf() {
+  const activeBudget = getActiveBudget();
+  const fileName = `${sanitizeFileName(activeBudget.name || "orcamento-tattoo")}.pdf`;
   dom.invoiceDocument.innerHTML = createInvoiceHtml();
-  requestAnimationFrame(() => window.print());
+  exportBudgetPdf({
+    html: dom.invoiceDocument.innerHTML,
+    fileName
+  });
 }
 
 function createInvoiceHtml() {
@@ -2725,11 +2737,3 @@ function createInvoiceHtml() {
     </article>
   `;
 }
-
-function registerServiceWorker() {
-  if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("service-worker.js").catch(() => {});
-  }
-}
-
-document.addEventListener("DOMContentLoaded", initializeApp);

@@ -1,20 +1,31 @@
-const CACHE_NAME = "calculadora-tattoo-v5.6.0";
+const CACHE_NAME = "calculadora-tattoo-v5.7.0";
+const APP_CACHE_PREFIX = "calculadora-tattoo-";
 const APP_SHELL_URL = "./index.html";
-const RUNTIME_CACHE_NAME = "calculadora-tattoo-runtime-v5.6.0";
-const LUCIDE_CDN_HOSTNAME = "unpkg.com";
+const RUNTIME_CACHE_NAME = "calculadora-tattoo-runtime-v5.7.0";
 const LUCIDE_CDN_URL = "https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js";
+const HTML2PDF_CDN_URL = "https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js";
+const EXTERNAL_ASSET_URLS = [
+  LUCIDE_CDN_URL,
+  HTML2PDF_CDN_URL
+];
 const APP_ASSETS = [
   "./",
   APP_SHELL_URL,
   "./style.css",
-  "./script.js",
+  "./js/main.js",
+  "./js/dom.js",
+  "./js/state.js",
+  "./js/budget.js",
+  "./js/inventory.js",
+  "./js/pdf.js",
+  "./js/pwa.js",
+  "./js/utils.js",
   "./manifest.webmanifest",
   "./icons/icon.svg"
 ];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(cacheApplicationShell());
-  self.skipWaiting();
 });
 
 self.addEventListener("activate", (event) => {
@@ -30,6 +41,12 @@ self.addEventListener("fetch", (event) => {
   event.respondWith(handleRequest(event.request));
 });
 
+self.addEventListener("message", (event) => {
+  if (event.data?.type === "SKIP_WAITING") {
+    self.skipWaiting();
+  }
+});
+
 /**
  * Stores the local application shell for instant startup and offline access.
  * @returns {Promise<void>} Resolves when the shell cache is refreshed.
@@ -37,7 +54,7 @@ self.addEventListener("fetch", (event) => {
 async function cacheApplicationShell() {
   const cache = await caches.open(CACHE_NAME);
   await cache.addAll(APP_ASSETS);
-  await cacheExternalAsset(LUCIDE_CDN_URL);
+  await Promise.all(EXTERNAL_ASSET_URLS.map(cacheExternalAsset));
 }
 
 /**
@@ -65,7 +82,7 @@ async function deleteOldCaches() {
   const cacheNames = await caches.keys();
   await Promise.all(
     cacheNames
-      .filter((cacheName) => ![CACHE_NAME, RUNTIME_CACHE_NAME].includes(cacheName))
+      .filter((cacheName) => cacheName.startsWith(APP_CACHE_PREFIX) && ![CACHE_NAME, RUNTIME_CACHE_NAME].includes(cacheName))
       .map((cacheName) => caches.delete(cacheName))
   );
 }
@@ -96,7 +113,7 @@ async function handleRequest(request) {
  * @returns {Promise<Response>} Cached or network response.
  */
 async function getExternalAssetResponse(request, requestUrl) {
-  if (requestUrl.hostname !== LUCIDE_CDN_HOSTNAME) {
+  if (!EXTERNAL_ASSET_URLS.includes(requestUrl.href)) {
     return fetch(request);
   }
 
