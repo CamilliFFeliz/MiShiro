@@ -1,9 +1,16 @@
 const STORAGE_KEY = "CALCULADORA_TATTOO_STATE_V5";
+const THEME_STORAGE_KEY = "CALCULADORA_TATTOO_THEME";
 const LEGACY_STORAGE_KEYS = [
   "CALCULADORA_TATTOO_LOCAL_STATE_V1",
   "CALCULADORA_TATTOO_STATE_V2",
   "CALCULADORA_TATTOO_STATE_V3"
 ];
+const THEME_DARK = "dark";
+const THEME_LIGHT = "light";
+const THEME_META_COLORS = {
+  [THEME_DARK]: "#2D0B40",
+  [THEME_LIGHT]: "#F6F7FB"
+};
 const CATEGORY_ALL = "Todos";
 const CATEGORY_NEEDLES = "Agulhas e Cartuchos";
 const CATEGORY_INKS = "Tintas";
@@ -583,6 +590,7 @@ const DEFAULT_BUDGET = {
 
 const dom = {};
 let appState = loadAppState();
+let activeTheme = getInitialTheme();
 let activeScreen = "home";
 let activeInventoryCategory = CATEGORY_ALL;
 let activeBudgetCategory = CATEGORY_ALL;
@@ -595,6 +603,7 @@ let backupStatusTimeoutId = 0;
 function initializeApp() {
   bindDomReferences();
   bindEvents();
+  applyTheme(activeTheme);
   renderApp();
   registerServiceWorker();
 }
@@ -607,6 +616,9 @@ function bindDomReferences() {
   dom.homeActions = document.querySelectorAll("[data-home-action]");
   dom.pageTitle = document.querySelector("#pageTitle");
   dom.pageEyebrow = document.querySelector("#pageEyebrow");
+  dom.themeColorMeta = document.querySelector("#themeColorMeta");
+  dom.themeToggleButton = document.querySelector("#themeToggleButton");
+  dom.themeToggleLabel = document.querySelector("#themeToggleLabel");
   dom.screens = document.querySelectorAll("[data-screen]");
   dom.quickNewItemButton = document.querySelector("#quickNewItemButton");
   dom.openItemModalButton = document.querySelector("#openItemModalButton");
@@ -666,6 +678,7 @@ function bindDomReferences() {
 function bindEvents() {
   dom.openSidebarButton.addEventListener("click", openSidebar);
   dom.drawerBackdrop.addEventListener("click", closeSidebar);
+  dom.themeToggleButton.addEventListener("click", toggleTheme);
   dom.navLinks.forEach((navLink) => {
     navLink.addEventListener("click", () => setActiveScreen(navLink.dataset.screenTarget));
   });
@@ -721,8 +734,65 @@ function bindEvents() {
   dom.restoreReferenceStockButton.addEventListener("click", restoreReferenceStock);
 }
 
+function readStorageItem(storageKey) {
+  try {
+    return localStorage.getItem(storageKey) || "";
+  } catch {
+    return "";
+  }
+}
+
+function writeStorageItem(storageKey, value) {
+  try {
+    localStorage.setItem(storageKey, value);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function getInitialTheme() {
+  const storedTheme = readStorageItem(THEME_STORAGE_KEY);
+
+  if ([THEME_DARK, THEME_LIGHT].includes(storedTheme)) {
+    return storedTheme;
+  }
+
+  if (document.documentElement.dataset.theme === THEME_LIGHT) {
+    return THEME_LIGHT;
+  }
+
+  return THEME_DARK;
+}
+
+function toggleTheme() {
+  activeTheme = activeTheme === THEME_DARK ? THEME_LIGHT : THEME_DARK;
+  writeStorageItem(THEME_STORAGE_KEY, activeTheme);
+  applyTheme(activeTheme);
+}
+
+function applyTheme(themeName) {
+  const normalizedTheme = themeName === THEME_LIGHT ? THEME_LIGHT : THEME_DARK;
+  activeTheme = normalizedTheme;
+  document.documentElement.dataset.theme = normalizedTheme;
+
+  if (dom.themeColorMeta) {
+    dom.themeColorMeta.setAttribute("content", THEME_META_COLORS[normalizedTheme]);
+  }
+
+  if (dom.themeToggleButton) {
+    const isLightTheme = normalizedTheme === THEME_LIGHT;
+    dom.themeToggleButton.setAttribute("aria-pressed", String(isLightTheme));
+    dom.themeToggleButton.setAttribute("aria-label", `Alternar para tema ${isLightTheme ? "escuro" : "claro"}`);
+    dom.themeToggleButton.innerHTML = `${createIconHtml(isLightTheme ? "sun" : "moon")}<span id="themeToggleLabel">${isLightTheme ? "Claro" : "Escuro"}</span>`;
+    dom.themeToggleLabel = document.querySelector("#themeToggleLabel");
+  }
+
+  renderLucideIcons();
+}
+
 function loadAppState() {
-  const savedState = localStorage.getItem(STORAGE_KEY) || getLegacyState();
+  const savedState = readStorageItem(STORAGE_KEY) || getLegacyState();
 
   if (!savedState) {
     return persistInitialState(createInitialState());
@@ -736,9 +806,7 @@ function loadAppState() {
 }
 
 function persistInitialState(initialState) {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(initialState));
-  } catch {
+  if (!writeStorageItem(STORAGE_KEY, JSON.stringify(initialState))) {
     return initialState;
   }
 
@@ -746,8 +814,8 @@ function persistInitialState(initialState) {
 }
 
 function getLegacyState() {
-  const legacyKey = LEGACY_STORAGE_KEYS.find((storageKey) => localStorage.getItem(storageKey));
-  return legacyKey ? localStorage.getItem(legacyKey) : "";
+  const legacyKey = LEGACY_STORAGE_KEYS.find((storageKey) => readStorageItem(storageKey));
+  return legacyKey ? readStorageItem(legacyKey) : "";
 }
 
 function createInitialState() {
@@ -1169,7 +1237,7 @@ function showBackupStatus(message) {
 }
 
 function saveAppState() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+  writeStorageItem(STORAGE_KEY, JSON.stringify(appState));
 }
 
 function renderApp() {
@@ -2228,15 +2296,16 @@ function calculateBudgetTotals(budget) {
   const marginCost = totalCost * (normalizeNumber(budget.profitMarginPercent) / 100);
   const suggestedPrice = totalCost + marginCost;
   const discountAmount = suggestedPrice * (normalizePercent(budget.discountPercent) / 100);
+  const finalPrice = Math.max(suggestedPrice - discountAmount, 0);
 
   return {
-    materialCost,
-    laborCost,
-    totalCost,
-    marginCost,
-    suggestedPrice,
-    discountAmount,
-    finalPrice: Math.max(suggestedPrice - discountAmount, 0)
+    materialCost: roundMoneyValue(materialCost),
+    laborCost: roundMoneyValue(laborCost),
+    totalCost: roundMoneyValue(totalCost),
+    marginCost: roundMoneyValue(marginCost),
+    suggestedPrice: roundMoneyValue(suggestedPrice),
+    discountAmount: roundMoneyValue(discountAmount),
+    finalPrice: roundMoneyValue(finalPrice)
   };
 }
 
@@ -2469,6 +2538,10 @@ function sanitizeText(value) {
 
 function roundDecimal(value) {
   return Math.round((normalizeNumber(value) + Number.EPSILON) * 100) / 100;
+}
+
+function roundMoneyValue(value) {
+  return roundDecimal(value);
 }
 
 function formatCurrency(value) {
