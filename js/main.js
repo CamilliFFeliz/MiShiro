@@ -4,6 +4,7 @@ import { applyMiShiroBrandV2 } from "./mishiro-brand-v2.js";
 import { setupMiShiroPdfExports } from "./mishiro-pdf-tools.js";
 import { setupDirectPdfExport } from "./mishiro-pdf-direct.js";
 import { setupMiShiroExperienceLayer } from "./mishiro-ux.js";
+import { setupStudioProLayer } from "./mishiro-studio-pro.js";
 import { registerServiceWorkerUpdateFlow } from "./pwa.js";
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -12,6 +13,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   applyMiShiroBrandV2();
   setupMiShiroPdfExports();
   setupDirectPdfExport();
+  setupStudioProLayer();
   setupMiShiroExperienceLayer();
   registerServiceWorkerUpdateFlow();
 });
