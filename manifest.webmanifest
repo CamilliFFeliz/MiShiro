@@ -22,7 +22,7 @@
       "url": "./index.html",
       "icons": [
         {
-          "src": "icons/icon.svg",
+          "src": "icons/mishiro.svg",
           "sizes": "any",
           "type": "image/svg+xml",
           "purpose": "any maskable"
@@ -36,7 +36,7 @@
       "url": "./index.html",
       "icons": [
         {
-          "src": "icons/icon.svg",
+          "src": "icons/mishiro.svg",
           "sizes": "any",
           "type": "image/svg+xml",
           "purpose": "any maskable"
@@ -46,7 +46,7 @@
   ],
   "icons": [
     {
-      "src": "icons/icon.svg",
+      "src": "icons/mishiro.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any maskable"
