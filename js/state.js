@@ -1,4 +1,4 @@
-import { readStorageItem, removeStorageItem, toPlainData } from "./utils.js";
+import { readStorageItem, removeStorageItem, writeStorageItem, toPlainData } from "./utils.js";
 
 const DATABASE_NAME = "CalculadoraTattooDB";
 const DATABASE_VERSION = 1;
@@ -7,9 +7,11 @@ const APP_STATE_ID = "current";
 const SAVE_DEBOUNCE_MS = 180;
 
 let databasePromise = null;
+let fallbackStorageKey = "CALCULADORA_TATTOO_STATE_V5";
 let pendingSaveTimeoutId = 0;
 
 export async function loadAppState({ storageKey, legacyStorageKeys, createInitialState, normalizeAppState }) {
+  fallbackStorageKey = storageKey || fallbackStorageKey;
   const indexedState = await readIndexedAppState().catch(() => null);
 
   if (indexedState) {
@@ -86,22 +88,35 @@ export function scheduleSaveAppState(appState) {
 }
 
 export async function saveAppStateNow(appState) {
+  const payload = {
+    savedAt: new Date().toISOString(),
+    ...toPlainData(appState)
+  };
+
   if (!("indexedDB" in window)) {
-    return false;
+    return writeFallbackAppState(payload);
   }
 
-  const database = await openDatabase();
+  try {
+    const database = await openDatabase();
 
-  return new Promise((resolve, reject) => {
-    const transaction = database.transaction(APP_STATE_STORE, "readwrite");
-    transaction.objectStore(APP_STATE_STORE).put({
-      id: APP_STATE_ID,
-      updatedAt: new Date().toISOString(),
-      value: toPlainData(appState)
+    return await new Promise((resolve, reject) => {
+      const transaction = database.transaction(APP_STATE_STORE, "readwrite");
+      transaction.objectStore(APP_STATE_STORE).put({
+        id: APP_STATE_ID,
+        updatedAt: new Date().toISOString(),
+        value: payload
+      });
+      transaction.addEventListener("complete", () => {
+        writeFallbackAppState(payload);
+        resolve(true);
+      });
+      transaction.addEventListener("error", () => reject(transaction.error));
+      transaction.addEventListener("abort", () => reject(transaction.error));
     });
-    transaction.addEventListener("complete", () => resolve(true));
-    transaction.addEventListener("error", () => reject(transaction.error));
-  });
+  } catch {
+    return writeFallbackAppState(payload);
+  }
 }
 
 async function readIndexedAppState() {
@@ -155,5 +170,13 @@ function readLegacyAppState(storageKey, legacyStorageKeys) {
 }
 
 function clearLegacyAppState(storageKey, legacyStorageKeys) {
-  [storageKey, ...legacyStorageKeys].forEach(removeStorageItem);
+  legacyStorageKeys.forEach(removeStorageItem);
+}
+
+function writeFallbackAppState(appState) {
+  try {
+    return writeStorageItem(fallbackStorageKey, JSON.stringify(toPlainData(appState)));
+  } catch {
+    return false;
+  }
 }

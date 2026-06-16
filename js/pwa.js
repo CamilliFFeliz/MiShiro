@@ -1,7 +1,7 @@
-const APP_CACHE_PREFIX = "calculadora-tattoo-";
+const APP_CACHE_PREFIXES = ["calculadora-tattoo-", "mishiro-orcamentos-"];
 const CURRENT_CACHE_NAMES = [
-  "calculadora-tattoo-v5.7.0",
-  "calculadora-tattoo-runtime-v5.7.0"
+  "mishiro-orcamentos-static-v2",
+  "mishiro-orcamentos-runtime-v2"
 ];
 
 let hasReloadedForUpdate = false;
@@ -11,27 +11,35 @@ export function registerServiceWorkerUpdateFlow() {
     return;
   }
 
-  navigator.serviceWorker.register("service-worker.js")
-    .then((registration) => {
-      registration.addEventListener("updatefound", () => {
-        const newWorker = registration.installing;
+  const register = () => {
+    navigator.serviceWorker.register("service-worker.js")
+      .then((registration) => {
+        registration.addEventListener("updatefound", () => {
+          const newWorker = registration.installing;
 
-        if (!newWorker) {
-          return;
-        }
-
-        newWorker.addEventListener("statechange", () => {
-          if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
-            showUpdateToast(newWorker);
+          if (!newWorker) {
+            return;
           }
-        });
-      });
 
-      if (registration.waiting && navigator.serviceWorker.controller) {
-        showUpdateToast(registration.waiting);
-      }
-    })
-    .catch(() => {});
+          newWorker.addEventListener("statechange", () => {
+            if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
+              showUpdateToast(newWorker);
+            }
+          });
+        });
+
+        if (registration.waiting && navigator.serviceWorker.controller) {
+          showUpdateToast(registration.waiting);
+        }
+      })
+      .catch(() => {});
+  };
+
+  if (document.readyState === "complete") {
+    register();
+  } else {
+    window.addEventListener("load", register, { once: true });
+  }
 
   navigator.serviceWorker.addEventListener("controllerchange", () => {
     if (hasReloadedForUpdate) {
@@ -70,7 +78,8 @@ async function clearOutdatedAppCaches() {
   const cacheNames = await caches.keys();
   await Promise.all(
     cacheNames
-      .filter((cacheName) => cacheName.startsWith(APP_CACHE_PREFIX) && !CURRENT_CACHE_NAMES.includes(cacheName))
+      .filter((cacheName) => APP_CACHE_PREFIXES.some((prefix) => cacheName.startsWith(prefix)))
+      .filter((cacheName) => !CURRENT_CACHE_NAMES.includes(cacheName))
       .map((cacheName) => caches.delete(cacheName))
   );
 }
