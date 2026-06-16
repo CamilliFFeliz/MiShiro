@@ -1,8 +1,8 @@
 {
   "id": "./index.html",
-  "name": "MiShiro Orçamentos",
-  "short_name": "MiShiro",
-  "description": "PWA offline para controle de estoque, cálculo de custos e criação de orçamentos para estúdios de tatuagem.",
+  "name": "CalculadoraTattoo",
+  "short_name": "TattooCalc",
+  "description": "PWA offline para gestão de estoque, orçamentos e relatórios financeiros de estúdios de tatuagem.",
   "lang": "pt-BR",
   "dir": "ltr",
   "start_url": "./index.html",
@@ -14,28 +14,42 @@
   "theme_color": "#2D0B40",
   "categories": ["business", "productivity", "finance"],
   "prefer_related_applications": false,
+  "shortcuts": [
+    {
+      "name": "Abrir estoque",
+      "short_name": "Estoque",
+      "description": "Abrir o aplicativo para gerenciar insumos.",
+      "url": "./index.html",
+      "icons": [
+        {
+          "src": "icons/icon.svg",
+          "sizes": "any",
+          "type": "image/svg+xml",
+          "purpose": "any maskable"
+        }
+      ]
+    },
+    {
+      "name": "Criar orçamento",
+      "short_name": "Orçamento",
+      "description": "Abrir o aplicativo para montar um orçamento.",
+      "url": "./index.html",
+      "icons": [
+        {
+          "src": "icons/icon.svg",
+          "sizes": "any",
+          "type": "image/svg+xml",
+          "purpose": "any maskable"
+        }
+      ]
+    }
+  ],
   "icons": [
     {
       "src": "icons/icon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any maskable"
-    }
-  ],
-  "shortcuts": [
-    {
-      "name": "Abrir estoque",
-      "short_name": "Estoque",
-      "description": "Abrir o estoque de insumos.",
-      "url": "./index.html#inventory",
-      "icons": [{ "src": "icons/icon.svg", "sizes": "any", "type": "image/svg+xml" }]
-    },
-    {
-      "name": "Criar orçamento",
-      "short_name": "Orçamento",
-      "description": "Abrir a tela de orçamento.",
-      "url": "./index.html#budget",
-      "icons": [{ "src": "icons/icon.svg", "sizes": "any", "type": "image/svg+xml" }]
     }
   ]
 }

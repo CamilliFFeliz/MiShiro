@@ -12,6 +12,7 @@ let pendingSaveTimeoutId = 0;
 
 export async function loadAppState({ storageKey, legacyStorageKeys, createInitialState, normalizeAppState }) {
   fallbackStorageKey = storageKey || fallbackStorageKey;
+
   const indexedState = await readIndexedAppState().catch(() => null);
 
   if (indexedState) {
@@ -25,7 +26,7 @@ export async function loadAppState({ storageKey, legacyStorageKeys, createInitia
     const hasMigrated = await saveAppStateNow(normalizedLegacyState).catch(() => false);
 
     if (hasMigrated) {
-      clearLegacyAppState(storageKey, legacyStorageKeys);
+      clearLegacyAppState(legacyStorageKeys);
     }
 
     return normalizedLegacyState;
@@ -88,34 +89,31 @@ export function scheduleSaveAppState(appState) {
 }
 
 export async function saveAppStateNow(appState) {
-  const payload = {
-    savedAt: new Date().toISOString(),
-    ...toPlainData(appState)
-  };
+  const plainState = toPlainData(appState);
 
   if (!("indexedDB" in window)) {
-    return writeFallbackAppState(payload);
+    return writeFallbackAppState(plainState);
   }
 
   try {
     const database = await openDatabase();
 
-    return await new Promise((resolve, reject) => {
+    await new Promise((resolve, reject) => {
       const transaction = database.transaction(APP_STATE_STORE, "readwrite");
       transaction.objectStore(APP_STATE_STORE).put({
         id: APP_STATE_ID,
         updatedAt: new Date().toISOString(),
-        value: payload
+        value: plainState
       });
-      transaction.addEventListener("complete", () => {
-        writeFallbackAppState(payload);
-        resolve(true);
-      });
+      transaction.addEventListener("complete", () => resolve(true));
       transaction.addEventListener("error", () => reject(transaction.error));
       transaction.addEventListener("abort", () => reject(transaction.error));
     });
+
+    writeFallbackAppState(plainState);
+    return true;
   } catch {
-    return writeFallbackAppState(payload);
+    return writeFallbackAppState(plainState);
   }
 }
 
@@ -127,6 +125,7 @@ async function readIndexedAppState() {
     const request = transaction.objectStore(APP_STATE_STORE).get(APP_STATE_ID);
     request.addEventListener("success", () => resolve(request.result?.value || null));
     request.addEventListener("error", () => reject(request.error));
+    transaction.addEventListener("abort", () => reject(transaction.error));
   });
 }
 
@@ -148,6 +147,7 @@ function openDatabase() {
       });
       request.addEventListener("success", () => resolve(request.result));
       request.addEventListener("error", () => reject(request.error));
+      request.addEventListener("blocked", () => reject(request.error || new Error("A abertura do banco local foi bloqueada.")));
     });
   }
 
@@ -169,7 +169,7 @@ function readLegacyAppState(storageKey, legacyStorageKeys) {
   }
 }
 
-function clearLegacyAppState(storageKey, legacyStorageKeys) {
+function clearLegacyAppState(legacyStorageKeys) {
   legacyStorageKeys.forEach(removeStorageItem);
 }
 

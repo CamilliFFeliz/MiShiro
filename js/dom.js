@@ -597,7 +597,7 @@ const DEFAULT_BUDGET = {
 const dom = {};
 let appState = null;
 let activeTheme = getInitialTheme();
-let activeScreen = getInitialScreen();
+let activeScreen = "home";
 let activeInventoryCategory = CATEGORY_ALL;
 let activeBudgetCategory = CATEGORY_ALL;
 let inventorySearchTerm = "";
@@ -747,14 +747,6 @@ function bindEvents() {
   dom.importInventoryBackupButton.addEventListener("click", () => dom.inventoryBackupFileInput.click());
   dom.inventoryBackupFileInput.addEventListener("change", handleInventoryBackupFileChange);
   dom.restoreReferenceStockButton.addEventListener("click", restoreReferenceStock);
-}
-
-
-function getInitialScreen() {
-  const hashScreen = sanitizeText(window.location.hash).replace(/^#/, "");
-  const queryScreen = new URLSearchParams(window.location.search).get("screen");
-  const requestedScreen = sanitizeText(queryScreen || hashScreen);
-  return Object.prototype.hasOwnProperty.call(SCREEN_META, requestedScreen) ? requestedScreen : "home";
 }
 
 function getInitialTheme() {

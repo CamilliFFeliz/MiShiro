@@ -1,114 +1,144 @@
-const CACHE_NAME = "mishiro-orcamentos-static-v2";
-const RUNTIME_CACHE = "mishiro-orcamentos-runtime-v2";
-const STATIC_ASSETS = [
+const CACHE_NAME = "mishiro-orcamentos-static-v3-css-restaurado";
+const RUNTIME_CACHE_NAME = "mishiro-orcamentos-runtime-v3-css-restaurado";
+const APP_CACHE_PREFIXES = ["calculadora-tattoo-", "mishiro-orcamentos-"];
+const CURRENT_CACHE_NAMES = [CACHE_NAME, RUNTIME_CACHE_NAME];
+const APP_SHELL_URL = "./index.html";
+const LUCIDE_CDN_URL = "https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js";
+const HTML2PDF_CDN_URL = "https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js";
+const EXTERNAL_ASSET_URLS = [
+  LUCIDE_CDN_URL,
+  HTML2PDF_CDN_URL
+];
+const APP_ASSETS = [
   "./",
-  "./index.html",
+  APP_SHELL_URL,
   "./style.css",
-  "./manifest.webmanifest",
-  "./icons/icon.svg",
   "./js/main.js",
   "./js/dom.js",
   "./js/state.js",
-  "./js/utils.js",
-  "./js/inventory.js",
   "./js/budget.js",
+  "./js/inventory.js",
   "./js/pdf.js",
-  "./js/pwa.js"
+  "./js/pwa.js",
+  "./js/utils.js",
+  "./manifest.webmanifest",
+  "./icons/icon.svg"
 ];
 
 self.addEventListener("install", (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then((cache) => cache.addAll(STATIC_ASSETS))
-      .then(() => self.skipWaiting())
-      .catch(() => self.skipWaiting())
-  );
+  event.waitUntil(cacheApplicationShell().finally(() => self.skipWaiting()));
 });
 
 self.addEventListener("activate", (event) => {
-  event.waitUntil(
-    caches.keys()
-      .then((cacheNames) => Promise.all(
-        cacheNames
-          .filter((cacheName) => cacheName !== CACHE_NAME && cacheName !== RUNTIME_CACHE)
-          .map((cacheName) => caches.delete(cacheName))
-      ))
-      .then(() => self.clients.claim())
-  );
+  event.waitUntil(deleteOldCaches().then(() => self.clients.claim()));
+});
+
+self.addEventListener("fetch", (event) => {
+  if (event.request.method !== "GET") {
+    return;
+  }
+
+  event.respondWith(handleRequest(event.request));
 });
 
 self.addEventListener("message", (event) => {
-  if (event.data && event.data.type === "SKIP_WAITING") {
+  if (event.data?.type === "SKIP_WAITING") {
     self.skipWaiting();
   }
 });
 
-self.addEventListener("fetch", (event) => {
-  const { request } = event;
+async function cacheApplicationShell() {
+  const cache = await caches.open(CACHE_NAME);
+  await cache.addAll(APP_ASSETS);
+  await Promise.all(EXTERNAL_ASSET_URLS.map(cacheExternalAsset));
+}
 
-  if (request.method !== "GET") {
-    return;
+async function cacheExternalAsset(assetUrl) {
+  try {
+    const response = await fetch(assetUrl, { mode: "cors" });
+
+    if (response && response.ok) {
+      const cache = await caches.open(RUNTIME_CACHE_NAME);
+      await cache.put(assetUrl, response);
+    }
+  } catch {
   }
+}
 
-  const url = new URL(request.url);
+async function deleteOldCaches() {
+  const cacheNames = await caches.keys();
+  await Promise.all(
+    cacheNames
+      .filter((cacheName) => APP_CACHE_PREFIXES.some((prefix) => cacheName.startsWith(prefix)))
+      .filter((cacheName) => !CURRENT_CACHE_NAMES.includes(cacheName))
+      .map((cacheName) => caches.delete(cacheName))
+  );
+}
 
-  if (url.origin !== self.location.origin) {
-    event.respondWith(fetch(request).catch(() => caches.match(request)));
-    return;
-  }
-
+async function handleRequest(request) {
   if (request.mode === "navigate") {
-    event.respondWith(
-      fetch(request)
-        .then((response) => {
-          const clone = response.clone();
-          caches.open(RUNTIME_CACHE).then((cache) => cache.put(request, clone));
-          return response;
-        })
-        .catch(() => caches.match("./index.html"))
-    );
-    return;
+    return getNavigationResponse(request);
   }
 
-  if (isStaticAsset(url)) {
-    event.respondWith(staleWhileRevalidate(request));
-    return;
+  const requestUrl = new URL(request.url);
+
+  if (requestUrl.origin !== self.location.origin) {
+    return getExternalAssetResponse(request, requestUrl);
   }
 
-  event.respondWith(cacheFirst(request));
-});
-
-function isStaticAsset(url) {
-  return /\.(html|css|js|json|webmanifest|svg|png|jpg|jpeg|webp|woff2?)$/i.test(url.pathname);
+  return getLocalAssetResponse(request);
 }
 
-async function staleWhileRevalidate(request) {
-  const cached = await caches.match(request);
-  const networkPromise = fetch(request)
-    .then((response) => {
-      if (response && response.ok) {
-        caches.open(RUNTIME_CACHE).then((cache) => cache.put(request, response.clone()));
-      }
-      return response;
-    })
-    .catch(() => cached);
+async function getExternalAssetResponse(request, requestUrl) {
+  if (!EXTERNAL_ASSET_URLS.includes(requestUrl.href)) {
+    return fetch(request);
+  }
 
-  return cached || networkPromise;
+  const cachedResponse = await caches.match(request);
+
+  try {
+    const networkResponse = await fetch(request);
+
+    if (networkResponse && networkResponse.ok) {
+      const cache = await caches.open(RUNTIME_CACHE_NAME);
+      await cache.put(request, networkResponse.clone());
+      return networkResponse;
+    }
+  } catch {
+  }
+
+  return cachedResponse || fetch(request);
 }
 
-async function cacheFirst(request) {
-  const cached = await caches.match(request);
+async function getNavigationResponse(request) {
+  try {
+    const networkResponse = await fetch(request);
 
-  if (cached) {
-    return cached;
+    if (networkResponse && networkResponse.ok) {
+      const cache = await caches.open(CACHE_NAME);
+      await cache.put(APP_SHELL_URL, networkResponse.clone());
+    }
+
+    return networkResponse;
+  } catch {
+    const cachedResponse = await caches.match(APP_SHELL_URL);
+    return cachedResponse || Response.error();
+  }
+}
+
+async function getLocalAssetResponse(request) {
+  const cachedResponse = await caches.match(request);
+
+  try {
+    const networkResponse = await fetch(request);
+
+    if (networkResponse && networkResponse.ok) {
+      const cache = await caches.open(CACHE_NAME);
+      await cache.put(request, networkResponse.clone());
+      return networkResponse;
+    }
+  } catch {
   }
 
-  const response = await fetch(request);
-
-  if (response && response.ok) {
-    const cache = await caches.open(RUNTIME_CACHE);
-    cache.put(request, response.clone());
-  }
-
-  return response;
+  return cachedResponse || Response.error();
 }

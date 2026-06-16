@@ -1,7 +1,7 @@
 const APP_CACHE_PREFIXES = ["calculadora-tattoo-", "mishiro-orcamentos-"];
 const CURRENT_CACHE_NAMES = [
-  "mishiro-orcamentos-static-v2",
-  "mishiro-orcamentos-runtime-v2"
+  "mishiro-orcamentos-static-v3-css-restaurado",
+  "mishiro-orcamentos-runtime-v3-css-restaurado"
 ];
 
 let hasReloadedForUpdate = false;

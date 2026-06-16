@@ -4,93 +4,82 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta id="themeColorMeta" name="theme-color" content="#2D0B40" />
-  <meta name="description" content="MiShiro Orçamentos: PWA offline para estoque, orçamento e relatórios de estúdio de tatuagem." />
+  <meta name="description" content="CalculadoraTattoo: PWA para gestão de estoque e orçamento de estúdios de tatuagem." />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="MiShiro" />
-  <meta name="application-name" content="MiShiro Orçamentos" />
-  <meta name="referrer" content="strict-origin-when-cross-origin" />
+  <meta name="apple-mobile-web-app-title" content="CalculadoraTattoo" />
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="icon" href="icons/icon.svg" type="image/svg+xml" />
   <link rel="apple-touch-icon" href="icons/icon.svg" />
-  <link rel="stylesheet" href="style.css" />
   <script>
     (() => {
       const THEME_STORAGE_KEY = "CALCULADORA_TATTOO_THEME";
+
       try {
         const storedTheme = localStorage.getItem(THEME_STORAGE_KEY);
         const prefersLight = window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches;
-        document.documentElement.dataset.theme = ["light", "dark"].includes(storedTheme) ? storedTheme : (prefersLight ? "light" : "dark");
+        const themeName = ["light", "dark"].includes(storedTheme) ? storedTheme : (prefersLight ? "light" : "dark");
+        document.documentElement.dataset.theme = themeName;
       } catch {
         document.documentElement.dataset.theme = "dark";
       }
     })();
   </script>
-  <title>MiShiro Orçamentos</title>
+  <link rel="stylesheet" href="style.css" />
+  <title>CalculadoraTattoo</title>
 </head>
 <body>
   <div class="drawer-backdrop" id="drawerBackdrop" hidden></div>
 
-  <div class="app-shell" id="appShell">
-    <aside class="sidebar" id="sidebar" aria-label="Menu lateral principal">
-      <div class="brand-block">
-        <div class="brand-mark" aria-hidden="true">MS</div>
-        <div>
-          <strong>MiShiro Orçamentos</strong>
-          <span>Estoque, custos e propostas</span>
-        </div>
+  <aside class="sidebar" id="sidebar" aria-label="Menu lateral principal">
+    <div class="brand-block">
+      <div class="brand-mark" aria-hidden="true">CT</div>
+      <div>
+        <strong>CalculadoraTattoo</strong>
+        <span>Gestão premium para estúdios</span>
       </div>
+    </div>
 
-      <nav class="sidebar-nav" aria-label="Navegação principal">
-        <button class="nav-link is-active" type="button" data-screen-target="home">
-          <span aria-hidden="true"><i data-lucide="home"></i></span>
-          Início
-        </button>
-        <button class="nav-link" type="button" data-screen-target="reports">
-          <span aria-hidden="true"><i data-lucide="bar-chart-3"></i></span>
-          Relatórios
-        </button>
-        <button class="nav-link" type="button" data-screen-target="inventory">
-          <span aria-hidden="true"><i data-lucide="package"></i></span>
-          Estoque
-        </button>
-        <button class="nav-link" type="button" data-screen-target="budget">
-          <span aria-hidden="true"><i data-lucide="receipt"></i></span>
-          Orçamento
-        </button>
-      </nav>
-
-      <section class="sidebar-tools" aria-label="Ferramentas de dados">
-        <span>Dados locais</span>
-        <button class="sidebar-tool-button" id="exportInventoryBackupButton" type="button">
-          <i data-lucide="download" aria-hidden="true"></i>
-          Exportar estoque
-        </button>
-        <button class="sidebar-tool-button" id="importInventoryBackupButton" type="button">
-          <i data-lucide="upload" aria-hidden="true"></i>
-          Importar estoque
-        </button>
-        <button class="sidebar-tool-button is-danger" id="restoreReferenceStockButton" type="button">
-          <i data-lucide="rotate-ccw" aria-hidden="true"></i>
-          Restaurar base
-        </button>
-        <input id="inventoryBackupFileInput" type="file" accept="application/json,.json" hidden />
-        <div class="sidebar-status" id="backupStatus" aria-live="polite" aria-atomic="true"></div>
-      </section>
-
-      <section class="sidebar-footer">
-        <span>Armazenamento offline</span>
-        <strong>Os dados ficam salvos no navegador.</strong>
-      </section>
-    </aside>
-
-    <header class="topbar" role="banner">
-      <button class="icon-button mobile-menu-button" id="openSidebarButton" type="button" aria-label="Abrir menu lateral">
-        <i data-lucide="menu" aria-hidden="true"></i>
+    <nav class="sidebar-nav" aria-label="Navegação">
+      <button class="nav-link is-active" type="button" data-screen-target="home">
+        <span aria-hidden="true"><i data-lucide="home"></i></span>
+        Início
       </button>
+      <button class="nav-link" type="button" data-screen-target="reports">
+        <span aria-hidden="true"><i data-lucide="bar-chart-3"></i></span>
+        Relatórios
+      </button>
+      <button class="nav-link" type="button" data-screen-target="inventory">
+        <span aria-hidden="true"><i data-lucide="box"></i></span>
+        Estoque
+      </button>
+      <button class="nav-link" type="button" data-screen-target="budget">
+        <span aria-hidden="true"><i data-lucide="receipt"></i></span>
+        Orçamento
+      </button>
+    </nav>
+
+    <section class="sidebar-tools" aria-label="Ferramentas de backup">
+      <span>Backup</span>
+      <button class="sidebar-tool-button" id="exportInventoryBackupButton" type="button"><i data-lucide="download" aria-hidden="true"></i>Exportar JSON</button>
+      <button class="sidebar-tool-button" id="importInventoryBackupButton" type="button"><i data-lucide="upload" aria-hidden="true"></i>Importar JSON</button>
+      <button class="sidebar-tool-button is-danger" id="restoreReferenceStockButton" type="button"><i data-lucide="rotate-ccw" aria-hidden="true"></i>Restaurar Estoque Base</button>
+      <input id="inventoryBackupFileInput" type="file" accept="application/json,.json" hidden />
+      <p class="sidebar-status" id="backupStatus" aria-live="polite"></p>
+    </section>
+
+    <div class="sidebar-footer">
+      <span>LocalStorage</span>
+      <strong>Dados salvos no navegador</strong>
+    </div>
+  </aside>
+
+  <div class="app-shell">
+    <header class="topbar">
+      <button class="icon-button mobile-menu-button" id="openSidebarButton" type="button" aria-label="Abrir menu lateral"><i data-lucide="menu" aria-hidden="true"></i></button>
       <div class="topbar-title">
-        <span class="eyebrow" id="pageEyebrow">Visão geral</span>
+        <span id="pageEyebrow">Visão geral</span>
         <h1 id="pageTitle">Início</h1>
       </div>
       <div class="topbar-actions">
@@ -98,319 +87,293 @@
           <i data-lucide="moon" aria-hidden="true"></i>
           <span id="themeToggleLabel">Escuro</span>
         </button>
-        <button class="primary-button compact-only" id="quickNewItemButton" type="button" aria-label="Cadastrar item rapidamente" hidden>
-          <i data-lucide="plus" aria-hidden="true"></i>
-          <span>Novo</span>
-        </button>
+        <button class="primary-button compact-only" id="quickNewItemButton" type="button"><i data-lucide="plus" aria-hidden="true"></i>Novo item</button>
       </div>
     </header>
 
-    <main class="content-shell" role="main">
-      <section class="screen-panel is-active" id="homeScreen" data-screen="home">
+    <main class="content-shell">
+      <section class="screen-panel is-active" id="homeScreen" data-screen="home" aria-labelledby="homeTitle">
         <div class="hero-grid">
-          <article class="hero-card glass-panel">
-            <span class="eyebrow">Gestão local para estúdios</span>
-            <h2>Orçamentos mais claros, estoque sob controle.</h2>
-            <p>Cadastre insumos, calcule custo real por uso, monte propostas com margem, desconto e imagem de referência. O aplicativo funciona em PWA e salva os dados diretamente no navegador.</p>
+          <section class="hero-card glass-panel">
+            <span class="eyebrow">Motor financeiro para tatuagem</span>
+            <h2 id="homeTitle">Orçamentos mais claros, estoque mais realista e cálculo por tipo de insumo.</h2>
+            <p>
+              Cadastre materiais conforme a forma real de compra: caixa, unidade, frasco, embalagem, pacote ou rolo. Depois monte a ficha do cliente com insumos usados, mão de obra e imagem de referência para exportar um orçamento visualmente profissional.
+            </p>
             <div class="action-row">
-              <button class="primary-button" type="button" data-home-action="budget">
-                <i data-lucide="receipt" aria-hidden="true"></i>
-                Criar orçamento
-              </button>
-              <button class="secondary-button" type="button" data-home-action="inventory">
-                <i data-lucide="package-plus" aria-hidden="true"></i>
-                Ver estoque
-              </button>
+              <button class="primary-button" type="button" data-home-action="inventory"><i data-lucide="package-plus" aria-hidden="true"></i>Cadastrar estoque</button>
+              <button class="secondary-button" type="button" data-home-action="budget"><i data-lucide="calculator" aria-hidden="true"></i>Criar orçamento</button>
+              <button class="ghost-button" type="button" data-home-action="reports"><i data-lucide="bar-chart-3" aria-hidden="true"></i>Ver relatórios</button>
             </div>
-          </article>
+          </section>
 
-          <article class="flow-card">
+          <aside class="flow-card glass-panel" aria-label="Como funciona">
             <div class="flow-header">
-              <div>
-                <span>Fluxo sugerido</span>
-                <h3>Do cadastro ao valor final</h3>
-              </div>
-              <strong>3 passos</strong>
+              <span>Fluxo recomendado</span>
+              <strong>3 etapas</strong>
             </div>
             <article>
               <strong>01</strong>
               <div>
-                <h3>Cadastre insumos</h3>
-                <p>Informe embalagem, preço pago, unidade de medida e quantidade disponível.</p>
+                <h3>Escolha a categoria</h3>
+                <p>O cadastro muda conforme cartucho, tinta, pastoso, descartável ou rolo em metros.</p>
               </div>
             </article>
             <article>
               <strong>02</strong>
               <div>
-                <h3>Monte o orçamento</h3>
-                <p>Selecione materiais, tempo de sessão, margem e desconto aplicado ao cliente.</p>
+                <h3>Informe o preço real</h3>
+                <p>O app calcula custo por unidade, ml, g ou metro.</p>
               </div>
             </article>
             <article>
               <strong>03</strong>
               <div>
-                <h3>Exporte a proposta</h3>
-                <p>Gere o PDF ou imprima a ficha de orçamento quando necessário.</p>
+                <h3>Monte o orçamento</h3>
+                <p>Some insumos utilizados, duração da sessão, valor por hora e referência visual.</p>
               </div>
             </article>
-          </article>
+          </aside>
         </div>
 
-        <div class="feature-grid" aria-label="Recursos principais">
+        <section class="feature-grid" aria-label="Recursos do aplicativo">
           <article class="feature-card">
-            <span>Offline-first</span>
-            <strong>Persistência no navegador</strong>
-            <p>O estado principal é salvo em IndexedDB, com recuperação por localStorage quando necessário.</p>
+            <span>Cartuchos</span>
+            <strong>Caixa ou unidade</strong>
+            <p>Preço da caixa dividido pela quantidade ou preço unitário direto. No orçamento, uso sempre inteiro.</p>
           </article>
           <article class="feature-card">
-            <span>Custo real</span>
-            <strong>Cálculo por unidade, ml, g ou metro</strong>
-            <p>As categorias possuem regras próprias para compra por caixa, pacote, frasco, rolo ou uso unitário.</p>
+            <span>Tintas e pastosos</span>
+            <strong>Precisão decimal</strong>
+            <p>Permite 1.5 ml, 2.5 g, 0.5 m e digitação livre com passo de 0.5.</p>
           </article>
           <article class="feature-card">
-            <span>Auditoria simples</span>
-            <strong>Backup JSON de estoque</strong>
-            <p>Exporte e importe os itens cadastrados sem depender de banco externo ou servidor.</p>
+            <span>PDF premium</span>
+            <strong>Cliente + referência</strong>
+            <p>Exporta nome do cliente, imagem pequena, insumos e mão de obra.</p>
           </article>
-        </div>
+        </section>
       </section>
 
-      <section class="screen-panel" id="reportsScreen" data-screen="reports">
+      <section class="screen-panel" id="reportsScreen" data-screen="reports" aria-labelledby="reportsTitle">
         <div class="section-header">
           <div>
-            <span>Indicadores</span>
-            <h2>Relatórios do estoque</h2>
+            <span>Visão financeira do estúdio</span>
+            <h2 id="reportsTitle">Relatórios</h2>
           </div>
-          <span class="counter-pill" id="reportsInventoryCounter">0 itens</span>
+          <strong class="counter-pill" id="reportsInventoryCounter">0 de 0</strong>
         </div>
 
-        <div class="dashboard-grid">
+        <section class="dashboard-grid" aria-label="Indicadores principais">
           <article class="report-card report-card-feature">
-            <span>Investimento total</span>
+            <span>Investimento total em estoque</span>
             <strong id="dashboardTotalInvestedValue">R$ 0,00</strong>
-            <p>Soma estimada do valor financeiro armazenado no estoque.</p>
+            <p>Somatório financeiro do estoque cadastrado, considerando preço da embalagem e quantidade em estoque.</p>
           </article>
           <article class="report-card">
-            <span>Categoria principal</span>
+            <span>Categoria com maior investimento</span>
             <strong id="dashboardTopCategoryName">Sem dados</strong>
             <p id="dashboardTopCategoryValue">R$ 0,00 alocado nesta categoria.</p>
           </article>
           <article class="report-card">
-            <span>Orçamentos</span>
+            <span>Orçamentos gerados</span>
             <strong id="dashboardBudgetCount">0</strong>
             <p id="dashboardBudgetInsight">Nenhum histórico de orçamento preenchido ainda.</p>
           </article>
-        </div>
+        </section>
 
-        <article class="report-chart-card">
+        <section class="report-chart-card glass-panel" aria-labelledby="categoryChartTitle">
           <div class="section-mini-header">
             <div>
               <span>Distribuição por categoria</span>
-              <h3>Onde o dinheiro está alocado</h3>
+              <h3 id="categoryChartTitle">Investimento do estoque</h3>
             </div>
           </div>
           <div class="report-chart" id="dashboardCategoryChart"></div>
-        </article>
+        </section>
       </section>
 
-      <section class="screen-panel" id="inventoryScreen" data-screen="inventory">
+      <section class="screen-panel" id="inventoryScreen" data-screen="inventory" aria-labelledby="inventoryTitle">
         <div class="section-header">
           <div>
-            <span>Banco local</span>
-            <h2>Estoque</h2>
+            <span>Banco local de insumos</span>
+            <h2 id="inventoryTitle">Estoque</h2>
           </div>
           <div class="header-actions">
-            <span class="counter-pill" id="inventoryCounter">0 itens</span>
-            <button class="primary-button" id="openItemModalButton" type="button">
-              <i data-lucide="plus" aria-hidden="true"></i>
-              Novo item
-            </button>
+            <strong class="counter-pill" id="inventoryCounter">0 itens</strong>
+            <button class="primary-button" id="openItemModalButton" type="button"><i data-lucide="plus" aria-hidden="true"></i>Novo item</button>
           </div>
         </div>
 
         <div class="toolbar-grid">
           <label class="search-field">
-            <span>Buscar item</span>
-            <input id="inventorySearchInput" type="search" placeholder="Nome, marca, cor, categoria..." autocomplete="off" />
+            <span>Pesquisar no estoque</span>
+            <input id="inventorySearchInput" type="search" placeholder="Marca, categoria, numeração, cor ou nome" />
           </label>
-          <button class="secondary-button" id="clearInventorySearchButton" type="button">Limpar</button>
+          <button class="secondary-button" id="clearInventorySearchButton" type="button"><i data-lucide="x" aria-hidden="true"></i>Limpar</button>
         </div>
 
-        <div class="chip-row" id="inventoryCategoryFilters" aria-label="Filtros de estoque"></div>
-        <div class="inventory-grid" id="inventoryGrid"></div>
+        <section class="chip-row" id="inventoryCategoryFilters" aria-label="Filtros de categoria do estoque"></section>
+        <section class="inventory-grid" id="inventoryGrid" aria-label="Itens cadastrados"></section>
       </section>
 
-      <section class="screen-panel" id="budgetScreen" data-screen="budget">
+      <section class="screen-panel" id="budgetScreen" data-screen="budget" aria-labelledby="budgetTitle">
         <div class="section-header">
           <div>
-            <span>Ficha do cliente</span>
-            <h2>Orçamento</h2>
+            <span>Ficha financeira do cliente</span>
+            <h2 id="budgetTitle">Orçamento</h2>
           </div>
-          <div class="header-actions">
-            <span class="counter-pill" id="budgetCounter">0 itens</span>
-            <button class="secondary-button" id="newBudgetButton" type="button">
-              <i data-lucide="file-plus" aria-hidden="true"></i>
-              Novo
-            </button>
-            <button class="secondary-button" id="duplicateBudgetButton" type="button">
-              <i data-lucide="copy" aria-hidden="true"></i>
-              Duplicar
-            </button>
-            <button class="primary-button" id="exportPdfButton" type="button">
-              <i data-lucide="file-down" aria-hidden="true"></i>
-              PDF
-            </button>
-          </div>
+          <strong class="counter-pill" id="budgetCounter">0 itens</strong>
         </div>
 
         <div class="budget-layout">
-          <article class="budget-form-card">
-            <div class="section-mini-header">
-              <div>
-                <span>Dados do atendimento</span>
-                <h3>Base do cálculo</h3>
-              </div>
-            </div>
-
+          <section class="budget-form-card glass-panel" aria-label="Dados do orçamento">
             <div class="form-grid two-columns">
               <label class="form-field">
-                <span>Nome do orçamento</span>
-                <input id="budgetNameInput" type="text" placeholder="Ex: Fechamento braço floral" autocomplete="off" />
+                <span><i data-lucide="file-text" aria-hidden="true"></i>Nome do orçamento</span>
+                <input id="budgetNameInput" type="text" placeholder="Ex: Fechamento de braço" />
               </label>
               <label class="form-field">
-                <span>Cliente</span>
-                <input id="clientNameInput" type="text" placeholder="Nome do cliente" autocomplete="off" />
+                <span><i data-lucide="user" aria-hidden="true"></i>Nome do cliente</span>
+                <input id="clientNameInput" type="text" placeholder="Ex: Mariana Souza" />
               </label>
               <label class="form-field">
-                <span>Valor da hora</span>
+                <span><i data-lucide="dollar-sign" aria-hidden="true"></i>Valor da hora</span>
                 <input id="hourlyRateInput" type="text" inputmode="decimal" placeholder="150,00" />
               </label>
               <label class="form-field">
-                <span>Duração estimada</span>
+                <span><i data-lucide="clock" aria-hidden="true"></i>Duração estimada</span>
                 <input id="sessionDurationInput" type="text" inputmode="decimal" placeholder="3" />
               </label>
               <label class="form-field">
-                <span>Margem de lucro (%)</span>
+                <span><i data-lucide="percent" aria-hidden="true"></i>Margem de Lucro / Custos Fixos (%)</span>
                 <input id="profitMarginInput" type="text" inputmode="decimal" placeholder="30" />
               </label>
               <label class="form-field">
-                <span>Desconto (%)</span>
-                <input id="discountPercentInput" type="text" inputmode="decimal" placeholder="0" />
+                <span><i data-lucide="badge-percent" aria-hidden="true"></i>Desconto (%)</span>
+                <input id="discountPercentInput" type="text" inputmode="decimal" placeholder="10" />
               </label>
             </div>
 
-            <div class="image-upload-card">
+            <section class="image-upload-card">
               <div>
-                <span>Referência visual</span>
-                <strong>Imagem da tatuagem</strong>
-                <p>Opcional. A imagem fica salva somente no navegador junto com a ficha.</p>
+                <span>Imagem de referência</span>
+                <strong>Adicionar tatuagem ao PDF</strong>
+                <p>Use uma imagem leve em PNG, JPG ou WEBP. Ela será exibida em tamanho reduzido no orçamento.</p>
               </div>
               <div class="image-actions">
-                <label class="secondary-button" for="referenceImageInput">
-                  <i data-lucide="image-plus" aria-hidden="true"></i>
-                  Adicionar imagem
-                </label>
-                <button class="ghost-button" id="removeReferenceImageButton" type="button">
-                  <i data-lucide="x" aria-hidden="true"></i>
-                  Remover
-                </button>
-                <input id="referenceImageInput" type="file" accept="image/png,image/jpeg,image/jpg,image/webp" hidden />
+                <label class="secondary-button" for="referenceImageInput"><i data-lucide="image-plus" aria-hidden="true"></i>Escolher imagem</label>
+                <button class="ghost-button" id="removeReferenceImageButton" type="button"><i data-lucide="trash-2" aria-hidden="true"></i>Remover</button>
+                <input id="referenceImageInput" type="file" accept="image/png,image/jpeg,image/webp" hidden />
               </div>
               <figure class="reference-preview" id="referencePreview" hidden></figure>
+            </section>
+
+            <div class="total-grid" aria-live="polite">
+              <article>
+                <span>Insumos</span>
+                <strong id="materialTotalValue">R$ 0,00</strong>
+              </article>
+              <article>
+                <span>Mão de obra</span>
+                <strong id="laborTotalValue">R$ 0,00</strong>
+              </article>
+              <article class="total-feature">
+                <span>Total</span>
+                <strong id="budgetTotalValue">R$ 0,00</strong>
+              </article>
+              <article class="suggested-price-card">
+                <span>Valor Original</span>
+                <strong id="suggestedPriceValue">R$ 0,00</strong>
+              </article>
+              <article class="discount-card">
+                <span>Desconto aplicado</span>
+                <strong id="discountAmountValue">R$ 0,00</strong>
+              </article>
+              <article class="final-price-card">
+                <span>Valor Final</span>
+                <strong id="finalPriceValue">R$ 0,00</strong>
+              </article>
             </div>
 
-            <div class="total-grid">
-              <article><span>Insumos</span><strong id="materialTotalValue">R$ 0,00</strong></article>
-              <article><span>Mão de obra</span><strong id="laborTotalValue">R$ 0,00</strong></article>
-              <article><span>Custo base</span><strong id="budgetTotalValue">R$ 0,00</strong></article>
-              <article><span>Valor sugerido</span><strong id="suggestedPriceValue">R$ 0,00</strong></article>
-              <article><span>Desconto</span><strong id="discountAmountValue">R$ 0,00</strong></article>
-              <article class="total-feature"><span>Valor final</span><strong id="finalPriceValue">R$ 0,00</strong></article>
+            <div class="action-row end-actions">
+              <button class="secondary-button" id="duplicateBudgetButton" type="button"><i data-lucide="copy" aria-hidden="true"></i>Duplicar projeto</button>
+              <button class="secondary-button" id="newBudgetButton" type="button"><i data-lucide="file-plus" aria-hidden="true"></i>Novo orçamento</button>
+              <button class="primary-button" id="exportPdfButton" type="button"><i data-lucide="file-down" aria-hidden="true"></i>Exportar PDF</button>
             </div>
-          </article>
+          </section>
 
-          <article class="budget-picker-card">
+          <section class="budget-picker-card glass-panel" aria-labelledby="pickerTitle">
             <div class="section-mini-header">
               <div>
-                <span>Materiais</span>
-                <h3>Adicionar insumos</h3>
+                <span>Adicionar insumos</span>
+                <h3 id="pickerTitle">Buscar item</h3>
               </div>
+              <button class="secondary-button" id="clearBudgetSearchButton" type="button"><i data-lucide="x" aria-hidden="true"></i>Limpar</button>
             </div>
-            <div class="toolbar-grid inside-card">
-              <label class="search-field">
-                <span>Buscar no estoque</span>
-                <input id="budgetSearchInput" type="search" placeholder="Buscar insumo..." autocomplete="off" />
-              </label>
-              <button class="secondary-button" id="clearBudgetSearchButton" type="button">Limpar</button>
-            </div>
-            <div class="chip-row compact-chip-row" id="budgetCategoryFilters" aria-label="Filtros do orçamento"></div>
-            <div class="picker-list" id="stockPickerList"></div>
-          </article>
 
-          <article class="cart-card">
-            <div class="section-mini-header">
-              <div>
-                <span>Resumo</span>
-                <h3>Insumos selecionados</h3>
-              </div>
-            </div>
-            <div class="cart-list" id="cartList"></div>
-          </article>
+            <label class="search-field inside-card">
+              <span>Pesquisar</span>
+              <input id="budgetSearchInput" type="search" placeholder="Ex: RL 0310, luva, preto, vaselina" />
+            </label>
+
+            <section class="chip-row compact-chip-row" id="budgetCategoryFilters" aria-label="Filtros de categoria para orçamento"></section>
+            <section class="picker-list" id="stockPickerList" aria-label="Itens disponíveis para orçamento"></section>
+          </section>
         </div>
 
-        <div class="invoice-document" id="invoiceDocument" aria-hidden="true"></div>
+        <section class="cart-card glass-panel" aria-labelledby="cartTitle">
+          <div class="section-mini-header">
+            <div>
+              <span>Itens usados</span>
+              <h3 id="cartTitle">Carrinho do orçamento</h3>
+            </div>
+          </div>
+          <section class="cart-list" id="cartList" aria-label="Itens adicionados ao orçamento"></section>
+        </section>
       </section>
     </main>
   </div>
 
-  <dialog class="app-modal" id="itemModal">
-    <form class="modal-card" id="itemForm" method="dialog">
-      <header class="modal-header">
+  <dialog class="app-modal" id="itemModal" aria-labelledby="itemModalTitle">
+    <form class="modal-card" id="itemForm" autocomplete="off">
+      <div class="modal-header">
         <div>
           <span id="itemModalEyebrow">Novo item</span>
           <h2 id="itemModalTitle">Cadastrar insumo</h2>
         </div>
-        <button class="icon-button" id="closeItemModalButton" type="button" aria-label="Fechar modal">
-          <i data-lucide="x" aria-hidden="true"></i>
-        </button>
-      </header>
+        <button class="icon-button" id="closeItemModalButton" type="button" aria-label="Fechar modal"><i data-lucide="x" aria-hidden="true"></i></button>
+      </div>
 
       <section class="form-step-panel">
         <div class="step-heading">
-          <strong>01</strong>
-          <span>Escolha a categoria para liberar os campos corretos.</span>
+          <strong>Etapa 1</strong>
+          <span>Escolha a categoria principal</span>
         </div>
-        <div class="category-choice-grid" id="categoryChoiceGrid"></div>
+        <div class="category-choice-grid" id="categoryChoiceGrid" aria-label="Categorias de cadastro"></div>
       </section>
 
       <section class="form-step-panel">
         <div class="step-heading">
-          <strong>02</strong>
-          <span id="dynamicFormTitle">Ficha específica</span>
+          <strong>Etapa 2</strong>
+          <span id="dynamicFormTitle">Preencha a ficha do item</span>
         </div>
         <div class="dynamic-fields-grid" id="dynamicFieldsGrid"></div>
-        <div class="unit-cost-preview" id="unitCostPreview" aria-live="polite"></div>
       </section>
 
-      <div class="end-actions">
-        <button class="ghost-button" type="button" id="closeItemModalButtonFooter" onclick="document.querySelector('#itemModal').close()">Cancelar</button>
-        <button class="primary-button" type="submit">
-          <i data-lucide="save" aria-hidden="true"></i>
-          Salvar item
-        </button>
-      </div>
+      <section class="unit-cost-preview" id="unitCostPreview" aria-live="polite">
+        <span>Prévia do cálculo</span>
+        <strong>R$ 0,00</strong>
+      </section>
+
+      <button class="primary-button full-button" id="saveItemButton" type="submit"><i data-lucide="save" aria-hidden="true"></i>Salvar item</button>
     </form>
   </dialog>
 
-  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js" crossorigin="anonymous" defer></script>
+  <section class="invoice-document" id="invoiceDocument" aria-hidden="true"></section>
+
+  <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js" crossorigin="anonymous" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" integrity="sha512-GsLlZN/3F2ErC5ifS5QtgpiJtWd43JWSuIgh7mbzZ8zBps+dvLusV+eNQATqgA/HdeKFVgA5v3S/cIrLF7QnIg==" crossorigin="anonymous" referrerpolicy="no-referrer" defer></script>
   <script type="module" src="js/main.js"></script>
-
-  <noscript>
-    <div class="noscript-warning">
-      <strong>JavaScript desabilitado</strong>
-      <p>O MiShiro Orçamentos precisa de JavaScript habilitado para funcionar.</p>
-    </div>
-  </noscript>
 </body>
 </html>
