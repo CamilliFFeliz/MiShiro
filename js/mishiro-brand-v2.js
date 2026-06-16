@@ -2,7 +2,8 @@ const SVG_NS = "http://www.w3.org/2000/svg";
 const BRAND_NAME = "MiShiro Orçamentos";
 const BRAND_TAGLINE = "Custos, proposta e PDF para tattoo";
 const EXTRA_STYLES = [
-  ["mishiro-ux-css", "mishiro-ux.css"]
+  ["mishiro-ux-css", "mishiro-ux.css"],
+  ["mishiro-studio-pro-css", "mishiro-studio-pro.css"]
 ];
 const NAV_ICONS = new Map([
   ["home", "layout-dashboard"],
