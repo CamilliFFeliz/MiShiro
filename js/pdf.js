@@ -1,8 +1,18 @@
+const PDF_RENDER_TIMEOUT_MS = 8000;
+const PDF_BRAND_NAME = "MiShiro Orçamentos";
+
 export async function exportBudgetPdf({ html, fileName }) {
+  const normalizedHtml = enhanceInvoiceHtml(html);
+  const printDocument = document.querySelector("#invoiceDocument");
+
+  if (printDocument) {
+    printDocument.innerHTML = normalizedHtml;
+  }
+
   const renderRoot = document.createElement("section");
   renderRoot.className = "pdf-render-root";
   renderRoot.setAttribute("aria-hidden", "true");
-  renderRoot.innerHTML = html;
+  renderRoot.innerHTML = normalizedHtml;
   document.body.append(renderRoot);
 
   try {
@@ -13,26 +23,84 @@ export async function exportBudgetPdf({ html, fileName }) {
       return;
     }
 
+    await preparePdfDocument(invoicePage);
+
     await window.html2pdf()
       .set({
-        filename: fileName,
-        margin: 8,
-        image: { type: "jpeg", quality: 0.96 },
+        filename: normalizePdfFileName(fileName),
+        margin: [8, 8, 8, 8],
+        image: { type: "jpeg", quality: 0.98 },
         html2canvas: {
-          scale: 2,
+          scale: Math.min(window.devicePixelRatio || 2, 2.5),
           useCORS: true,
-          backgroundColor: "#FFFFFF"
+          backgroundColor: "#FFFFFF",
+          letterRendering: true,
+          logging: false
         },
         jsPDF: {
           unit: "mm",
           format: "a4",
-          orientation: "portrait"
+          orientation: "portrait",
+          compress: true
         },
-        pagebreak: { mode: ["css", "legacy"] }
+        pagebreak: {
+          mode: ["avoid-all", "css", "legacy"],
+          avoid: [".invoice-header", ".invoice-summary-grid", ".invoice-footer", "tr"]
+        }
       })
       .from(invoicePage)
       .save();
+  } catch {
+    window.print();
   } finally {
     renderRoot.remove();
   }
+}
+
+function enhanceInvoiceHtml(html) {
+  return String(html || "")
+    .replaceAll("CalculadoraTattoo", PDF_BRAND_NAME)
+    .replaceAll("Orçamento gerado localmente no navegador.", `PDF gerado localmente pelo ${PDF_BRAND_NAME}. Esta proposta não substitui documento fiscal.`);
+}
+
+async function preparePdfDocument(rootElement) {
+  const fontReadyPromise = document.fonts?.ready || Promise.resolve();
+  const imageReadyPromise = waitForImages(rootElement);
+  await withTimeout(Promise.all([fontReadyPromise, imageReadyPromise]), PDF_RENDER_TIMEOUT_MS);
+}
+
+function waitForImages(rootElement) {
+  const images = Array.from(rootElement.querySelectorAll("img"));
+
+  if (images.length === 0) {
+    return Promise.resolve();
+  }
+
+  return Promise.all(images.map((imageElement) => {
+    if (imageElement.complete && imageElement.naturalWidth > 0) {
+      return Promise.resolve();
+    }
+
+    return new Promise((resolve) => {
+      imageElement.addEventListener("load", resolve, { once: true });
+      imageElement.addEventListener("error", resolve, { once: true });
+    });
+  }));
+}
+
+function withTimeout(promise, timeoutMs) {
+  return new Promise((resolve) => {
+    const timeoutId = window.setTimeout(resolve, timeoutMs);
+    promise
+      .catch(() => {})
+      .finally(() => {
+        window.clearTimeout(timeoutId);
+        resolve();
+      });
+  });
+}
+
+function normalizePdfFileName(fileName) {
+  const safeFileName = String(fileName || "orcamento.pdf").trim();
+  return safeFileName.toLowerCase().endsWith(".pdf") ? safeFileName : `${safeFileName}.pdf`;
 }
