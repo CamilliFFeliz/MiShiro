@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="MiShiro Orçamentos">
+  <defs>
+    <linearGradient id="g" x1="72" x2="440" y1="56" y2="456" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#7DD3C7"/>
+      <stop offset="0.42" stop-color="#6A1B9A"/>
+      <stop offset="1" stop-color="#2D0B40"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="132" fill="#0F0A18"/>
+  <rect x="72" y="72" width="368" height="368" rx="116" fill="url(#g)"/>
+  <circle cx="256" cy="256" r="148" fill="#FFFFFF" opacity="0.96"/>
+  <path d="M154 340V184l102 112 102-112v156" fill="none" stroke="#2D0B40" stroke-width="42" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M338 166 420 84" fill="none" stroke="#6A1B9A" stroke-width="30" stroke-linecap="round"/>
+  <path d="M134 122l17 37 38 17-38 17-17 38-17-38-38-17 38-17z" fill="#F4C86A"/>
+  <path d="M382 354l12 25 26 12-26 13-12 26-13-26-25-13 25-12z" fill="#F4C86A"/>
+</svg>
