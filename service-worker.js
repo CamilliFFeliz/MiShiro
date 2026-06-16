@@ -1,5 +1,5 @@
-const CACHE_NAME = "mishiro-orcamentos-static-v6-visual-performance";
-const RUNTIME_CACHE_NAME = "mishiro-orcamentos-runtime-v6-visual-performance";
+const CACHE_NAME = "mishiro-orcamentos-static-v7-icone-marca";
+const RUNTIME_CACHE_NAME = "mishiro-orcamentos-runtime-v7-icone-marca";
 const APP_CACHE_PREFIXES = ["calculadora-tattoo-", "mishiro-orcamentos-"];
 const CURRENT_CACHE_NAMES = [CACHE_NAME, RUNTIME_CACHE_NAME];
 const APP_SHELL_URL = "./index.html";
@@ -29,7 +29,8 @@ const APP_ASSETS = [
   "./js/pwa.js",
   "./js/utils.js",
   "./manifest.webmanifest",
-  "./icons/icon.svg"
+  "./icons/icon.svg",
+  "./icons/mishiro.svg"
 ];
 
 self.addEventListener("install", (event) => {
