@@ -1,0 +1,341 @@
+:root {
+  --radius-small: 12px;
+  --radius-medium: 16px;
+  --radius-large: 22px;
+  --radius-extra: 28px;
+  --shadow-card: 0 18px 58px rgba(0, 0, 0, 0.34);
+  --shadow-purple: 0 18px 52px rgba(106, 27, 154, 0.3);
+}
+
+html[data-theme="light"] {
+  --shadow-card: 0 18px 48px rgba(28, 35, 50, 0.12);
+  --shadow-purple: 0 18px 44px rgba(109, 59, 177, 0.18);
+}
+
+.brand-mark {
+  position: relative;
+  overflow: hidden;
+  border-radius: 20px;
+  background:
+    radial-gradient(circle at 18% 18%, rgba(244, 200, 106, 0.38), transparent 34%),
+    linear-gradient(145deg, rgba(125, 211, 199, 0.28), rgba(106, 27, 154, 0.76)),
+    var(--purple-dark);
+}
+
+.brand-mark::after {
+  content: "";
+  position: absolute;
+  inset: 1px;
+  border-radius: inherit;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  pointer-events: none;
+}
+
+.brand-mark svg {
+  position: relative;
+  z-index: 1;
+  width: 38px;
+  height: 38px;
+}
+
+.brand-mark .logo-plate {
+  fill: rgba(255, 255, 255, 0.92);
+}
+
+.brand-mark .logo-fold {
+  fill: none;
+  stroke: rgba(45, 11, 64, 0.86);
+  stroke-width: 3;
+  stroke-linejoin: round;
+}
+
+.brand-mark .logo-needle {
+  fill: rgba(45, 11, 64, 0.94);
+}
+
+.brand-mark .logo-spark {
+  fill: #F4C86A;
+}
+
+.hero-card,
+.flow-card,
+.feature-card,
+.report-card,
+.report-chart-card,
+.inventory-card,
+.budget-form-card,
+.budget-picker-card,
+.cart-card,
+.modal-card,
+.form-step-panel {
+  border-color: var(--glass-border);
+  box-shadow: var(--shadow-card);
+}
+
+.hero-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-card::after {
+  content: "";
+  position: absolute;
+  right: -90px;
+  bottom: -110px;
+  width: 280px;
+  height: 280px;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(125, 211, 199, 0.22), transparent 64%);
+  pointer-events: none;
+}
+
+.feature-card,
+.report-card,
+.inventory-card,
+.picker-card,
+.cart-line {
+  transform: translateZ(0);
+}
+
+.feature-card:hover,
+.report-card:hover,
+.inventory-card:hover,
+.picker-card:hover,
+.cart-line:hover {
+  border-color: var(--panel-hover-border);
+  transform: translateY(-3px);
+}
+
+.primary-button,
+.secondary-button,
+.ghost-button,
+.sidebar-tool-button,
+.theme-toggle-button,
+.nav-link {
+  border-radius: 16px;
+}
+
+.primary-button {
+  background:
+    linear-gradient(135deg, rgba(125, 211, 199, 0.22), transparent),
+    linear-gradient(135deg, var(--purple), var(--purple-dark));
+}
+
+/* MiShiro PDF refinement */
+.pdf-render-root {
+  width: 794px;
+  min-height: 1123px;
+  overflow: visible;
+}
+
+.pdf-render-root .invoice-page {
+  width: 100%;
+  min-height: 1123px;
+  padding: 30px;
+  color: #17121F;
+  background: #FFFFFF;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.pdf-render-root .invoice-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 148px;
+  gap: 22px;
+  align-items: stretch;
+  padding: 0 0 18px;
+  border-bottom: 2px solid #2D0B40;
+}
+
+.pdf-render-root .invoice-header > div {
+  position: relative;
+  padding-left: 74px;
+}
+
+.pdf-render-root .invoice-header > div::before {
+  content: "M";
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: grid;
+  width: 58px;
+  height: 58px;
+  place-items: center;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #6A1B9A, #2D0B40);
+  color: #FFFFFF;
+  font-size: 27px;
+  font-weight: 900;
+}
+
+.pdf-render-root .invoice-header span,
+.pdf-render-root .invoice-summary-grid span {
+  display: block;
+  color: #6A1B9A;
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.pdf-render-root .invoice-header h1 {
+  margin-top: 7px;
+  color: #17121F;
+  font-size: 29px;
+  line-height: 1.04;
+}
+
+.pdf-render-root .invoice-header p {
+  margin-top: 8px;
+  color: #40374D;
+  font-size: 12px;
+}
+
+.pdf-render-root .invoice-reference-image,
+.pdf-render-root .invoice-reference-placeholder {
+  width: 148px;
+  height: 148px;
+  border: 1px solid rgba(45, 11, 64, 0.18);
+  border-radius: 20px;
+  background: #F7F2FB;
+}
+
+.pdf-render-root .invoice-reference-image {
+  object-fit: cover;
+}
+
+.pdf-render-root .invoice-reference-placeholder {
+  display: grid;
+  place-items: center;
+  padding: 14px;
+  color: #63566F;
+  font-size: 11px;
+  text-align: center;
+}
+
+.pdf-render-root .invoice-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 9px;
+  margin: 18px 0 15px;
+}
+
+.pdf-render-root .invoice-summary-grid div,
+.pdf-render-root .invoice-labor-line,
+.pdf-render-root .invoice-footer {
+  padding: 12px;
+  border: 1px solid rgba(45, 11, 64, 0.12);
+  border-radius: 15px;
+  background: #FBF8FD;
+  color: #17121F;
+}
+
+.pdf-render-root .invoice-summary-grid strong {
+  display: block;
+  margin-top: 5px;
+  color: #17121F;
+  font-size: 16px;
+}
+
+.pdf-render-root .invoice-summary-grid div:last-child {
+  background: linear-gradient(135deg, #2D0B40, #6A1B9A);
+  color: #FFFFFF;
+}
+
+.pdf-render-root .invoice-summary-grid div:last-child span,
+.pdf-render-root .invoice-summary-grid div:last-child strong {
+  color: #FFFFFF;
+}
+
+.pdf-render-root .invoice-summary-grid div:last-child strong {
+  font-size: 20px;
+}
+
+.pdf-render-root .invoice-labor-line {
+  margin-bottom: 14px;
+  font-size: 11.5px;
+  line-height: 1.5;
+}
+
+.pdf-render-root .invoice-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  overflow: hidden;
+  border: 1px solid rgba(45, 11, 64, 0.12);
+  border-radius: 16px;
+  color: #17121F;
+  font-size: 10.2px;
+}
+
+.pdf-render-root .invoice-table th {
+  background: #2D0B40;
+  color: #FFFFFF;
+  font-size: 9.5px;
+  letter-spacing: 0.04em;
+  text-align: left;
+  text-transform: uppercase;
+}
+
+.pdf-render-root .invoice-table th,
+.pdf-render-root .invoice-table td {
+  padding: 9px;
+  border: 0;
+  border-bottom: 1px solid rgba(45, 11, 64, 0.1);
+  vertical-align: top;
+}
+
+.pdf-render-root .invoice-table tbody tr:nth-child(even) td {
+  background: #FBF8FD;
+}
+
+.pdf-render-root .invoice-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.pdf-render-root .invoice-footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 16px;
+  align-items: center;
+  font-size: 10.5px;
+}
+
+.pdf-render-root .invoice-footer strong {
+  color: #2D0B40;
+  font-size: 17px;
+  white-space: nowrap;
+}
+
+@media print {
+  .invoice-header > div {
+    position: relative;
+    padding-left: 74px;
+  }
+
+  .invoice-header > div::before {
+    content: "M";
+    position: absolute;
+    left: 0;
+    top: 0;
+    display: grid;
+    width: 58px;
+    height: 58px;
+    place-items: center;
+    border-radius: 18px;
+    background: #2D0B40;
+    color: #FFFFFF;
+    font-size: 27px;
+    font-weight: 900;
+  }
+
+  .invoice-summary-grid div:last-child {
+    background: #2D0B40;
+    color: #FFFFFF;
+  }
+
+  .invoice-summary-grid div:last-child span,
+  .invoice-summary-grid div:last-child strong {
+    color: #FFFFFF;
+  }
+}
