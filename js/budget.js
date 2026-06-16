@@ -1,13 +1,18 @@
 export function calculateBudgetTotals(budget, context) {
-  const materialCost = budget.items.reduce((total, cartItem) => {
+  const budgetItems = Array.isArray(budget?.items) ? budget.items : [];
+  const materialCost = budgetItems.reduce((total, cartItem) => {
     const inventoryItem = context.findInventoryItem(cartItem.inventoryItemId);
     return inventoryItem ? total + context.calculateLineSubtotal(inventoryItem, cartItem.quantityUsed) : total;
   }, 0);
-  const laborCost = context.normalizeNumber(budget.hourlyRate) * context.normalizeNumber(budget.sessionDuration);
+  const hourlyRate = Math.max(context.normalizeNumber(budget?.hourlyRate), 0);
+  const sessionDuration = Math.max(context.normalizeNumber(budget?.sessionDuration), 0);
+  const profitMarginPercent = context.normalizePercent(budget?.profitMarginPercent);
+  const discountPercent = context.normalizePercent(budget?.discountPercent);
+  const laborCost = hourlyRate * sessionDuration;
   const totalCost = materialCost + laborCost;
-  const marginCost = totalCost * (context.normalizeNumber(budget.profitMarginPercent) / 100);
+  const marginCost = totalCost * (profitMarginPercent / 100);
   const suggestedPrice = totalCost + marginCost;
-  const discountAmount = suggestedPrice * (context.normalizePercent(budget.discountPercent) / 100);
+  const discountAmount = suggestedPrice * (discountPercent / 100);
   const finalPrice = Math.max(suggestedPrice - discountAmount, 0);
 
   return {
