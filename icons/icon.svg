@@ -1,12 +1,24 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="CalculadoraTattoo">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="MiShiro Orçamentos">
   <defs>
-    <linearGradient id="g" x1="0" x2="1" y1="0" y2="1">
-      <stop offset="0" stop-color="#6A1B9A"/>
+    <linearGradient id="bg" x1="88" x2="424" y1="72" y2="440" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#7DD3C7"/>
+      <stop offset="0.42" stop-color="#6A1B9A"/>
       <stop offset="1" stop-color="#2D0B40"/>
+    </linearGradient>
+    <linearGradient id="paper" x1="158" x2="356" y1="116" y2="396" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#EDE3F5"/>
     </linearGradient>
   </defs>
   <rect width="512" height="512" rx="128" fill="#0F0A18"/>
-  <rect x="72" y="72" width="368" height="368" rx="104" fill="url(#g)" opacity="0.95"/>
-  <path d="M172 188c0-28 22-50 50-50h116c12 0 22 10 22 22s-10 22-22 22H222c-4 0-8 3-8 8v132c0 4 3 8 8 8h116c12 0 22 10 22 22s-10 22-22 22H222c-28 0-50-22-50-50V188Z" fill="#fff"/>
-  <path d="M250 256c0-58 42-105 96-116 13-3 25 7 25 21 0 10-7 19-17 21-35 8-61 38-61 74s26 66 61 74c10 2 17 11 17 21 0 14-12 24-25 21-54-11-96-58-96-116Z" fill="#fff" opacity="0.88"/>
+  <circle cx="120" cy="112" r="70" fill="#F4C86A" opacity="0.18"/>
+  <circle cx="400" cy="410" r="92" fill="#7DD3C7" opacity="0.14"/>
+  <rect x="78" y="78" width="356" height="356" rx="108" fill="url(#bg)"/>
+  <path d="M158 118h140l58 58v220H158z" fill="url(#paper)"/>
+  <path d="M298 118v60h58" fill="none" stroke="#6A1B9A" stroke-width="18" stroke-linejoin="round" opacity="0.72"/>
+  <path d="M196 332 330 198l34 34-134 134-51 17z" fill="#2D0B40"/>
+  <path d="M330 198 349 179c10-10 27-10 37 0l5 5c10 10 10 27 0 37l-27 27z" fill="#F4C86A"/>
+  <path d="M196 332 179 383l51-17z" fill="#7DD3C7"/>
+  <path d="M198 164h74M198 202h58M198 240h38" stroke="#2D0B40" stroke-width="15" stroke-linecap="round" opacity="0.72"/>
+  <path d="M204 106l11 24 24 11-24 11-11 24-11-24-24-11 24-11z" fill="#F4C86A"/>
 </svg>
