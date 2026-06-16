@@ -1,27 +1,32 @@
 const BRAND_NAME = "MiShiro Orçamentos";
 const BRAND_TAGLINE = "Propostas e custos para tattoo";
 const BRAND_DESCRIPTION = "PWA offline para estoque, precificação e geração de propostas em PDF para estúdios de tatuagem.";
-const BRAND_CSS_ID = "mishiro-brand-css";
+const BRAND_STYLESHEETS = [
+  { id: "mishiro-brand-css", href: "mishiro.css" },
+  { id: "mishiro-pdf-tools-css", href: "mishiro-pdf-tools.css" }
+];
 const SVG_NAMESPACE = "http://www.w3.org/2000/svg";
 
 export function applyMiShiroBranding() {
-  injectBrandStylesheet();
+  injectBrandStylesheets();
   updateDocumentMetadata();
   updateSidebarBrand();
   updateHomeCopy();
   updatePdfCopy();
 }
 
-function injectBrandStylesheet() {
-  if (document.getElementById(BRAND_CSS_ID)) {
-    return;
-  }
+function injectBrandStylesheets() {
+  BRAND_STYLESHEETS.forEach(({ id, href }) => {
+    if (document.getElementById(id)) {
+      return;
+    }
 
-  const stylesheetLink = document.createElement("link");
-  stylesheetLink.id = BRAND_CSS_ID;
-  stylesheetLink.rel = "stylesheet";
-  stylesheetLink.href = "mishiro.css";
-  document.head.append(stylesheetLink);
+    const stylesheetLink = document.createElement("link");
+    stylesheetLink.id = id;
+    stylesheetLink.rel = "stylesheet";
+    stylesheetLink.href = href;
+    document.head.append(stylesheetLink);
+  });
 }
 
 function updateDocumentMetadata() {
