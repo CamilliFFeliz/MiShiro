@@ -11,14 +11,23 @@ export async function exportBudgetPdf({ html, fileName }) {
 
   const renderRoot = document.createElement("section");
   renderRoot.className = "pdf-render-root";
-  renderRoot.setAttribute("aria-hidden", "true");
   renderRoot.innerHTML = normalizedHtml;
+  Object.assign(renderRoot.style, {
+    position: "fixed",
+    top: "0",
+    left: "0",
+    width: "794px",
+    maxWidth: "794px",
+    background: "#FFFFFF",
+    zIndex: "2147483647",
+    pointerEvents: "none"
+  });
   document.body.append(renderRoot);
 
   try {
-    const invoicePage = renderRoot.querySelector(".invoice-page");
+    const invoicePage = renderRoot.querySelector(".invoice-page") || renderRoot;
 
-    if (!invoicePage || typeof window.html2pdf !== "function") {
+    if (typeof window.html2pdf !== "function") {
       window.print();
       return;
     }
@@ -31,11 +40,14 @@ export async function exportBudgetPdf({ html, fileName }) {
         margin: [8, 8, 8, 8],
         image: { type: "jpeg", quality: 0.98 },
         html2canvas: {
-          scale: Math.min(window.devicePixelRatio || 2, 2.5),
+          scale: Math.min(window.devicePixelRatio || 2, 2.4),
           useCORS: true,
+          allowTaint: true,
           backgroundColor: "#FFFFFF",
           letterRendering: true,
-          logging: false
+          logging: false,
+          scrollX: 0,
+          scrollY: 0
         },
         jsPDF: {
           unit: "mm",
@@ -44,14 +56,12 @@ export async function exportBudgetPdf({ html, fileName }) {
           compress: true
         },
         pagebreak: {
-          mode: ["avoid-all", "css", "legacy"],
+          mode: ["css", "legacy"],
           avoid: [".invoice-header", ".invoice-summary-grid", ".invoice-footer", "tr"]
         }
       })
       .from(invoicePage)
       .save();
-  } catch {
-    window.print();
   } finally {
     renderRoot.remove();
   }
