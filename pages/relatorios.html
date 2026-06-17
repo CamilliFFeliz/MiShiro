@@ -15,17 +15,52 @@
 </head>
 <body data-page="relatorios">
   <div id="app" class="app-frame">
-    <main id="appMain" class="page-shell">
-      <header class="page-header"><span class="eyebrow">Relatórios</span><h1>Indicadores do estúdio</h1><p>Saúde do estoque, investimento por categoria e leitura mensal da agenda.</p></header>
+    <main id="appMain" class="page-shell reports-shell">
+      <header class="page-header reports-title">
+        <span class="eyebrow">Indicadores</span>
+        <h1>Relatórios</h1>
+        <p>Leitura visual do estoque, investimento por categoria e desempenho mensal da agenda.</p>
+      </header>
+
       <section class="metric-grid report-metrics">
-        <article class="metric-card"><span>Investimento total</span><strong id="investimentoEstoque">R$ 0,00</strong><p>Valor financeiro cadastrado.</p></article>
-        <article class="metric-card"><span>Total de itens</span><strong id="totalItensEstoque">0</strong><p>Insumos ativos.</p></article>
-        <article class="metric-card"><span>Orçamentos</span><strong id="qtdOrcamentos">0</strong><p>Registros locais.</p></article>
-        <article class="metric-card"><span>Agendamentos no mês</span><strong id="totalAgendaMes">0</strong><p>Eventos do período.</p></article>
+        <article class="metric-card report-kpi"><span>Investimento total</span><strong id="investimentoEstoque">R$ 0,00</strong><p>Valor financeiro cadastrado.</p></article>
+        <article class="metric-card report-kpi"><span>Total de itens</span><strong id="totalItensEstoque">0</strong><p>Insumos ativos.</p></article>
+        <article class="metric-card report-kpi"><span>Orçamentos</span><strong id="qtdOrcamentos">0</strong><p>Registros locais.</p></article>
+        <article class="metric-card report-kpi"><span>Agenda do mês</span><strong id="totalAgendaMes">0</strong><p>Eventos no período.</p></article>
       </section>
-      <section class="panel-card"><header class="section-title"><span>Categorias</span><h2>Distribuição do estoque</h2></header><div id="graficoCategorias" class="report-list"></div></section>
-      <section class="panel-card"><header class="section-title"><span>Saúde do estoque</span><h2>Faltas, baixos e itens ok</h2></header><div class="health-grid"><article><span>Itens em falta</span><strong id="itensEmFalta">0</strong></article><article><span>Estoque baixo</span><strong id="itensBaixos">0</strong></article><article><span>Estoque ok</span><strong id="itensOk">0</strong></article></div><div class="health-lists"><section><h3>Em falta</h3><div id="listaEmFalta" class="report-list compact"></div></section><section><h3>Estoque baixo</h3><div id="listaBaixo" class="report-list compact"></div></section></div></section>
-      <section class="panel-card"><header class="section-title"><span>Agenda</span><h2>Relatório mensal</h2></header><div class="agenda-report-grid"><article><span>Cancelados</span><strong id="agendaCancelados">0</strong></article><article><span>Remarcados</span><strong id="agendaRemarcados">0</strong></article><article><span>Concluídos</span><strong id="agendaConcluidos">0</strong></article><article><span>Próximos 7 dias</span><strong id="agendaProximos">0</strong></article><article><span>Taxa de cancelamento</span><strong id="taxaCancelamento">0%</strong></article></div><div class="health-lists"><section><h3>Cancelamentos com motivo</h3><div id="listaCancelamentos" class="report-list compact"></div></section><section><h3>Próximos atendimentos</h3><div id="listaProximosAgenda" class="report-list compact"></div></section></div></section>
+
+      <section class="panel-card report-panel category-report-panel">
+        <header class="section-title"><span>Categorias</span><h2>Distribuição do estoque</h2></header>
+        <div id="graficoCategorias" class="report-list category-report-list"></div>
+      </section>
+
+      <section class="panel-card report-panel">
+        <header class="section-title"><span>Saúde do estoque</span><h2>Faltas, baixos e itens ok</h2></header>
+        <div class="health-grid report-stat-grid">
+          <article class="report-stat-card is-danger"><span>Itens em falta</span><strong id="itensEmFalta">0</strong></article>
+          <article class="report-stat-card is-warning"><span>Estoque baixo</span><strong id="itensBaixos">0</strong></article>
+          <article class="report-stat-card is-ok"><span>Estoque ok</span><strong id="itensOk">0</strong></article>
+        </div>
+        <div class="health-lists report-two-columns">
+          <section><h3>Em falta</h3><div id="listaEmFalta" class="report-list compact"></div></section>
+          <section><h3>Estoque baixo</h3><div id="listaBaixo" class="report-list compact"></div></section>
+        </div>
+      </section>
+
+      <section class="panel-card report-panel">
+        <header class="section-title"><span>Agenda</span><h2>Relatório mensal</h2></header>
+        <div class="agenda-report-grid report-stat-grid agenda-stats-grid">
+          <article class="report-stat-card"><span>Cancelados</span><strong id="agendaCancelados">0</strong></article>
+          <article class="report-stat-card"><span>Remarcados</span><strong id="agendaRemarcados">0</strong></article>
+          <article class="report-stat-card"><span>Concluídos</span><strong id="agendaConcluidos">0</strong></article>
+          <article class="report-stat-card"><span>Próximos 7 dias</span><strong id="agendaProximos">0</strong></article>
+          <article class="report-stat-card is-featured"><span>Taxa de cancelamento</span><strong id="taxaCancelamento">0%</strong></article>
+        </div>
+        <div class="health-lists report-two-columns">
+          <section><h3>Cancelamentos com motivo</h3><div id="listaCancelamentos" class="report-list compact"></div></section>
+          <section><h3>Próximos atendimentos</h3><div id="listaProximosAgenda" class="report-list compact"></div></section>
+        </div>
+      </section>
     </main>
   </div>
   <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js" defer></script>
