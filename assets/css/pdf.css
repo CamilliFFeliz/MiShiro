@@ -1,0 +1,62 @@
+.client-pdf-options {
+  display: grid;
+  gap: 16px;
+  margin-top: 18px;
+  padding: clamp(16px, 4vw, 22px);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-large);
+  background:
+    linear-gradient(135deg, rgba(125, 211, 199, 0.1), rgba(106, 27, 154, 0.09)),
+    rgba(255, 255, 255, 0.048);
+  box-shadow: var(--shadow-card);
+}
+
+.client-pdf-options .section-mini-header {
+  margin-bottom: 0;
+}
+
+.client-pdf-options .section-mini-header span {
+  color: var(--text-muted);
+  font-size: clamp(0.68rem, 2.4vw, 0.78rem);
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.client-pdf-options .section-mini-header h3 {
+  margin-top: 5px;
+  color: var(--text-primary);
+  font-size: clamp(1.05rem, 4vw, 1.3rem);
+}
+
+.client-pdf-options .full-client-field {
+  grid-column: 1 / -1;
+}
+
+.client-pdf-options textarea {
+  min-height: 92px;
+}
+
+#exportInternalPdfButton,
+#exportClientPdfButton {
+  min-width: fit-content;
+}
+
+#exportInternalPdfButton[disabled],
+#exportClientPdfButton[disabled] {
+  opacity: 0.72;
+}
+
+@media (min-width: 860px) {
+  .client-pdf-options .two-columns {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .end-actions {
+    flex-wrap: wrap;
+  }
+
+  .end-actions #exportInternalPdfButton,
+  .end-actions #exportClientPdfButton {
+    width: auto;
+  }
+}

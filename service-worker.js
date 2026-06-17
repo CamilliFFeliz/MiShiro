@@ -1,5 +1,5 @@
-const CACHE_NAME = "mishiro-orcamentos-static-v11-agenda-calendario";
-const RUNTIME_CACHE_NAME = "mishiro-orcamentos-runtime-v11-agenda-calendario";
+const CACHE_NAME = "mishiro-orcamentos-static-v12-organizacao-pastas";
+const RUNTIME_CACHE_NAME = "mishiro-orcamentos-runtime-v12-organizacao-pastas";
 const APP_CACHE_PREFIXES = ["calculadora-tattoo-", "mishiro-orcamentos-"];
 const CURRENT_CACHE_NAMES = [CACHE_NAME, RUNTIME_CACHE_NAME];
 const APP_SHELL_URL = "./index.html";
@@ -15,30 +15,38 @@ const APP_ASSETS = [
   "./mishiro-ux.css",
   "./mishiro-studio-pro.css",
   "./mvc-mishiro.css",
+  "./assets/css/base.css",
+  "./assets/css/identidade.css",
+  "./assets/css/pdf.css",
+  "./assets/css/experiencia.css",
+  "./assets/css/estudio-pro.css",
+  "./assets/css/mvc.css",
   "./js/main.js",
-  "./js/mishiro-brand.js",
-  "./js/mishiro-brand-v2.js",
-  "./js/mishiro-pdf-tools.js",
-  "./js/mishiro-pdf-direct.js",
-  "./js/mishiro-ux.js",
-  "./js/mishiro-studio-pro.js",
-  "./js/mvc/modelos/esquema-banco.js",
-  "./js/mvc/modelos/banco-local.js",
-  "./js/mvc/modelos/backup-local.js",
-  "./js/mvc/servicos/servico-estoque.js",
-  "./js/mvc/servicos/servico-orcamentos.js",
-  "./js/mvc/servicos/servico-agendamentos.js",
-  "./js/mvc/controladores/controlador-mvc.js",
-  "./js/dom.js",
-  "./js/state.js",
-  "./js/budget.js",
-  "./js/inventory.js",
-  "./js/pdf.js",
-  "./js/pwa.js",
-  "./js/utils.js",
+  "./src/main.js",
+  "./src/mishiro-brand.js",
+  "./src/mishiro-brand-v2.js",
+  "./src/mishiro-pdf-tools.js",
+  "./src/mishiro-pdf-direct.js",
+  "./src/mishiro-ux.js",
+  "./src/mishiro-studio-pro.js",
+  "./src/mvc/modelos/esquema-banco.js",
+  "./src/mvc/modelos/banco-local.js",
+  "./src/mvc/modelos/backup-local.js",
+  "./src/mvc/servicos/servico-estoque.js",
+  "./src/mvc/servicos/servico-orcamentos.js",
+  "./src/mvc/servicos/servico-agendamentos.js",
+  "./src/mvc/controladores/controlador-mvc.js",
+  "./src/dom.js",
+  "./src/state.js",
+  "./src/budget.js",
+  "./src/inventory.js",
+  "./src/pdf.js",
+  "./src/pwa.js",
+  "./src/utils.js",
   "./manifest.webmanifest",
   "./icons/icon.svg",
-  "./icons/mishiro.svg"
+  "./icons/mishiro.svg",
+  "./assets/icons/mishiro.svg"
 ];
 
 self.addEventListener("install", (event) => {
