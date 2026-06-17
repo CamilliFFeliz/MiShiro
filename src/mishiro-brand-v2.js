@@ -1,9 +1,11 @@
 const BRAND_NAME = "MiShiro Tattoo";
-const BRAND_TAGLINE = "Custos, proposta e agenda para tattoo";
+const BRAND_TAGLINE = "Orçamentos, agenda e estoque";
 const EXTRA_STYLES = [
   ["mishiro-ux-css", "assets/css/experiencia.css"],
   ["mishiro-studio-pro-css", "assets/css/estudio-pro.css"],
-  ["mishiro-theme-css", "assets/css/tema-mishiro.css"]
+  ["mishiro-theme-css", "assets/css/tema-mishiro.css"],
+  ["mishiro-logo-img-css", "assets/css/logos-img.css"],
+  ["mishiro-mobile-polish-css", "assets/css/polimento-mobile.css"]
 ];
 const NAV_ICONS = new Map([
   ["home", "layout-dashboard"],
@@ -55,13 +57,13 @@ function replaceNavigationIcons() {
 }
 
 function refineHeroCopy() {
-  setText(".hero-card .eyebrow", BRAND_NAME);
-  setText("#homeTitle", "A rotina do estúdio organizada com a identidade MiShiro.");
-  setText(".hero-card p", "Da entrada do insumo ao PDF final, o app agora usa a paleta da marca: roxo profundo, branco limpo, preto de contraste e cards mais consistentes para o atendimento do estúdio.");
+  setText(".hero-card .eyebrow", "MiShiro Tattoo • App de gestão");
+  setText("#homeTitle", "Um painel simples, bonito e rápido para orçar, agendar e controlar o estoque.");
+  setText(".hero-card p", "A interface foi ajustada para celular primeiro: botões maiores, cards mais espaçados, logo inteira sem corte e textos mais diretos para atendimento rápido no estúdio.");
   const flowSteps = document.querySelectorAll(".flow-card article");
-  setStep(flowSteps[0], "Monte a base de custos", "Cadastre insumos por unidade, ml, g ou metro e evite estimativas soltas no orçamento.");
-  setStep(flowSteps[1], "Simule o atendimento", "Some materiais, tempo, valor por hora, margem e desconto em uma visão única.");
-  setStep(flowSteps[2], "Exporte o documento certo", "Use o PDF interno para controle do estúdio e o PDF simplificado para enviar ao cliente.");
+  setStep(flowSteps[0], "Estoque sempre à mão", "Cadastre materiais com custo real e encontre tudo rápido pelo celular.");
+  setStep(flowSteps[1], "Orçamento sem bagunça", "Monte a proposta com cliente, referência, insumos, horas, margem e desconto.");
+  setStep(flowSteps[2], "Fluxo profissional", "Envie PDF, marque aceite, agende a sessão e só então baixe o estoque.");
 }
 
 function setIconForSelector(selector, iconName) {
