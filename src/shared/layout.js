@@ -38,11 +38,15 @@ function criarSidebar(base, atual) {
 }
 
 function carregarCamadaVisualPro() {
-  if (document.querySelector("#mishiro-pro-ui-css")) return;
+  carregarCssFinal("mishiro-pro-ui-css", "assets/css/pro-ui.css?v=20260617.3");
+  carregarCssFinal("mishiro-pro-polish-css", "assets/css/pro-polish.css?v=20260617.3");
+}
+function carregarCssFinal(id, caminho) {
+  if (document.querySelector(`#${id}`)) return;
   const link = document.createElement("link");
-  link.id = "mishiro-pro-ui-css";
+  link.id = id;
   link.rel = "stylesheet";
-  link.href = `${obterBase()}assets/css/pro-ui.css?v=20260617.2`;
+  link.href = `${obterBase()}${caminho}`;
   document.head.append(link);
 }
 function obterBase() { return location.pathname.includes("/pages/") ? "../" : "./"; }
