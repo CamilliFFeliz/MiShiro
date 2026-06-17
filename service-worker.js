@@ -1,9 +1,11 @@
-const CACHE_NAME = "mishiro-static-v24-paginas-reais";
-const RUNTIME_CACHE_NAME = "mishiro-runtime-v24-paginas-reais";
+const CACHE_NAME = "mishiro-static-v25-carrinho-pdf-pipeline";
+const RUNTIME_CACHE_NAME = "mishiro-runtime-v25-carrinho-pdf-pipeline";
 const APP_CACHE_PREFIXES = ["calculadora-tattoo-", "mishiro-orcamentos-", "mishiro-static-", "mishiro-runtime-"];
 const CURRENT_CACHE_NAMES = [CACHE_NAME, RUNTIME_CACHE_NAME];
 const APP_SHELL_URL = "./index.html";
 const LUCIDE_CDN_URL = "https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js";
+const JSPDF_CDN_URL = "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
+const EXTERNAL_ASSET_URLS = [LUCIDE_CDN_URL, JSPDF_CDN_URL];
 const APP_ASSETS = [
   "./",
   APP_SHELL_URL,
@@ -80,7 +82,7 @@ self.addEventListener("message", (event) => {
 async function cacheApplicationShell() {
   const cache = await caches.open(CACHE_NAME);
   await cache.addAll(APP_ASSETS);
-  await cacheExternalAsset(LUCIDE_CDN_URL);
+  await Promise.all(EXTERNAL_ASSET_URLS.map(cacheExternalAsset));
 }
 
 async function cacheExternalAsset(assetUrl) {
@@ -106,7 +108,7 @@ async function handleRequest(request) {
 }
 
 async function getExternalAssetResponse(request, requestUrl) {
-  if (requestUrl.href !== LUCIDE_CDN_URL) return fetch(request);
+  if (!EXTERNAL_ASSET_URLS.includes(requestUrl.href)) return fetch(request);
   const cachedResponse = await caches.match(request);
   try {
     const networkResponse = await fetch(request);
