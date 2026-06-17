@@ -1,0 +1,130 @@
+.mishiro-hero-brand {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  width: min(100%, 420px);
+  margin-bottom: clamp(18px, 4vw, 30px);
+  padding: 10px;
+  border: 1px solid var(--glass-border-strong);
+  border-radius: 28px;
+  background:
+    linear-gradient(135deg, rgba(52, 9, 117, 0.18), rgba(255, 255, 255, 0.045)),
+    var(--glass-surface-soft);
+  box-shadow: 0 22px 54px rgba(52, 9, 117, 0.26);
+}
+
+.mishiro-hero-logo {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  max-height: 220px;
+  border-radius: 22px;
+  object-fit: cover;
+  background: var(--mishiro-roxo-profundo);
+}
+
+html[data-theme="light"] .mishiro-hero-brand {
+  background:
+    linear-gradient(135deg, rgba(52, 9, 117, 0.08), rgba(255, 255, 255, 0.88)),
+    #ffffff;
+}
+
+.brand-block strong {
+  letter-spacing: -0.045em;
+}
+
+.brand-block span {
+  color: var(--text-muted);
+}
+
+.hero-card {
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 8% 8%, rgba(52, 9, 117, 0.26), transparent 20rem),
+    radial-gradient(circle at 88% 14%, rgba(255, 255, 255, 0.075), transparent 18rem),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.078), rgba(255, 255, 255, 0.032)),
+    var(--glass-surface);
+}
+
+html[data-theme="light"] .hero-card {
+  background:
+    radial-gradient(circle at 8% 8%, rgba(52, 9, 117, 0.12), transparent 20rem),
+    radial-gradient(circle at 88% 14%, rgba(52, 9, 117, 0.08), transparent 18rem),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(246, 242, 251, 0.76)),
+    #ffffff;
+}
+
+.section-header,
+.flow-card,
+.feature-card,
+.report-card,
+.inventory-card,
+.budget-form-card,
+.budget-picker-card,
+.cart-card,
+.studio-pro-card,
+.coluna-pipeline-mvc,
+.agenda-notas-mvc,
+.calendario-retangular-mvc {
+  position: relative;
+}
+
+.feature-card::before,
+.report-card::before,
+.inventory-card::before,
+.budget-form-card::before,
+.budget-picker-card::before,
+.cart-card::before,
+.studio-pro-card::before,
+.coluna-pipeline-mvc::before,
+.agenda-notas-mvc::before,
+.calendario-retangular-mvc::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(255,255,255,.11), transparent 34%, rgba(52,9,117,.14));
+  opacity: .55;
+}
+
+html[data-theme="light"] .feature-card::before,
+html[data-theme="light"] .report-card::before,
+html[data-theme="light"] .inventory-card::before,
+html[data-theme="light"] .budget-form-card::before,
+html[data-theme="light"] .budget-picker-card::before,
+html[data-theme="light"] .cart-card::before,
+html[data-theme="light"] .studio-pro-card::before,
+html[data-theme="light"] .coluna-pipeline-mvc::before,
+html[data-theme="light"] .agenda-notas-mvc::before,
+html[data-theme="light"] .calendario-retangular-mvc::before {
+  background: linear-gradient(135deg, rgba(52,9,117,.08), transparent 44%, rgba(52,9,117,.045));
+}
+
+.primary-button,
+.secondary-button,
+.ghost-button,
+.nav-link,
+.theme-toggle-button {
+  border-radius: 16px;
+}
+
+@media (min-width: 980px) {
+  .hero-card {
+    grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
+  }
+
+  .mishiro-hero-brand {
+    margin-bottom: 26px;
+  }
+}
+
+@media (max-width: 620px) {
+  .mishiro-hero-brand {
+    width: min(100%, 320px);
+    margin-inline: auto;
+  }
+
+  .mishiro-hero-logo {
+    max-height: 180px;
+  }
+}
