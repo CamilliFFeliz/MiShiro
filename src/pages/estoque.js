@@ -129,9 +129,7 @@ function renderCampoEstoqueMinimo(dados) {
   return `<label class="field"><span>Estoque mínimo</span><input data-item-field="minimumQuantity" type="text" inputmode="decimal" placeholder="2" value="${escapar(dados.minimumQuantity ?? 2)}" /></label>`;
 }
 
-function campoVisivel(campo, dados) {
-  return !campo.visibleWhen || dados[campo.visibleWhen.key] === campo.visibleWhen.value;
-}
+function campoVisivel(campo, dados) { return !campo.visibleWhen || dados[campo.visibleWhen.key] === campo.visibleWhen.value; }
 
 async function salvarItem(evento) {
   evento.preventDefault();
@@ -158,9 +156,7 @@ function converterItemParaFormulario(item) {
   return { name: item.nome || "", brand: item.marca || "", lineType: item.linhaTipo || item.nome || "", numbering: item.numeracao || "", color: item.cor || "", purchaseMode: compraUnitaria ? PURCHASE_MODE_SINGLE : PURCHASE_MODE_BOX, packageQuantity: compraUnitaria ? "" : item.quantidadeEmbalagem, packagePrice: compraUnitaria ? "" : item.precoEmbalagem, singleUnitPrice: compraUnitaria ? item.precoEmbalagem : "", stockQuantity: item.quantidadeAtual, minimumQuantity: item.quantidadeMinima, measureUnit: item.unidadeMedida || CATEGORY_DEFINITIONS[categoriaFormulario]?.defaultMeasure };
 }
 
-function criarDadosPadraoFormulario(categoria) {
-  return { purchaseMode: UNIT_PURCHASE_CATEGORIES.includes(categoria) ? PURCHASE_MODE_BOX : "", measureUnit: CATEGORY_DEFINITIONS[categoria]?.defaultMeasure || "un", minimumQuantity: 2 };
-}
+function criarDadosPadraoFormulario(categoria) { return { purchaseMode: UNIT_PURCHASE_CATEGORIES.includes(categoria) ? PURCHASE_MODE_BOX : "", measureUnit: CATEGORY_DEFINITIONS[categoria]?.defaultMeasure || "un", minimumQuantity: 2 }; }
 
 function atualizarPrevia() {
   const preview = document.querySelector("#unitCostPreview");
@@ -190,5 +186,7 @@ function render() {
 
 function card(item) {
   const resumo = calcularResumoEstoque(item);
-  return `<article class="inventory-card stock-card"><div class="card-topline"><span class="category-pill">${escapar(item.categoria)}</span></div><div class="inventory-title-row"><div class="product-avatar">${escapar((item.nome || "?").slice(0, 1).toUpperCase())}</div><div><h3>${escapar(item.nome)}</h3><span>${escapar(getItemSpecification(item) || "Sem especificação")}</span></div></div><div class="stock-metric-grid"><div class="stock-metric"><span>Quantidade atual</span><strong>${resumo.quantidadeAtual} ${escapar(item.unidadeMedida)}</strong></div><div class="stock-metric"><span>Custo por ${escapar(getMeasureLabel(item.unidadeMedida))}</span><strong>${formatarMoeda(resumo.custoUnitario)}</strong></div><div class="stock-metric is-featured"><span>Valor financeiro total</span><strong>${formatarMoeda(resumo.valorTotal)}</strong></div></div><p class="card-note">Embalagem de ${normalizarNumero(item.quantidadeEmbalagem)} ${escapar(item.unidadeMedida)} por ${formatarMoeda(item.precoEmbalagem)} · mínimo ${resumo.quantidadeMinima}</p><div class="inventory-card-actions"><button class="button button-secondary" type="button" data-edit-stock-item="${escapar(item.id)}"><i data-lucide="pencil"></i>Editar</button></div></article>`;
+  const especificacao = getItemSpecification(item) || "Sem especificação";
+  const quantidade = `${resumo.quantidadeAtual} ${item.unidadeMedida}`;
+  return `<article class="inventory-card stock-compact-card"><header class="stock-compact-head"><span class="category-pill">${escapar(item.categoria)}</span><button class="icon-edit-button" type="button" data-edit-stock-item="${escapar(item.id)}" aria-label="Editar ${escapar(item.nome)}"><i data-lucide="pencil"></i></button></header><div class="stock-compact-main"><div class="product-avatar">${escapar((item.nome || "?").slice(0, 1).toUpperCase())}</div><div><h3>${escapar(item.nome)}</h3><span>${escapar(especificacao)}</span></div></div><div class="stock-compact-stats"><article><span>Atual</span><strong>${escapar(quantidade)}</strong></article><article><span>Custo</span><strong>${formatarMoeda(resumo.custoUnitario)}</strong></article><article class="is-featured"><span>Total</span><strong>${formatarMoeda(resumo.valorTotal)}</strong></article></div><footer class="stock-compact-footer"><span>Embalagem: ${normalizarNumero(item.quantidadeEmbalagem)} ${escapar(item.unidadeMedida)}</span><span>Mínimo: ${resumo.quantidadeMinima}</span></footer></article>`;
 }
