@@ -1,5 +1,5 @@
-const CACHE_NAME = "mishiro-static-v25-carrinho-pdf-pipeline";
-const RUNTIME_CACHE_NAME = "mishiro-runtime-v25-carrinho-pdf-pipeline";
+const CACHE_NAME = "mishiro-static-v26-estoque-carrinho-restaurados";
+const RUNTIME_CACHE_NAME = "mishiro-runtime-v26-estoque-carrinho-restaurados";
 const APP_CACHE_PREFIXES = ["calculadora-tattoo-", "mishiro-orcamentos-", "mishiro-static-", "mishiro-runtime-"];
 const CURRENT_CACHE_NAMES = [CACHE_NAME, RUNTIME_CACHE_NAME];
 const APP_SHELL_URL = "./index.html";
@@ -38,6 +38,7 @@ const APP_ASSETS = [
   "./src/shared/storage.js",
   "./src/shared/formatters.js",
   "./src/shared/ui.js",
+  "./src/shared/stock-catalog.js",
   "./src/pages/dashboard.js",
   "./src/pages/orcamentos.js",
   "./src/pages/estoque.js",
