@@ -30,14 +30,7 @@ export async function cadastrarItemEstoque(dados = {}) {
 
   await executarTransacao([LOJAS.itensEstoque, LOJAS.movimentosEstoque, LOJAS.metadadosBackup], "readwrite", async ({ lojas }) => {
     await converterRequisicao(lojas[LOJAS.itensEstoque].put(item));
-    await converterRequisicao(lojas[LOJAS.movimentosEstoque].put(criarMovimentoEstoque({
-      itemEstoqueId: item.id,
-      tipo: TIPO_MOVIMENTO_ESTOQUE.estoqueInicial,
-      quantidade: quantidadeAtual,
-      quantidadeAnterior: 0,
-      quantidadeNova: quantidadeAtual,
-      motivo: "Cadastro inicial"
-    })));
+    await converterRequisicao(lojas[LOJAS.movimentosEstoque].put(criarMovimentoEstoque({ itemEstoqueId: item.id, tipo: TIPO_MOVIMENTO_ESTOQUE.estoqueInicial, quantidade: quantidadeAtual, quantidadeAnterior: 0, quantidadeNova: quantidadeAtual, motivo: "Cadastro inicial" })));
     await marcarBancoAlterado(lojas);
   });
 
@@ -71,17 +64,22 @@ export async function listarAlertasEstoqueBaixo() {
 export function calcularCustoUnitario(item) {
   const precoDireto = normalizarNumero(item?.precoUnitario || item?.custoUnitarioSnapshot);
   if (precoDireto > 0) return arredondar(precoDireto);
-
   const preco = normalizarNumero(item?.precoEmbalagem || item?.packagePrice || item?.singleUnitPrice);
   const quantidade = Math.max(normalizarNumero(item?.quantidadeEmbalagem || item?.packageQuantity), 1);
   return arredondar(preco / quantidade);
+}
+
+export function calcularValorTotalEstoque(item) {
+  const precoEmbalagem = normalizarNumero(item?.precoEmbalagem || item?.packagePrice || item?.singleUnitPrice);
+  const quantidadeAtual = Math.max(normalizarNumero(item?.quantidadeAtual || item?.stockQuantity), 0);
+  return arredondar(precoEmbalagem * quantidadeAtual);
 }
 
 export function calcularResumoEstoque(item) {
   const custoUnitario = calcularCustoUnitario(item);
   const quantidadeAtual = Math.max(normalizarNumero(item?.quantidadeAtual), 0);
   const quantidadeMinima = Math.max(normalizarNumero(item?.quantidadeMinima), 0);
-  const valorTotal = arredondar(custoUnitario * quantidadeAtual);
+  const valorTotal = calcularValorTotalEstoque(item);
   const percentualMinimo = quantidadeMinima > 0 ? Math.min((quantidadeAtual / quantidadeMinima) * 100, 100) : 100;
   return { custoUnitario, quantidadeAtual, quantidadeMinima, valorTotal, percentualMinimo, estoqueBaixo: quantidadeMinima > 0 && quantidadeAtual <= quantidadeMinima };
 }
@@ -89,16 +87,7 @@ export function calcularResumoEstoque(item) {
 export function criarSnapshotItemEstoque(item, quantidadeUsada) {
   const quantidade = Math.max(normalizarNumero(quantidadeUsada), 0);
   const custoUnitario = calcularCustoUnitario(item);
-  return {
-    itemEstoqueId: item.id,
-    nomeItemSnapshot: item.nome,
-    categoriaSnapshot: item.categoria,
-    unidadeMedidaSnapshot: item.unidadeMedida,
-    quantidadeUsada: quantidade,
-    custoUnitarioSnapshot: arredondar(custoUnitario),
-    subtotalSnapshot: arredondar(custoUnitario * quantidade),
-    criadoEm: obterDataIso()
-  };
+  return { itemEstoqueId: item.id, nomeItemSnapshot: item.nome, categoriaSnapshot: item.categoria, unidadeMedidaSnapshot: item.unidadeMedida, quantidadeUsada: quantidade, custoUnitarioSnapshot: arredondar(custoUnitario), subtotalSnapshot: arredondar(custoUnitario * quantidade), criadoEm: obterDataIso() };
 }
 
 async function alterarQuantidade(itemEstoqueId, quantidade, calcularNovaQuantidade, tipo, motivo) {
