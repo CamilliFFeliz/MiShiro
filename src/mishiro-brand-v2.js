@@ -1,9 +1,9 @@
-const SVG_NS = "http://www.w3.org/2000/svg";
-const BRAND_NAME = "MiShiro Orçamentos";
-const BRAND_TAGLINE = "Custos, proposta e PDF para tattoo";
+const BRAND_NAME = "MiShiro Tattoo";
+const BRAND_TAGLINE = "Custos, proposta e agenda para tattoo";
 const EXTRA_STYLES = [
   ["mishiro-ux-css", "assets/css/experiencia.css"],
-  ["mishiro-studio-pro-css", "assets/css/estudio-pro.css"]
+  ["mishiro-studio-pro-css", "assets/css/estudio-pro.css"],
+  ["mishiro-theme-css", "assets/css/tema-mishiro.css"]
 ];
 const NAV_ICONS = new Map([
   ["home", "layout-dashboard"],
@@ -15,7 +15,6 @@ const NAV_ICONS = new Map([
 export function applyMiShiroBrandV2() {
   injectExtraStyles();
   replaceBrandText();
-  replaceBrandLogo();
   replaceNavigationIcons();
   refineHeroCopy();
   requestIconRefresh();
@@ -40,14 +39,6 @@ function replaceBrandText() {
   if (brandTagline) brandTagline.textContent = BRAND_TAGLINE;
 }
 
-function replaceBrandLogo() {
-  const mark = document.querySelector(".brand-mark");
-  if (!mark) return;
-  mark.replaceChildren(createLogo());
-  mark.setAttribute("aria-label", BRAND_NAME);
-  mark.setAttribute("title", BRAND_NAME);
-}
-
 function replaceNavigationIcons() {
   NAV_ICONS.forEach((iconName, screenName) => {
     const icon = document.querySelector(`[data-screen-target='${screenName}']`)?.querySelector("[data-lucide]");
@@ -65,34 +56,12 @@ function replaceNavigationIcons() {
 
 function refineHeroCopy() {
   setText(".hero-card .eyebrow", BRAND_NAME);
-  setText("#homeTitle", "Precificação mais clara, proposta mais bonita e controle real dos custos da tattoo.");
-  setText(".hero-card p", "O MiShiro organiza estoque, mão de obra, margem, desconto e referência visual em uma experiência mais fluida. O foco é transformar custos soltos em um orçamento profissional para o estúdio e em uma proposta simples para o cliente.");
+  setText("#homeTitle", "A rotina do estúdio organizada com a identidade MiShiro.");
+  setText(".hero-card p", "Da entrada do insumo ao PDF final, o app agora usa a paleta da marca: roxo profundo, branco limpo, preto de contraste e cards mais consistentes para o atendimento do estúdio.");
   const flowSteps = document.querySelectorAll(".flow-card article");
   setStep(flowSteps[0], "Monte a base de custos", "Cadastre insumos por unidade, ml, g ou metro e evite estimativas soltas no orçamento.");
   setStep(flowSteps[1], "Simule o atendimento", "Some materiais, tempo, valor por hora, margem e desconto em uma visão única.");
   setStep(flowSteps[2], "Exporte o documento certo", "Use o PDF interno para controle do estúdio e o PDF simplificado para enviar ao cliente.");
-}
-
-function createLogo() {
-  const svg = document.createElementNS(SVG_NS, "svg");
-  svg.setAttribute("viewBox", "0 0 64 64");
-  svg.setAttribute("focusable", "false");
-  svg.setAttribute("aria-hidden", "true");
-  addPath(svg, "logo-orb", "M32 6a26 26 0 1 0 0 52 26 26 0 0 0 0-52Z");
-  addPath(svg, "logo-m-left", "M18 43V22l14 15");
-  addPath(svg, "logo-m-right", "M32 37l14-15v21");
-  addPath(svg, "logo-needle-line", "M42 20 54 8");
-  addPath(svg, "logo-needle-tip", "M53 7l6-2-2 6z");
-  addPath(svg, "logo-glow", "M16 13l2.2 4.8L23 21l-4.8 2.2L16 28l-2.2-4.8L9 21l4.8-2.2z");
-  addPath(svg, "logo-spark", "M48 43l1.5 3.2L53 48l-3.5 1.8L48 53l-1.5-3.2L43 48l3.5-1.8z");
-  return svg;
-}
-
-function addPath(svg, className, pathData) {
-  const path = document.createElementNS(SVG_NS, "path");
-  path.setAttribute("class", className);
-  path.setAttribute("d", pathData);
-  svg.append(path);
 }
 
 function setIconForSelector(selector, iconName) {
