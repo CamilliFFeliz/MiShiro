@@ -1,5 +1,5 @@
-const CACHE_NAME = "mishiro-orcamentos-static-v17-favicon-oficial";
-const RUNTIME_CACHE_NAME = "mishiro-orcamentos-runtime-v17-favicon-oficial";
+const CACHE_NAME = "mishiro-orcamentos-static-v18-logos-mobile";
+const RUNTIME_CACHE_NAME = "mishiro-orcamentos-runtime-v18-logos-mobile";
 const APP_CACHE_PREFIXES = ["calculadora-tattoo-", "mishiro-orcamentos-"];
 const CURRENT_CACHE_NAMES = [CACHE_NAME, RUNTIME_CACHE_NAME];
 const APP_SHELL_URL = "./index.html";
@@ -18,7 +18,12 @@ const APP_ASSETS = [
   "./assets/css/mvc.css",
   "./assets/css/tema-mishiro.css",
   "./assets/css/logos-img.css",
+  "./assets/css/polimento-mobile.css",
   "./assets/favicon/favicon.svg",
+  "./img/mishiro-logo-claro.jpg",
+  "./img/mishiro-logo-escuro.jpg",
+  "./img/mishiro-simbolo-claro.jpg",
+  "./img/mishiro-simbolo-escuro.jpg.jpg",
   "./assets/brand/mishiro-logo-clara.svg",
   "./assets/brand/mishiro-logo-escura.svg",
   "./assets/brand/mishiro-simbolo-claro.svg",
