@@ -1,0 +1,6 @@
+.report-list { display:grid; gap:10px; }
+.report-row { display:grid; gap:8px; }
+.report-row header { display:flex; justify-content:space-between; gap:12px; color:var(--text); font-weight:850; }
+.report-bar { height:10px; border-radius:999px; background:rgba(255,255,255,.08); overflow:hidden; }
+.report-bar i { display:block; height:100%; background:linear-gradient(90deg,#360a75,#7a45c7); }
+@media (min-width: 900px) { .metric-grid { grid-template-columns: repeat(3,minmax(0,1fr)); } }
