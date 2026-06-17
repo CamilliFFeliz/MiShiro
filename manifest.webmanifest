@@ -1,8 +1,8 @@
 {
   "id": "./index.html",
-  "name": "MiShiro Orçamentos",
+  "name": "MiShiro Tattoo",
   "short_name": "MiShiro",
-  "description": "PWA offline para estoque, precificação, orçamento e geração de propostas em PDF para estúdios de tatuagem.",
+  "description": "PWA offline para estoque, agenda, precificação, orçamento e geração de propostas em PDF para estúdios de tatuagem.",
   "lang": "pt-BR",
   "dir": "ltr",
   "start_url": "./index.html",
@@ -10,8 +10,8 @@
   "display": "standalone",
   "display_override": ["standalone", "minimal-ui", "browser"],
   "orientation": "portrait-primary",
-  "background_color": "#0F0A18",
-  "theme_color": "#2D0B40",
+  "background_color": "#340975",
+  "theme_color": "#340975",
   "categories": ["business", "productivity", "finance"],
   "prefer_related_applications": false,
   "shortcuts": [
@@ -22,7 +22,7 @@
       "url": "./index.html",
       "icons": [
         {
-          "src": "icons/mishiro.svg",
+          "src": "assets/brand/mishiro-simbolo-escuro.svg",
           "sizes": "any",
           "type": "image/svg+xml",
           "purpose": "any maskable"
@@ -36,7 +36,7 @@
       "url": "./index.html",
       "icons": [
         {
-          "src": "icons/mishiro.svg",
+          "src": "assets/brand/mishiro-simbolo-escuro.svg",
           "sizes": "any",
           "type": "image/svg+xml",
           "purpose": "any maskable"
@@ -46,10 +46,16 @@
   ],
   "icons": [
     {
-      "src": "icons/mishiro.svg",
+      "src": "assets/brand/mishiro-simbolo-escuro.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any maskable"
+    },
+    {
+      "src": "assets/brand/mishiro-simbolo-claro.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
     }
   ]
 }
