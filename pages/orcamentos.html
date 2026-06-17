@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#360a75" />
+  <meta name="description" content="Criação de orçamentos da MiShiro Tattoo." />
+  <link rel="manifest" href="../manifest.webmanifest" />
+  <link rel="icon" href="../icons/icon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="../assets/css/base.css" />
+  <link rel="stylesheet" href="../assets/css/tokens.css" />
+  <link rel="stylesheet" href="../assets/css/layout.css" />
+  <link rel="stylesheet" href="../assets/css/components.css" />
+  <link rel="stylesheet" href="../assets/css/orcamentos.css" />
+  <title>MiShiro Tattoo • Orçamentos</title>
+</head>
+<body data-page="orcamentos">
+  <div id="app" class="app-frame">
+    <main id="appMain" class="page-shell" aria-labelledby="pageHeading">
+      <header class="page-header">
+        <span class="eyebrow">Orçamentos</span>
+        <h1 id="pageHeading">Criar proposta de tatuagem</h1>
+        <p>Preencha as etapas principais, estime materiais e salve o orçamento no banco local do navegador.</p>
+      </header>
+
+      <section class="budget-flow" aria-label="Fluxo de orçamento">
+        <span>Cliente</span><span>Tatuagem</span><span>Materiais</span><span>Resumo</span>
+      </section>
+
+      <form id="formOrcamento" class="budget-page-grid">
+        <section class="panel-card studio-profile-card">
+          <header class="section-title"><span>Perfil do estúdio</span><h2>Dados de atendimento</h2></header>
+          <div class="form-grid compact">
+            <label class="field"><span>Estúdio</span><input id="studioName" name="studioName" type="text" placeholder="MiShiro Tattoo" /></label>
+            <label class="field"><span>Artista</span><input id="artistName" name="artistName" type="text" placeholder="Nome do tatuador" /></label>
+            <label class="field"><span>Contato</span><input id="studioContact" name="studioContact" type="text" placeholder="WhatsApp / Instagram" /></label>
+            <label class="field"><span>Sinal sugerido (%)</span><input id="bookingSignal" name="bookingSignal" inputmode="decimal" placeholder="30" /></label>
+          </div>
+        </section>
+
+        <section class="panel-card">
+          <header class="section-title"><span>Cliente</span><h2>Identificação</h2></header>
+          <div class="form-grid compact">
+            <label class="field"><span>Nome do orçamento</span><input id="nomeOrcamento" name="nomeOrcamento" required placeholder="Ex: Fechamento de braço" /></label>
+            <label class="field"><span>Cliente</span><input id="clienteNome" name="clienteNome" placeholder="Nome do cliente" /></label>
+          </div>
+        </section>
+
+        <section class="panel-card">
+          <header class="section-title"><span>Tatuagem</span><h2>Dados da arte</h2></header>
+          <div class="form-grid compact">
+            <label class="field"><span>Tamanho</span><input id="tamanhoTatuagem" name="tamanhoTatuagem" placeholder="Ex: 15 cm" /></label>
+            <label class="field"><span>Local do corpo</span><input id="localCorpo" name="localCorpo" placeholder="Ex: antebraço" /></label>
+            <label class="field"><span>Cores</span><input id="coresTatuagem" name="coresTatuagem" placeholder="Preto, cinza, colorida..." /></label>
+            <label class="field"><span>Complexidade</span><select id="complexidade"><option value="simples">Simples</option><option value="media">Média</option><option value="alta">Alta</option><option value="realismo">Realismo / alta complexidade</option></select></label>
+          </div>
+          <label class="field"><span>Observações para o cliente</span><textarea id="observacoesCliente" rows="4" placeholder="Detalhes da proposta, sessões, cuidados ou combinações."></textarea></label>
+        </section>
+
+        <section class="panel-card materials-panel">
+          <header class="section-title"><span>Materiais</span><h2>Estimativa de insumos</h2></header>
+          <div class="materials-picker">
+            <label class="field"><span>Item do estoque</span><select id="itemEstoqueSelect"></select></label>
+            <label class="field"><span>Quantidade usada</span><input id="quantidadeUsada" inputmode="decimal" placeholder="1" /></label>
+            <button class="button button-secondary" id="adicionarMaterial" type="button">Adicionar material</button>
+          </div>
+          <div id="listaMateriais" class="material-list"></div>
+        </section>
+
+        <section class="panel-card presets-panel">
+          <header class="section-title"><span>Presets</span><h2>Base rápida</h2></header>
+          <div class="preset-grid">
+            <button type="button" data-preset="minima">Sessão mínima</button>
+            <button type="button" data-preset="pequena">Pequena</button>
+            <button type="button" data-preset="media">Média</button>
+            <button type="button" data-preset="grande">Grande</button>
+          </div>
+        </section>
+
+        <aside class="panel-card summary-panel">
+          <header class="section-title"><span>Resumo financeiro</span><h2>Valor estimado</h2></header>
+          <div class="form-grid compact">
+            <label class="field"><span>Valor da hora</span><input id="valorHora" inputmode="decimal" placeholder="150" /></label>
+            <label class="field"><span>Duração (h)</span><input id="duracaoSessao" inputmode="decimal" placeholder="3" /></label>
+            <label class="field"><span>Margem / fixos (%)</span><input id="margem" inputmode="decimal" placeholder="30" /></label>
+            <label class="field"><span>Desconto (%)</span><input id="desconto" inputmode="decimal" placeholder="0" /></label>
+          </div>
+          <dl class="summary-list">
+            <div><dt>Materiais</dt><dd id="totalMateriais">R$ 0,00</dd></div>
+            <div><dt>Mão de obra</dt><dd id="totalMaoObra">R$ 0,00</dd></div>
+            <div><dt>Subtotal</dt><dd id="subtotalOrcamento">R$ 0,00</dd></div>
+            <div class="summary-final"><dt>Valor final</dt><dd id="valorFinal">R$ 0,00</dd></div>
+          </dl>
+          <div class="action-stack">
+            <button class="button button-primary" type="submit">Salvar orçamento</button>
+            <button class="button button-secondary" id="copiarResumo" type="button">Copiar resumo</button>
+            <button class="button button-ghost" id="limparOrcamento" type="button">Limpar</button>
+          </div>
+          <p id="statusOrcamento" class="form-status" aria-live="polite"></p>
+        </aside>
+      </form>
+    </main>
+  </div>
+  <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js" defer></script>
+  <script type="module" src="../src/pages/orcamentos.js"></script>
+</body>
+</html>
