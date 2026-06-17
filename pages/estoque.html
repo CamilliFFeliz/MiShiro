@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#360a75" />
+  <link rel="manifest" href="../manifest.webmanifest" />
+  <link rel="icon" href="../icons/icon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="../assets/css/base.css" />
+  <link rel="stylesheet" href="../assets/css/tokens.css" />
+  <link rel="stylesheet" href="../assets/css/layout.css" />
+  <link rel="stylesheet" href="../assets/css/components.css" />
+  <link rel="stylesheet" href="../assets/css/estoque.css" />
+  <title>MiShiro Tattoo • Estoque</title>
+</head>
+<body data-page="estoque">
+  <div id="app" class="app-frame">
+    <main id="appMain" class="page-shell">
+      <header class="page-header"><span class="eyebrow">Estoque</span><h1>Insumos do estúdio</h1><p>Cadastre materiais, acompanhe quantidades e visualize alertas de estoque baixo.</p></header>
+      <section class="stock-grid">
+        <form id="formEstoque" class="panel-card stock-form">
+          <header class="section-title"><span>Novo item</span><h2>Cadastro rápido</h2></header>
+          <div class="form-grid compact">
+            <label class="field"><span>Nome</span><input id="nomeItem" required placeholder="Ex: Cartucho 09RL" /></label>
+            <label class="field"><span>Categoria</span><input id="categoriaItem" placeholder="Agulhas, tintas, descartáveis..." /></label>
+            <label class="field"><span>Marca</span><input id="marcaItem" placeholder="Marca" /></label>
+            <label class="field"><span>Unidade</span><input id="unidadeItem" placeholder="un, ml, g, m" /></label>
+            <label class="field"><span>Preço embalagem</span><input id="precoItem" inputmode="decimal" placeholder="50,00" /></label>
+            <label class="field"><span>Qtd. embalagem</span><input id="qtdEmbalagem" inputmode="decimal" placeholder="10" /></label>
+            <label class="field"><span>Qtd. atual</span><input id="qtdAtual" inputmode="decimal" placeholder="10" /></label>
+            <label class="field"><span>Qtd. mínima</span><input id="qtdMinima" inputmode="decimal" placeholder="2" /></label>
+          </div>
+          <button class="button button-primary" type="submit">Salvar item</button>
+          <p id="statusEstoque" class="form-status" aria-live="polite"></p>
+        </form>
+        <section class="panel-card stock-list-panel">
+          <header class="section-title"><span>Lista</span><h2>Itens cadastrados</h2></header>
+          <div class="toolbar-inline"><label class="field"><span>Buscar</span><input id="buscaEstoque" type="search" placeholder="Nome, categoria ou marca" /></label></div>
+          <div id="alertasEstoque" class="alert-list"></div>
+          <div id="listaEstoque" class="stock-list"></div>
+        </section>
+      </section>
+    </main>
+  </div>
+  <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js" defer></script>
+  <script type="module" src="../src/pages/estoque.js"></script>
+</body>
+</html>
