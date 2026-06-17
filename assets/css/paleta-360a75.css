@@ -1,0 +1,304 @@
+:root {
+  --mishiro-roxo-base: #360a75;
+  --mishiro-roxo-950: #09020f;
+  --mishiro-roxo-900: #120421;
+  --mishiro-roxo-850: #19032d;
+  --mishiro-roxo-800: #210548;
+  --mishiro-roxo-700: #2b075f;
+  --mishiro-roxo-600: #360a75;
+  --mishiro-roxo-500: #4a1292;
+  --mishiro-roxo-400: #5f18ad;
+  --mishiro-roxo-300: #7a45c7;
+  --mishiro-roxo-200: #b89bea;
+  --mishiro-roxo-100: #eee7ff;
+  --mishiro-roxo-050: #f8f4ff;
+  --purple-dark: var(--mishiro-roxo-900) !important;
+  --purple: var(--mishiro-roxo-base) !important;
+  --purple-light: var(--mishiro-roxo-300) !important;
+  --accent-teal: #c7b3ff !important;
+  --accent-gold: #ffffff !important;
+  --background: var(--mishiro-roxo-950) !important;
+  --body-background:
+    radial-gradient(circle at 12% 0%, rgba(54, 10, 117, 0.52), transparent 28rem),
+    radial-gradient(circle at 92% 12%, rgba(122, 69, 199, 0.22), transparent 22rem),
+    linear-gradient(135deg, #07020d 0%, #120421 42%, #09020f 100%) !important;
+  --sidebar-background:
+    linear-gradient(180deg, rgba(54, 10, 117, 0.96), rgba(18, 4, 33, 0.99)),
+    var(--mishiro-roxo-900) !important;
+  --topbar-background: rgba(9, 2, 15, 0.82) !important;
+  --field-background: rgba(255, 255, 255, 0.075) !important;
+  --field-background-focus: rgba(255, 255, 255, 0.12) !important;
+  --field-placeholder: rgba(238, 231, 255, 0.5) !important;
+  --button-muted-background: rgba(54, 10, 117, 0.22) !important;
+  --button-ghost-background: rgba(255, 255, 255, 0.048) !important;
+  --menu-background: rgba(18, 4, 33, 0.96) !important;
+  --panel-hover-border: rgba(122, 69, 199, 0.48) !important;
+  --card-solid: #171022 !important;
+  --glass-surface: rgba(31, 11, 55, 0.74) !important;
+  --glass-surface-strong: rgba(54, 10, 117, 0.6) !important;
+  --glass-surface-soft: rgba(255, 255, 255, 0.065) !important;
+  --glass-border: rgba(238, 231, 255, 0.115) !important;
+  --glass-border-strong: rgba(184, 155, 234, 0.28) !important;
+  --text-primary: rgba(255, 255, 255, 0.96) !important;
+  --text-secondary: rgba(238, 231, 255, 0.74) !important;
+  --text-muted: rgba(238, 231, 255, 0.62) !important;
+  --shadow-card: 0 24px 68px rgba(0, 0, 0, 0.38) !important;
+  --shadow-purple: 0 24px 62px rgba(54, 10, 117, 0.44) !important;
+}
+
+html[data-theme="light"] {
+  --purple-dark: #23054b !important;
+  --purple: #360a75 !important;
+  --purple-light: #6f38bb !important;
+  --accent-teal: #4a1292 !important;
+  --accent-gold: #360a75 !important;
+  --background: #fbf8ff !important;
+  --body-background:
+    radial-gradient(circle at 10% 0%, rgba(54, 10, 117, 0.13), transparent 28rem),
+    radial-gradient(circle at 88% 12%, rgba(95, 24, 173, 0.12), transparent 22rem),
+    linear-gradient(135deg, #ffffff 0%, #f8f4ff 56%, #efe6fb 100%) !important;
+  --sidebar-background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.97), rgba(248, 244, 255, 0.98)),
+    #ffffff !important;
+  --topbar-background: rgba(255, 255, 255, 0.86) !important;
+  --field-background: rgba(255, 255, 255, 0.88) !important;
+  --field-background-focus: #ffffff !important;
+  --field-placeholder: rgba(54, 10, 117, 0.38) !important;
+  --button-muted-background: rgba(54, 10, 117, 0.085) !important;
+  --button-ghost-background: rgba(54, 10, 117, 0.045) !important;
+  --menu-background: rgba(255, 255, 255, 0.98) !important;
+  --panel-hover-border: rgba(54, 10, 117, 0.28) !important;
+  --card-solid: #ffffff !important;
+  --glass-surface: rgba(255, 255, 255, 0.84) !important;
+  --glass-surface-strong: rgba(255, 255, 255, 0.96) !important;
+  --glass-surface-soft: rgba(54, 10, 117, 0.055) !important;
+  --glass-border: rgba(54, 10, 117, 0.12) !important;
+  --glass-border-strong: rgba(54, 10, 117, 0.23) !important;
+  --text-primary: rgba(19, 15, 24, 0.94) !important;
+  --text-secondary: rgba(43, 28, 58, 0.72) !important;
+  --text-muted: rgba(54, 10, 117, 0.58) !important;
+  --shadow-card: 0 20px 52px rgba(54, 10, 117, 0.13) !important;
+  --shadow-purple: 0 18px 42px rgba(54, 10, 117, 0.2) !important;
+}
+
+body {
+  background: var(--body-background) !important;
+}
+
+body::before {
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.012) 1px, transparent 1px) !important;
+}
+
+.brand-mark,
+.mishiro-hero-logo {
+  background-color: var(--mishiro-roxo-base) !important;
+}
+
+.mishiro-hero-brand {
+  border-color: rgba(184, 155, 234, 0.28) !important;
+  background:
+    linear-gradient(135deg, rgba(54, 10, 117, 0.22), rgba(255, 255, 255, 0.045)),
+    var(--glass-surface-soft) !important;
+  box-shadow: 0 22px 54px rgba(54, 10, 117, 0.3) !important;
+}
+
+html[data-theme="light"] .mishiro-hero-brand {
+  background:
+    linear-gradient(135deg, rgba(54, 10, 117, 0.09), rgba(255, 255, 255, 0.9)),
+    #ffffff !important;
+}
+
+.sidebar,
+.topbar,
+.glass-panel,
+.hero-card,
+.flow-card,
+.feature-card,
+.report-card,
+.report-chart-card,
+.inventory-card,
+.budget-form-card,
+.budget-picker-card,
+.cart-card,
+.modal-card,
+.form-step-panel,
+.studio-pro-panel,
+.studio-pro-card,
+.coluna-pipeline-mvc,
+.backup-mvc,
+.card-agenda-mvc,
+.alertas-estoque-mvc,
+.agenda-cabecalho-mvc,
+.agenda-resumo-mvc article,
+.calendario-retangular-mvc,
+.agenda-notas-mvc {
+  border-color: var(--glass-border) !important;
+  box-shadow: var(--shadow-card) !important;
+}
+
+.hero-card,
+.flow-card,
+.feature-card,
+.report-card,
+.report-chart-card,
+.inventory-card,
+.budget-form-card,
+.budget-picker-card,
+.cart-card,
+.modal-card,
+.form-step-panel,
+.studio-pro-panel,
+.studio-pro-card,
+.coluna-pipeline-mvc,
+.backup-mvc,
+.agenda-cabecalho-mvc,
+.calendario-retangular-mvc,
+.agenda-notas-mvc {
+  background:
+    linear-gradient(145deg, rgba(255,255,255,0.076), rgba(255,255,255,0.03)),
+    var(--glass-surface) !important;
+}
+
+html[data-theme="light"] .hero-card,
+html[data-theme="light"] .flow-card,
+html[data-theme="light"] .feature-card,
+html[data-theme="light"] .report-card,
+html[data-theme="light"] .report-chart-card,
+html[data-theme="light"] .inventory-card,
+html[data-theme="light"] .budget-form-card,
+html[data-theme="light"] .budget-picker-card,
+html[data-theme="light"] .cart-card,
+html[data-theme="light"] .modal-card,
+html[data-theme="light"] .form-step-panel,
+html[data-theme="light"] .studio-pro-panel,
+html[data-theme="light"] .studio-pro-card,
+html[data-theme="light"] .coluna-pipeline-mvc,
+html[data-theme="light"] .backup-mvc,
+html[data-theme="light"] .agenda-cabecalho-mvc,
+html[data-theme="light"] .calendario-retangular-mvc,
+html[data-theme="light"] .agenda-notas-mvc {
+  background:
+    linear-gradient(145deg, rgba(255,255,255,0.96), rgba(248,244,255,0.76)),
+    var(--glass-surface) !important;
+}
+
+.hero-card::after,
+.flow-card::after {
+  background: radial-gradient(circle, rgba(54, 10, 117, 0.25), transparent 64%) !important;
+}
+
+.feature-card::before,
+.report-card::before,
+.inventory-card::before,
+.budget-form-card::before,
+.budget-picker-card::before,
+.cart-card::before,
+.studio-pro-card::before,
+.coluna-pipeline-mvc::before,
+.agenda-notas-mvc::before,
+.calendario-retangular-mvc::before {
+  background: linear-gradient(135deg, rgba(255,255,255,.11), transparent 34%, rgba(54,10,117,.16)) !important;
+}
+
+html[data-theme="light"] .feature-card::before,
+html[data-theme="light"] .report-card::before,
+html[data-theme="light"] .inventory-card::before,
+html[data-theme="light"] .budget-form-card::before,
+html[data-theme="light"] .budget-picker-card::before,
+html[data-theme="light"] .cart-card::before,
+html[data-theme="light"] .studio-pro-card::before,
+html[data-theme="light"] .coluna-pipeline-mvc::before,
+html[data-theme="light"] .agenda-notas-mvc::before,
+html[data-theme="light"] .calendario-retangular-mvc::before {
+  background: linear-gradient(135deg, rgba(54,10,117,.08), transparent 44%, rgba(54,10,117,.05)) !important;
+}
+
+.primary-button {
+  background:
+    linear-gradient(135deg, rgba(255,255,255,.16), transparent),
+    linear-gradient(135deg, #6f38bb 0%, #360a75 58%, #120421 100%) !important;
+  box-shadow: 0 16px 34px rgba(54, 10, 117, 0.36) !important;
+}
+
+.secondary-button,
+.ghost-button,
+.nav-link,
+.theme-toggle-button,
+.sidebar-tool-button,
+.icon-button,
+.filter-chip,
+.category-choice,
+.card-menu button,
+.preset-grid button,
+.command-list button,
+.acoes-card-mvc button {
+  border-color: var(--glass-border) !important;
+}
+
+.nav-link span,
+.category-pill,
+.filter-chip.is-active,
+.category-choice.is-selected {
+  background: rgba(54, 10, 117, 0.34) !important;
+  color: #ffffff !important;
+}
+
+.nav-link:hover,
+.nav-link.is-active,
+.sidebar-tool-button:hover,
+.preset-grid button:hover,
+.command-list button:hover {
+  border-color: var(--glass-border-strong) !important;
+  background: rgba(54, 10, 117, 0.22) !important;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--mishiro-roxo-300) !important;
+  box-shadow: 0 0 0 4px rgba(54, 10, 117, 0.24) !important;
+}
+
+.progress-fill,
+.stock-bar-fill,
+.health-track i,
+.dia-calendario-mvc.hoje .numero-dia-mvc {
+  background: linear-gradient(90deg, #360a75, #7a45c7) !important;
+}
+
+.marcador-dia-mvc,
+.agenda-resumo-mvc strong,
+.studio-score-card strong,
+.nota-topo-mvc span,
+.nota-topo-mvc strong {
+  color: var(--mishiro-roxo-200) !important;
+}
+
+html[data-theme="light"] .marcador-dia-mvc,
+html[data-theme="light"] .agenda-resumo-mvc strong,
+html[data-theme="light"] .studio-score-card strong,
+html[data-theme="light"] .nota-topo-mvc span,
+html[data-theme="light"] .nota-topo-mvc strong {
+  color: var(--mishiro-roxo-base) !important;
+}
+
+.pdf-render-root .invoice-header {
+  border-bottom-color: #360a75 !important;
+}
+
+.pdf-render-root .invoice-header > div::before {
+  background: linear-gradient(135deg, #6f38bb, #360a75) !important;
+}
+
+.pdf-render-root .invoice-header span,
+.pdf-render-root .invoice-summary-grid span {
+  color: #360a75 !important;
+}
+
+input,
+select,
+textarea {
+  accent-color: var(--mishiro-roxo-base) !important;
+}
