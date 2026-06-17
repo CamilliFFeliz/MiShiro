@@ -3,7 +3,6 @@ const PAGINAS = [
   ["orcamentos", "Orçamentos", "file-pen-line", "pages/orcamentos.html"],
   ["estoque", "Estoque", "package-search", "pages/estoque.html"],
   ["agenda", "Agenda", "calendar-days", "pages/agenda.html"],
-  ["pipeline", "Pipeline", "kanban-square", "pages/pipeline.html"],
   ["relatorios", "Relatórios", "chart-no-axes-combined", "pages/relatorios.html"],
   ["backup", "Backup", "database-backup", "pages/backup.html"],
   ["configuracoes", "Configurações", "settings", "pages/configuracoes.html"]
