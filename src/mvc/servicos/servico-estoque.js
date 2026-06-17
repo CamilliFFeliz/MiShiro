@@ -4,38 +4,50 @@ import { clonarEstoqueReferencia } from "../../shared/reference-stock.js";
 
 export async function cadastrarItemEstoque(dados = {}) {
   const agora = obterDataIso();
-  const quantidadeAtual = Math.max(normalizarNumero(dados.quantidadeAtual || dados.stockQuantity), 0);
-  const precoEmbalagem = Math.max(normalizarNumero(dados.precoEmbalagem || dados.packagePrice || dados.singleUnitPrice), 0);
-  const quantidadeEmbalagem = Math.max(normalizarNumero(dados.quantidadeEmbalagem || dados.packageQuantity), 1);
-  const item = {
-    id: dados.id || criarIdentificador("item-estoque"),
-    nome: dados.nome || dados.name || "Item sem nome",
-    nomeNormalizado: normalizarTexto(dados.nome || dados.name),
-    categoria: dados.categoria || dados.category || "Sem categoria",
-    marca: dados.marca || dados.brand || "",
-    unidadeMedida: dados.unidadeMedida || dados.measureUnit || "un",
-    precoEmbalagem,
-    quantidadeEmbalagem,
-    custoUnitarioSnapshot: arredondar(precoEmbalagem / quantidadeEmbalagem),
-    quantidadeAtual,
-    quantidadeMinima: Math.max(normalizarNumero(dados.quantidadeMinima || dados.minimumQuantity), 0),
-    formatoCompra: dados.formatoCompra || dados.purchaseMode || "unidade",
-    cor: dados.cor || dados.color || "",
-    numeracao: dados.numeracao || dados.numbering || "",
-    linhaTipo: dados.linhaTipo || dados.lineType || "",
-    observacoes: dados.observacoes || dados.notes || "",
-    criadoEm: dados.criadoEm || dados.createdAt || agora,
-    atualizadoEm: agora,
-    arquivadoEm: null
-  };
+  const item = montarItemEstoque(dados, { id: dados.id || criarIdentificador("item-estoque"), criadoEm: dados.criadoEm || dados.createdAt || agora });
 
   await executarTransacao([LOJAS.itensEstoque, LOJAS.movimentosEstoque, LOJAS.metadadosBackup], "readwrite", async ({ lojas }) => {
     await converterRequisicao(lojas[LOJAS.itensEstoque].put(item));
-    await converterRequisicao(lojas[LOJAS.movimentosEstoque].put(criarMovimentoEstoque({ itemEstoqueId: item.id, tipo: TIPO_MOVIMENTO_ESTOQUE.estoqueInicial, quantidade: quantidadeAtual, quantidadeAnterior: 0, quantidadeNova: quantidadeAtual, motivo: "Cadastro inicial" })));
+    await converterRequisicao(lojas[LOJAS.movimentosEstoque].put(criarMovimentoEstoque({ itemEstoqueId: item.id, tipo: TIPO_MOVIMENTO_ESTOQUE.estoqueInicial, quantidade: item.quantidadeAtual, quantidadeAnterior: 0, quantidadeNova: item.quantidadeAtual, motivo: "Cadastro inicial" })));
     await marcarBancoAlterado(lojas);
   });
 
   return item;
+}
+
+export async function atualizarItemEstoque(itemEstoqueId, dados = {}) {
+  let itemAtualizado = null;
+
+  await executarTransacao([LOJAS.itensEstoque, LOJAS.movimentosEstoque, LOJAS.metadadosBackup], "readwrite", async ({ lojas }) => {
+    const itemAtual = await converterRequisicao(lojas[LOJAS.itensEstoque].get(itemEstoqueId));
+    if (!itemAtual) throw new Error("Item não encontrado para edição.");
+
+    const quantidadeAnterior = normalizarNumero(itemAtual.quantidadeAtual);
+    itemAtualizado = montarItemEstoque(dados, {
+      ...itemAtual,
+      id: itemAtual.id,
+      criadoEm: itemAtual.criadoEm,
+      arquivadoEm: itemAtual.arquivadoEm || null
+    });
+
+    await converterRequisicao(lojas[LOJAS.itensEstoque].put(itemAtualizado));
+
+    const quantidadeNova = normalizarNumero(itemAtualizado.quantidadeAtual);
+    if (quantidadeNova !== quantidadeAnterior) {
+      await converterRequisicao(lojas[LOJAS.movimentosEstoque].put(criarMovimentoEstoque({
+        itemEstoqueId: itemAtual.id,
+        tipo: TIPO_MOVIMENTO_ESTOQUE.ajusteManual,
+        quantidade: quantidadeNova - quantidadeAnterior,
+        quantidadeAnterior,
+        quantidadeNova,
+        motivo: "Edição manual do item"
+      })));
+    }
+
+    await marcarBancoAlterado(lojas);
+  });
+
+  return itemAtualizado;
 }
 
 export async function restaurarEstoqueReferencia({ somenteSeVazio = false } = {}) {
@@ -118,6 +130,36 @@ async function alterarQuantidade(itemEstoqueId, quantidade, calcularNovaQuantida
     await marcarBancoAlterado(lojas);
   });
   return itemAtualizado;
+}
+
+function montarItemEstoque(dados = {}, base = {}) {
+  const agora = obterDataIso();
+  const quantidadeAtual = Math.max(normalizarNumero(dados.quantidadeAtual || dados.stockQuantity), 0);
+  const precoEmbalagem = Math.max(normalizarNumero(dados.precoEmbalagem || dados.packagePrice || dados.singleUnitPrice), 0);
+  const quantidadeEmbalagem = Math.max(normalizarNumero(dados.quantidadeEmbalagem || dados.packageQuantity), 1);
+
+  return {
+    ...base,
+    id: base.id || dados.id || criarIdentificador("item-estoque"),
+    nome: dados.nome || dados.name || "Item sem nome",
+    nomeNormalizado: normalizarTexto(dados.nome || dados.name),
+    categoria: dados.categoria || dados.category || "Sem categoria",
+    marca: dados.marca || dados.brand || "",
+    unidadeMedida: dados.unidadeMedida || dados.measureUnit || "un",
+    precoEmbalagem,
+    quantidadeEmbalagem,
+    custoUnitarioSnapshot: arredondar(precoEmbalagem / quantidadeEmbalagem),
+    quantidadeAtual,
+    quantidadeMinima: Math.max(normalizarNumero(dados.quantidadeMinima || dados.minimumQuantity), 0),
+    formatoCompra: dados.formatoCompra || dados.purchaseMode || "unidade",
+    cor: dados.cor || dados.color || "",
+    numeracao: dados.numeracao || dados.numbering || "",
+    linhaTipo: dados.linhaTipo || dados.lineType || "",
+    observacoes: dados.observacoes || dados.notes || "",
+    criadoEm: base.criadoEm || dados.criadoEm || dados.createdAt || agora,
+    atualizadoEm: agora,
+    arquivadoEm: base.arquivadoEm || null
+  };
 }
 
 export function criarMovimentoEstoque({ itemEstoqueId, orcamentoId = null, agendamentoId = null, tipo, quantidade, quantidadeAnterior, quantidadeNova, motivo }) {
