@@ -16,23 +16,15 @@
 <body data-page="agenda">
   <div id="app" class="app-frame">
     <main id="appMain" class="page-shell">
-      <header class="page-header"><span class="eyebrow">Agenda</span><h1>Calendário do estúdio</h1><p>Acompanhe os orçamentos agendados e os atendimentos do mês.</p></header>
-      <section class="agenda-header panel-card">
-        <button id="mesAnterior" class="button button-ghost" type="button">Anterior</button>
-        <strong id="mesAtual">Mês</strong>
-        <button id="proximoMes" class="button button-ghost" type="button">Próximo</button>
-      </section>
-      <section class="agenda-summary" aria-label="Resumo da agenda">
-        <article class="metric-card"><span>No mês</span><strong id="totalMes">0</strong><p>agendamentos</p></article>
-        <article class="metric-card"><span>No dia</span><strong id="totalDia">0</strong><p>selecionado</p></article>
-      </section>
-      <section class="calendar-card panel-card">
-        <div class="week-row"><span>Dom</span><span>Seg</span><span>Ter</span><span>Qua</span><span>Qui</span><span>Sex</span><span>Sáb</span></div>
-        <div id="calendario" class="calendar-grid"></div>
-      </section>
-      <section class="panel-card"><header class="section-title"><span>Bloquinhos de notas</span><h2 id="tituloEventos">Eventos do dia</h2></header><div id="listaEventos" class="note-list"></div></section>
+      <header class="page-header"><span class="eyebrow">Agenda + Pipeline</span><h1>Agenda</h1><p>Calendário visual, orçamentos para agendar e acompanhamento compacto do fluxo.</p></header>
+      <section class="agenda-header panel-card"><button id="mesAnterior" class="button button-ghost" type="button">Anterior</button><strong id="mesAtual">Mês</strong><button id="proximoMes" class="button button-ghost" type="button">Próximo</button></section>
+      <section class="agenda-summary" aria-label="Resumo da agenda"><article class="metric-card"><span>No mês</span><strong id="totalMes">0</strong><p>agendamentos</p></article><article class="metric-card"><span>No dia</span><strong id="totalDia">0</strong><p>selecionado</p></article><article class="metric-card"><span>Para agendar</span><strong id="totalParaAgendar">0</strong><p>aceitos sem data</p></article><article class="metric-card"><span>Cancelados</span><strong id="totalCanceladosMes">0</strong><p>no mês</p></article></section>
+      <section class="agenda-layout"><section class="calendar-card panel-card"><div class="week-row"><span>Dom</span><span>Seg</span><span>Ter</span><span>Qua</span><span>Qui</span><span>Sex</span><span>Sáb</span></div><div id="calendario" class="calendar-grid"></div></section><aside class="panel-card"><header class="section-title"><span>Dia selecionado</span><h2 id="tituloEventos">Eventos do dia</h2></header><div id="listaEventos" class="note-list"></div></aside></section>
+      <section class="panel-card"><header class="section-title"><span>Pipeline compacto</span><h2>Fluxo dos orçamentos</h2></header><div id="pipelineResumo" class="pipeline-summary"></div></section>
+      <section class="panel-card"><header class="section-title"><span>Para agendar</span><h2>Orçamentos aceitos sem data ativa</h2></header><div id="listaParaAgendar" class="note-list"></div></section>
     </main>
   </div>
+  <dialog id="agendaModal" class="modal-card agenda-modal"><form id="agendaForm" method="dialog" class="schedule-form"><header class="modal-header"><div><span id="agendaModalLabel">Agendar</span><h2 id="agendaModalTitle">Sessão</h2></div><button class="icon-button" id="fecharAgendaModal" type="button">×</button></header><input id="agendaOrcamentoId" type="hidden" /><input id="agendaId" type="hidden" /><label><span>Data</span><input id="agendaData" type="date" required /></label><label><span>Início</span><input id="agendaHoraInicio" type="time" required /></label><label><span>Fim</span><input id="agendaHoraFim" type="time" /></label><label><span>Observações</span><input id="agendaObservacoes" placeholder="Ex: sinal pago, levar referência" /></label><button class="button button-primary" type="submit">Salvar agendamento</button></form></dialog>
   <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js" defer></script>
   <script type="module" src="../src/pages/agenda.js"></script>
 </body>
