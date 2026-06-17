@@ -1,5 +1,6 @@
 import { converterRequisicao, executarTransacao, obterPorId, obterTodos } from "../modelos/banco-local.js";
 import { criarIdentificador, LOJAS, normalizarNumero, normalizarTexto, obterDataIso, TIPO_MOVIMENTO_ESTOQUE } from "../modelos/esquema-banco.js";
+import { clonarEstoqueReferencia } from "../../shared/reference-stock.js";
 
 export async function cadastrarItemEstoque(dados = {}) {
   const agora = obterDataIso();
@@ -35,6 +36,20 @@ export async function cadastrarItemEstoque(dados = {}) {
   });
 
   return item;
+}
+
+export async function restaurarEstoqueReferencia({ somenteSeVazio = false } = {}) {
+  const itensAtuais = await listarItensEstoque();
+  if (somenteSeVazio && itensAtuais.length > 0) return itensAtuais;
+  const estoqueReferencia = clonarEstoqueReferencia();
+  for (const item of estoqueReferencia) {
+    await cadastrarItemEstoque(item);
+  }
+  return listarItensEstoque();
+}
+
+export async function garantirEstoqueInicial() {
+  return restaurarEstoqueReferencia({ somenteSeVazio: true });
 }
 
 export async function adicionarEntradaEstoque(itemEstoqueId, quantidade, motivo = "Entrada manual") {
