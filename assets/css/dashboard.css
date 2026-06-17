@@ -1,0 +1,4 @@
+.dashboard-hero { margin-bottom: 2px; }
+.dashboard-grid { display:grid; grid-template-columns: 1fr; gap: clamp(14px,4vw,22px); }
+.metric-card-alert strong { color: var(--color-purple-200); }
+@media (min-width: 920px) { .dashboard-grid { grid-template-columns: 1fr 1fr; } .metric-grid { grid-template-columns: repeat(4, minmax(0,1fr)); } }
