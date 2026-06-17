@@ -1,12 +1,12 @@
 .mishiro-hero-brand {
   position: relative;
   z-index: 1;
-  display: flex;
-  width: min(100%, 420px);
-  margin-bottom: clamp(18px, 4vw, 30px);
-  padding: 10px;
+  display: grid;
+  width: min(100%, 520px);
+  margin: 0 auto clamp(22px, 5vw, 36px);
+  padding: clamp(10px, 2.8vw, 16px);
   border: 1px solid var(--glass-border-strong);
-  border-radius: 28px;
+  border-radius: clamp(22px, 6vw, 34px);
   background:
     linear-gradient(135deg, rgba(52, 9, 117, 0.18), rgba(255, 255, 255, 0.045)),
     var(--glass-surface-soft);
@@ -14,12 +14,49 @@
 }
 
 .mishiro-hero-logo {
+  display: block;
   width: 100%;
-  aspect-ratio: 1 / 1;
-  max-height: 220px;
-  border-radius: 22px;
-  object-fit: cover;
+  height: clamp(190px, 48vw, 300px);
+  border-radius: clamp(18px, 5vw, 26px);
+  object-fit: contain;
+  object-position: center;
   background: var(--mishiro-roxo-profundo);
+}
+
+.brand-mark {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 62px;
+  height: 62px;
+  padding: 6px;
+  overflow: hidden;
+  border-radius: 22px;
+  background: var(--mishiro-roxo-profundo);
+}
+
+.brand-mark img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+  border-radius: 15px;
+}
+
+.brand-logo-clara {
+  display: none !important;
+}
+
+.brand-logo-escura {
+  display: block !important;
+}
+
+html[data-theme="light"] .brand-logo-clara {
+  display: block !important;
+}
+
+html[data-theme="light"] .brand-logo-escura {
+  display: none !important;
 }
 
 html[data-theme="light"] .mishiro-hero-brand {
@@ -28,16 +65,23 @@ html[data-theme="light"] .mishiro-hero-brand {
     #ffffff;
 }
 
+.brand-block {
+  gap: 13px;
+}
+
 .brand-block strong {
   letter-spacing: -0.045em;
+  line-height: 1;
 }
 
 .brand-block span {
   color: var(--text-muted);
+  line-height: 1.24;
 }
 
 .hero-card {
   overflow: hidden;
+  padding: clamp(20px, 5vw, 42px);
   background:
     radial-gradient(circle at 8% 8%, rgba(52, 9, 117, 0.26), transparent 20rem),
     radial-gradient(circle at 88% 14%, rgba(255, 255, 255, 0.075), transparent 18rem),
@@ -51,6 +95,31 @@ html[data-theme="light"] .hero-card {
     radial-gradient(circle at 88% 14%, rgba(52, 9, 117, 0.08), transparent 18rem),
     linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(246, 242, 251, 0.76)),
     #ffffff;
+}
+
+.hero-card h2,
+#homeTitle {
+  max-width: 900px;
+  font-size: clamp(2rem, 9.2vw, 4.7rem);
+  line-height: 0.96;
+  letter-spacing: -0.072em;
+}
+
+.hero-card p {
+  max-width: 760px;
+  font-size: clamp(0.98rem, 3.7vw, 1.14rem);
+  line-height: 1.62;
+}
+
+.action-row {
+  gap: 12px;
+}
+
+.action-row > button,
+.action-row > .primary-button,
+.action-row > .secondary-button,
+.action-row > .ghost-button {
+  min-height: 48px;
 }
 
 .section-header,
@@ -110,21 +179,34 @@ html[data-theme="light"] .calendario-retangular-mvc::before {
 
 @media (min-width: 980px) {
   .hero-card {
-    grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
+    display: grid;
+    grid-template-columns: minmax(0, 0.82fr) minmax(0, 1.18fr);
+    align-items: center;
+    column-gap: clamp(24px, 4vw, 56px);
   }
 
   .mishiro-hero-brand {
-    margin-bottom: 26px;
+    grid-row: 1 / span 4;
+    margin: 0;
   }
 }
 
 @media (max-width: 620px) {
   .mishiro-hero-brand {
-    width: min(100%, 320px);
-    margin-inline: auto;
+    width: min(100%, 340px);
   }
 
   .mishiro-hero-logo {
-    max-height: 180px;
+    height: clamp(170px, 58vw, 230px);
+  }
+
+  .brand-mark {
+    width: 54px;
+    height: 54px;
+    border-radius: 18px;
+  }
+
+  .hero-card {
+    text-align: left;
   }
 }
