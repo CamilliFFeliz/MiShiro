@@ -1,0 +1,10 @@
+.stock-grid { display:grid; gap: clamp(14px,4vw,22px); align-items:start; }
+.stock-list-panel { min-height: 240px; }
+.alert-list { display:grid; gap:8px; margin-bottom: 12px; }
+.alert-card { padding:10px 12px; border:1px solid rgba(184,155,234,.32); border-radius:14px; background:rgba(54,10,117,.2); color:var(--text); }
+.stock-card { display:grid; gap:8px; }
+.stock-meta { display:grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap:6px; color:var(--text-soft); font-size:.86rem; }
+.stock-bar { height:8px; border-radius:999px; background:rgba(255,255,255,.08); overflow:hidden; }
+.stock-bar i { display:block; height:100%; border-radius:inherit; background:linear-gradient(90deg,#360a75,#7a45c7); }
+@media (min-width: 980px) { .stock-grid { grid-template-columns: minmax(320px,.38fr) minmax(0,1fr); } }
+@media (max-width: 420px) { .stock-meta { grid-template-columns:1fr; } }
