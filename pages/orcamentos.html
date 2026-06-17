@@ -15,19 +15,111 @@
 </head>
 <body data-page="orcamentos">
   <div id="app" class="app-frame">
-    <main id="appMain" class="page-shell" aria-labelledby="pageHeading">
-      <header class="page-header"><span class="eyebrow">Orçamentos</span><h1 id="pageHeading">Criar proposta</h1><p>Fluxo rápido para cliente, tatuagem, insumos, resumo financeiro e PDF.</p></header>
+    <main id="appMain" class="page-shell budget-shell" aria-labelledby="pageHeading">
+      <header class="page-header budget-page-title">
+        <span class="eyebrow">Proposta do cliente</span>
+        <h1 id="pageHeading">Orçamentos</h1>
+        <p>Monte uma proposta clara com dados da arte, insumos usados, valores e PDF para aprovação.</p>
+      </header>
+
       <form id="formOrcamento" class="budget-page-grid compact-budget-grid">
-        <section class="panel-card"><header class="section-title"><span>Cliente</span><h2>Dados rápidos</h2></header><div class="form-grid compact"><label class="field"><span>Nome do orçamento</span><input id="nomeOrcamento" required placeholder="Ex: Fechamento de braço" /></label><label class="field"><span>Cliente</span><input id="clienteNome" placeholder="Nome do cliente" /></label></div></section>
-        <section class="panel-card tattoo-panel"><header class="section-title"><span>Tatuagem</span><h2>Dados da arte</h2></header><div class="form-grid compact"><label class="field"><span>Tamanho</span><input id="tamanhoTatuagem" placeholder="Ex: 15 cm" /></label><label class="field"><span>Local do corpo</span><input id="localCorpo" placeholder="Ex: antebraço" /></label><label class="field"><span>Cores</span><input id="coresTatuagem" placeholder="Preto, cinza, colorida" /></label><label class="field"><span>Complexidade</span><select id="complexidade"><option value="simples">Simples</option><option value="media">Média</option><option value="alta">Alta</option><option value="realismo">Realismo / alta complexidade</option></select></label></div><label class="field"><span>Observações</span><textarea id="observacoesCliente" rows="3" placeholder="Detalhes importantes da proposta."></textarea></label><div class="reference-upload"><label class="field"><span>Imagem de referência</span><input id="imagemReferencia" type="file" accept="image/png,image/jpeg,image/webp" /></label><figure id="previewImagem" class="reference-preview is-empty"><span>Nenhuma imagem adicionada</span></figure></div></section>
-        <section class="panel-card presets-panel"><header class="section-title"><span>Presets</span><h2>Base rápida</h2></header><div class="preset-grid"><button type="button" data-preset="minima">Sessão mínima</button><button type="button" data-preset="pequena">Pequena</button><button type="button" data-preset="media">Média</button><button type="button" data-preset="grande">Grande</button><button type="button" data-preset="cobertura">Cobertura/reforma</button></div></section>
-        <section class="panel-card materials-panel"><header class="section-title"><span>Insumos</span><h2>Busca rápida</h2></header><div class="picker-toolbar"><label class="field"><span>Pesquisar</span><input id="budgetSearchInput" type="search" placeholder="RL, luva, preto, vaselina" /></label><button class="button button-ghost" id="clearBudgetSearchButton" type="button">Limpar</button></div><section class="chip-row compact-chip-row" id="budgetCategoryFilters"></section><section id="stockPickerList" class="picker-list compact-picker-list"></section></section>
-        <aside class="panel-card summary-panel"><header class="section-title"><span>Resumo financeiro</span><h2>Valor estimado</h2></header><div class="form-grid compact"><label class="field"><span>Valor da hora</span><input id="valorHora" inputmode="decimal" placeholder="150" /></label><label class="field"><span>Duração (h)</span><input id="duracaoSessao" inputmode="decimal" placeholder="3" /></label><label class="field"><span>Margem (%)</span><input id="margem" inputmode="decimal" placeholder="30" /></label><label class="field"><span>Desconto (%)</span><input id="desconto" inputmode="decimal" placeholder="0" /></label></div><dl class="summary-list"><div><dt>Materiais</dt><dd id="totalMateriais">R$ 0,00</dd></div><div><dt>Mão de obra</dt><dd id="totalMaoObra">R$ 0,00</dd></div><div><dt>Subtotal</dt><dd id="subtotalOrcamento">R$ 0,00</dd></div><div><dt>Desconto</dt><dd id="valorDesconto">R$ 0,00</dd></div><div class="summary-final"><dt>Valor final</dt><dd id="valorFinal">R$ 0,00</dd></div></dl><div class="action-stack"><button class="button button-primary" type="submit">Salvar orçamento</button><button class="button button-secondary" id="gerarPdf" type="button">Gerar PDF</button><button class="button button-secondary" id="copiarResumo" type="button">Copiar resumo</button><button class="button button-ghost" id="limparOrcamento" type="button">Limpar</button></div><p id="statusOrcamento" class="form-status" aria-live="polite"></p></aside>
+        <section class="panel-card budget-card client-card">
+          <header class="section-title compact-title">
+            <span>01 • Cliente</span>
+            <h2>Identificação</h2>
+          </header>
+          <div class="form-grid compact budget-form-grid">
+            <label class="field"><span>Nome do orçamento</span><input id="nomeOrcamento" required placeholder="Ex: Fechamento de braço" /></label>
+            <label class="field"><span>Cliente</span><input id="clienteNome" placeholder="Nome do cliente" /></label>
+          </div>
+        </section>
+
+        <section class="panel-card budget-card tattoo-panel">
+          <header class="section-title compact-title">
+            <span>02 • Arte</span>
+            <h2>Dados da tatuagem</h2>
+          </header>
+          <div class="form-grid compact budget-form-grid">
+            <label class="field"><span>Tamanho</span><input id="tamanhoTatuagem" placeholder="Ex: 15 cm" /></label>
+            <label class="field"><span>Local do corpo</span><input id="localCorpo" placeholder="Ex: antebraço" /></label>
+            <label class="field"><span>Cores</span><input id="coresTatuagem" placeholder="Preto, cinza, colorida" /></label>
+            <label class="field"><span>Complexidade</span><select id="complexidade"><option value="simples">Simples</option><option value="media">Média</option><option value="alta">Alta</option><option value="realismo">Realismo / alta complexidade</option></select></label>
+          </div>
+          <label class="field"><span>Observações</span><textarea id="observacoesCliente" rows="3" placeholder="Detalhes importantes da proposta."></textarea></label>
+          <div class="reference-upload pro-upload-area">
+            <input id="imagemReferencia" class="upload-input" type="file" accept="image/png,image/jpeg,image/webp" />
+            <label class="upload-button" for="imagemReferencia"><i data-lucide="image-plus"></i><strong>Adicionar imagem de referência</strong><small>PNG, JPG ou WEBP até 2 MB</small></label>
+            <figure id="previewImagem" class="reference-preview is-empty"><span>Nenhuma imagem adicionada</span></figure>
+          </div>
+        </section>
+
+        <section class="panel-card budget-card presets-panel">
+          <header class="section-title compact-title">
+            <span>03 • Base rápida</span>
+            <h2>Presets</h2>
+          </header>
+          <div class="preset-grid pro-preset-grid">
+            <button type="button" data-preset="minima"><strong>Sessão mínima</strong><span>1h</span></button>
+            <button type="button" data-preset="pequena"><strong>Pequena</strong><span>2h</span></button>
+            <button type="button" data-preset="media"><strong>Média</strong><span>4h</span></button>
+            <button type="button" data-preset="grande"><strong>Grande</strong><span>6h</span></button>
+            <button type="button" data-preset="cobertura"><strong>Cobertura</strong><span>Reforma</span></button>
+          </div>
+        </section>
+
+        <section class="panel-card budget-card materials-panel">
+          <header class="section-title compact-title">
+            <span>04 • Insumos</span>
+            <h2>Adicionar materiais</h2>
+          </header>
+          <div class="picker-toolbar pro-picker-toolbar">
+            <label class="field"><span>Buscar material</span><input id="budgetSearchInput" type="search" placeholder="RL, luva, preto, vaselina" /></label>
+            <button class="button button-ghost" id="clearBudgetSearchButton" type="button"><i data-lucide="search-x"></i>Limpar</button>
+          </div>
+          <section class="chip-row compact-chip-row horizontal-chip-row" id="budgetCategoryFilters" aria-label="Filtros de insumos"></section>
+          <section id="stockPickerList" class="picker-list compact-picker-list" aria-label="Itens disponíveis do estoque"></section>
+        </section>
+
+        <aside class="panel-card budget-card summary-panel pro-summary-panel">
+          <header class="section-title compact-title">
+            <span>05 • Fechamento</span>
+            <h2>Resumo financeiro</h2>
+          </header>
+          <div class="form-grid compact price-grid">
+            <label class="field"><span>Valor da hora</span><input id="valorHora" inputmode="decimal" placeholder="150" /></label>
+            <label class="field"><span>Duração (h)</span><input id="duracaoSessao" inputmode="decimal" placeholder="3" /></label>
+            <label class="field"><span>Margem (%)</span><input id="margem" inputmode="decimal" placeholder="30" /></label>
+            <label class="field"><span>Desconto (%)</span><input id="desconto" inputmode="decimal" placeholder="0" /></label>
+          </div>
+          <dl class="summary-list pro-summary-list">
+            <div><dt>Materiais</dt><dd id="totalMateriais">R$ 0,00</dd></div>
+            <div><dt>Mão de obra</dt><dd id="totalMaoObra">R$ 0,00</dd></div>
+            <div><dt>Subtotal</dt><dd id="subtotalOrcamento">R$ 0,00</dd></div>
+            <div><dt>Desconto</dt><dd id="valorDesconto">R$ 0,00</dd></div>
+            <div class="summary-final"><dt>Valor final</dt><dd id="valorFinal">R$ 0,00</dd></div>
+          </dl>
+          <div class="action-stack budget-actions">
+            <button class="button button-primary" type="submit"><i data-lucide="save"></i>Salvar orçamento</button>
+            <button class="button button-secondary" id="gerarPdf" type="button"><i data-lucide="file-down"></i>Gerar PDF</button>
+            <button class="button button-secondary" id="copiarResumo" type="button"><i data-lucide="copy"></i>Copiar resumo</button>
+            <button class="button button-ghost" id="limparOrcamento" type="button"><i data-lucide="eraser"></i>Limpar</button>
+          </div>
+          <p id="statusOrcamento" class="form-status" aria-live="polite"></p>
+        </aside>
       </form>
     </main>
   </div>
-  <button id="floatingCartButton" class="floating-cart-button" type="button"><span><strong id="floatingCartCount">0 itens</strong><small id="floatingCartTotal">R$ 0,00</small></span></button>
-  <aside id="cartDrawer" class="cart-drawer"><header><div><span>Carrinho</span><h2>Insumos selecionados</h2></div><button id="closeCartDrawer" class="icon-button" type="button">×</button></header><div id="listaMateriais" class="cart-list"></div><footer><span>Total de materiais</span><strong id="drawerMaterialsTotal">R$ 0,00</strong></footer></aside>
+
+  <button id="floatingCartButton" class="floating-cart-button" type="button" aria-label="Abrir carrinho de materiais">
+    <i data-lucide="shopping-cart"></i>
+    <span><strong id="floatingCartCount">0 itens</strong><small id="floatingCartTotal">R$ 0,00</small></span>
+  </button>
+  <aside id="cartDrawer" class="cart-drawer" aria-label="Carrinho de materiais">
+    <header><div><span>Carrinho</span><h2>Insumos selecionados</h2></div><button id="closeCartDrawer" class="icon-button" type="button" aria-label="Fechar carrinho"><i data-lucide="x"></i></button></header>
+    <div id="listaMateriais" class="cart-list"></div>
+    <footer><span>Total de materiais</span><strong id="drawerMaterialsTotal">R$ 0,00</strong></footer>
+  </aside>
+
   <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
   <script type="module" src="../src/pages/orcamentos.js"></script>
