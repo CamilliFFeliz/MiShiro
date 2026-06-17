@@ -5,7 +5,8 @@ const BRAND_STYLESHEETS = [
   { id: "mishiro-brand-css", href: "assets/css/identidade.css" },
   { id: "mishiro-pdf-tools-css", href: "assets/css/pdf.css" },
   { id: "mishiro-mvc-css", href: "assets/css/mvc.css" },
-  { id: "mishiro-theme-css", href: "assets/css/tema-mishiro.css" }
+  { id: "mishiro-theme-css", href: "assets/css/tema-mishiro.css" },
+  { id: "mishiro-logo-img-css", href: "assets/css/logos-img.css" }
 ];
 const LOGOS = {
   simboloClaro: [
