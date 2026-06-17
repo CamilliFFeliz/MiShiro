@@ -4,6 +4,8 @@ import { criarIdentificador, LOJAS, normalizarNumero, normalizarTexto, obterData
 export async function cadastrarItemEstoque(dados = {}) {
   const agora = obterDataIso();
   const quantidadeAtual = Math.max(normalizarNumero(dados.quantidadeAtual || dados.stockQuantity), 0);
+  const precoEmbalagem = Math.max(normalizarNumero(dados.precoEmbalagem || dados.packagePrice || dados.singleUnitPrice), 0);
+  const quantidadeEmbalagem = Math.max(normalizarNumero(dados.quantidadeEmbalagem || dados.packageQuantity), 1);
   const item = {
     id: dados.id || criarIdentificador("item-estoque"),
     nome: dados.nome || dados.name || "Item sem nome",
@@ -11,8 +13,9 @@ export async function cadastrarItemEstoque(dados = {}) {
     categoria: dados.categoria || dados.category || "Sem categoria",
     marca: dados.marca || dados.brand || "",
     unidadeMedida: dados.unidadeMedida || dados.measureUnit || "un",
-    precoEmbalagem: normalizarNumero(dados.precoEmbalagem || dados.packagePrice || dados.singleUnitPrice),
-    quantidadeEmbalagem: Math.max(normalizarNumero(dados.quantidadeEmbalagem || dados.packageQuantity), 1),
+    precoEmbalagem,
+    quantidadeEmbalagem,
+    custoUnitarioSnapshot: arredondar(precoEmbalagem / quantidadeEmbalagem),
     quantidadeAtual,
     quantidadeMinima: Math.max(normalizarNumero(dados.quantidadeMinima || dados.minimumQuantity), 0),
     formatoCompra: dados.formatoCompra || dados.purchaseMode || "unidade",
@@ -66,9 +69,21 @@ export async function listarAlertasEstoqueBaixo() {
 }
 
 export function calcularCustoUnitario(item) {
+  const precoDireto = normalizarNumero(item?.precoUnitario || item?.custoUnitarioSnapshot);
+  if (precoDireto > 0) return arredondar(precoDireto);
+
   const preco = normalizarNumero(item?.precoEmbalagem || item?.packagePrice || item?.singleUnitPrice);
   const quantidade = Math.max(normalizarNumero(item?.quantidadeEmbalagem || item?.packageQuantity), 1);
-  return preco / quantidade;
+  return arredondar(preco / quantidade);
+}
+
+export function calcularResumoEstoque(item) {
+  const custoUnitario = calcularCustoUnitario(item);
+  const quantidadeAtual = Math.max(normalizarNumero(item?.quantidadeAtual), 0);
+  const quantidadeMinima = Math.max(normalizarNumero(item?.quantidadeMinima), 0);
+  const valorTotal = arredondar(custoUnitario * quantidadeAtual);
+  const percentualMinimo = quantidadeMinima > 0 ? Math.min((quantidadeAtual / quantidadeMinima) * 100, 100) : 100;
+  return { custoUnitario, quantidadeAtual, quantidadeMinima, valorTotal, percentualMinimo, estoqueBaixo: quantidadeMinima > 0 && quantidadeAtual <= quantidadeMinima };
 }
 
 export function criarSnapshotItemEstoque(item, quantidadeUsada) {
