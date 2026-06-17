@@ -1,5 +1,5 @@
-const CACHE_NAME = "mishiro-orcamentos-static-v13-raiz-limpa";
-const RUNTIME_CACHE_NAME = "mishiro-orcamentos-runtime-v13-raiz-limpa";
+const CACHE_NAME = "mishiro-orcamentos-static-v14-agenda-retangular";
+const RUNTIME_CACHE_NAME = "mishiro-orcamentos-runtime-v14-agenda-retangular";
 const APP_CACHE_PREFIXES = ["calculadora-tattoo-", "mishiro-orcamentos-"];
 const CURRENT_CACHE_NAMES = [CACHE_NAME, RUNTIME_CACHE_NAME];
 const APP_SHELL_URL = "./index.html";
