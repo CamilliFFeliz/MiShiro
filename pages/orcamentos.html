@@ -20,11 +20,11 @@
       <header class="page-header">
         <span class="eyebrow">Orçamentos</span>
         <h1 id="pageHeading">Criar proposta de tatuagem</h1>
-        <p>Monte uma proposta real com cliente, arte, materiais em formato de carrinho, imagem de referência e resumo financeiro.</p>
+        <p>Monte uma proposta real com cliente, arte, busca de insumos, carrinho, imagem de referência e PDF.</p>
       </header>
 
       <section class="budget-flow" aria-label="Fluxo de orçamento">
-        <span>Cliente</span><span>Tatuagem</span><span>Carrinho</span><span>PDF</span>
+        <span>Cliente</span><span>Tatuagem</span><span>Estoque</span><span>Carrinho</span><span>PDF</span>
       </section>
 
       <form id="formOrcamento" class="budget-page-grid">
@@ -62,13 +62,17 @@
         </section>
 
         <section class="panel-card materials-panel">
-          <header class="section-title"><span>Carrinho de materiais</span><h2>Itens estimados do orçamento</h2></header>
-          <div class="materials-picker">
-            <label class="field"><span>Item do estoque</span><select id="itemEstoqueSelect"></select></label>
-            <label class="field"><span>Quantidade usada</span><input id="quantidadeUsada" inputmode="decimal" placeholder="1" /></label>
-            <button class="button button-secondary" id="adicionarMaterial" type="button">Adicionar ao carrinho</button>
+          <header class="section-title"><span>Adicionar insumos</span><h2>Buscar no estoque</h2></header>
+          <div class="picker-toolbar">
+            <label class="field"><span>Pesquisar</span><input id="budgetSearchInput" type="search" placeholder="Ex: RL 0310, luva, preto, vaselina" /></label>
+            <button class="button button-ghost" id="clearBudgetSearchButton" type="button">Limpar busca</button>
           </div>
-          <div id="detalheItemSelecionado" class="selected-stock-detail"></div>
+          <section class="chip-row compact-chip-row" id="budgetCategoryFilters" aria-label="Filtros de categoria do orçamento"></section>
+          <section id="stockPickerList" class="picker-list" aria-label="Itens disponíveis para orçamento"></section>
+        </section>
+
+        <section class="panel-card cart-panel">
+          <header class="section-title"><span>Itens usados</span><h2>Carrinho do orçamento</h2></header>
           <div id="listaMateriais" class="cart-list"></div>
         </section>
 
@@ -94,6 +98,7 @@
             <div><dt>Materiais</dt><dd id="totalMateriais">R$ 0,00</dd></div>
             <div><dt>Mão de obra</dt><dd id="totalMaoObra">R$ 0,00</dd></div>
             <div><dt>Subtotal com margem</dt><dd id="subtotalOrcamento">R$ 0,00</dd></div>
+            <div><dt>Desconto aplicado</dt><dd id="valorDesconto">R$ 0,00</dd></div>
             <div class="summary-final"><dt>Valor final</dt><dd id="valorFinal">R$ 0,00</dd></div>
           </dl>
           <div class="action-stack">
