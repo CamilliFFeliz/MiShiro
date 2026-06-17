@@ -2,7 +2,7 @@
   "id": "./index.html",
   "name": "MiShiro Tattoo",
   "short_name": "MiShiro",
-  "description": "PWA offline para estoque, agenda, precificação, orçamento e geração de propostas em PDF para estúdios de tatuagem.",
+  "description": "PWA mobile-first para estoque, agenda, precificação, orçamento e geração de propostas em PDF para estúdios de tatuagem.",
   "lang": "pt-BR",
   "dir": "ltr",
   "start_url": "./index.html",
@@ -22,9 +22,9 @@
       "url": "./index.html",
       "icons": [
         {
-          "src": "assets/brand/mishiro-simbolo-escuro.svg",
-          "sizes": "any",
-          "type": "image/svg+xml",
+          "src": "img/mishiro-simbolo-escuro.jpg.jpg",
+          "sizes": "512x512",
+          "type": "image/jpeg",
           "purpose": "any maskable"
         }
       ]
@@ -36,9 +36,9 @@
       "url": "./index.html",
       "icons": [
         {
-          "src": "assets/brand/mishiro-simbolo-escuro.svg",
-          "sizes": "any",
-          "type": "image/svg+xml",
+          "src": "img/mishiro-simbolo-escuro.jpg.jpg",
+          "sizes": "512x512",
+          "type": "image/jpeg",
           "purpose": "any maskable"
         }
       ]
@@ -46,15 +46,15 @@
   ],
   "icons": [
     {
-      "src": "assets/brand/mishiro-simbolo-escuro.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
+      "src": "img/mishiro-simbolo-escuro.jpg.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
       "purpose": "any maskable"
     },
     {
-      "src": "assets/brand/mishiro-simbolo-claro.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
+      "src": "img/mishiro-simbolo-claro.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
       "purpose": "any"
     }
   ]
