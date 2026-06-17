@@ -1,3 +1,34 @@
 <!DOCTYPE html>
-<html lang="pt-BR"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/><meta name="theme-color" content="#360a75"/><link rel="manifest" href="../manifest.webmanifest"/><link rel="icon" href="../icons/icon.svg" type="image/svg+xml"/><link rel="stylesheet" href="../assets/css/base.css"/><link rel="stylesheet" href="../assets/css/tokens.css"/><link rel="stylesheet" href="../assets/css/layout.css"/><link rel="stylesheet" href="../assets/css/components.css"/><link rel="stylesheet" href="../assets/css/relatorios.css"/><title>MiShiro Tattoo • Relatórios</title></head>
-<body data-page="relatorios"><div id="app" class="app-frame"><main id="appMain" class="page-shell"><header class="page-header"><span class="eyebrow">Relatórios</span><h1>Indicadores do estúdio</h1><p>Veja investimento em estoque, orçamentos salvos e distribuição por categoria.</p></header><section class="metric-grid"><article class="metric-card"><span>Investimento em estoque</span><strong id="investimentoEstoque">R$ 0,00</strong><p>Total cadastrado.</p></article><article class="metric-card"><span>Categoria principal</span><strong id="categoriaPrincipal">Sem dados</strong><p id="valorCategoria">R$ 0,00</p></article><article class="metric-card"><span>Orçamentos</span><strong id="qtdOrcamentos">0</strong><p>Registros locais.</p></article></section><section class="panel-card"><header class="section-title"><span>Categorias</span><h2>Distribuição do estoque</h2></header><div id="graficoCategorias" class="report-list"></div></section></main></div><script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js" defer></script><script type="module" src="../src/pages/relatorios.js"></script></body></html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#360a75" />
+  <link rel="manifest" href="../manifest.webmanifest" />
+  <link rel="icon" href="../icons/icon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="../assets/css/base.css" />
+  <link rel="stylesheet" href="../assets/css/tokens.css" />
+  <link rel="stylesheet" href="../assets/css/layout.css" />
+  <link rel="stylesheet" href="../assets/css/components.css" />
+  <link rel="stylesheet" href="../assets/css/relatorios.css" />
+  <title>MiShiro Tattoo • Relatórios</title>
+</head>
+<body data-page="relatorios">
+  <div id="app" class="app-frame">
+    <main id="appMain" class="page-shell">
+      <header class="page-header"><span class="eyebrow">Relatórios</span><h1>Indicadores do estúdio</h1><p>Saúde do estoque, investimento por categoria e leitura mensal da agenda.</p></header>
+      <section class="metric-grid report-metrics">
+        <article class="metric-card"><span>Investimento total</span><strong id="investimentoEstoque">R$ 0,00</strong><p>Valor financeiro cadastrado.</p></article>
+        <article class="metric-card"><span>Total de itens</span><strong id="totalItensEstoque">0</strong><p>Insumos ativos.</p></article>
+        <article class="metric-card"><span>Orçamentos</span><strong id="qtdOrcamentos">0</strong><p>Registros locais.</p></article>
+        <article class="metric-card"><span>Agendamentos no mês</span><strong id="totalAgendaMes">0</strong><p>Eventos do período.</p></article>
+      </section>
+      <section class="panel-card"><header class="section-title"><span>Categorias</span><h2>Distribuição do estoque</h2></header><div id="graficoCategorias" class="report-list"></div></section>
+      <section class="panel-card"><header class="section-title"><span>Saúde do estoque</span><h2>Faltas, baixos e itens ok</h2></header><div class="health-grid"><article><span>Itens em falta</span><strong id="itensEmFalta">0</strong></article><article><span>Estoque baixo</span><strong id="itensBaixos">0</strong></article><article><span>Estoque ok</span><strong id="itensOk">0</strong></article></div><div class="health-lists"><section><h3>Em falta</h3><div id="listaEmFalta" class="report-list compact"></div></section><section><h3>Estoque baixo</h3><div id="listaBaixo" class="report-list compact"></div></section></div></section>
+      <section class="panel-card"><header class="section-title"><span>Agenda</span><h2>Relatório mensal</h2></header><div class="agenda-report-grid"><article><span>Cancelados</span><strong id="agendaCancelados">0</strong></article><article><span>Remarcados</span><strong id="agendaRemarcados">0</strong></article><article><span>Concluídos</span><strong id="agendaConcluidos">0</strong></article><article><span>Próximos 7 dias</span><strong id="agendaProximos">0</strong></article><article><span>Taxa de cancelamento</span><strong id="taxaCancelamento">0%</strong></article></div><div class="health-lists"><section><h3>Cancelamentos com motivo</h3><div id="listaCancelamentos" class="report-list compact"></div></section><section><h3>Próximos atendimentos</h3><div id="listaProximosAgenda" class="report-list compact"></div></section></div></section>
+    </main>
+  </div>
+  <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js" defer></script>
+  <script type="module" src="../src/pages/relatorios.js"></script>
+</body>
+</html>
