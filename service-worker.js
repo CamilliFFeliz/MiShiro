@@ -1,5 +1,5 @@
-const CACHE_NAME = "mishiro-orcamentos-static-v21-paleta-final-360a75";
-const RUNTIME_CACHE_NAME = "mishiro-orcamentos-runtime-v21-paleta-final-360a75";
+const CACHE_NAME = "mishiro-orcamentos-static-v22-navegacao-orcamento";
+const RUNTIME_CACHE_NAME = "mishiro-orcamentos-runtime-v22-navegacao-orcamento";
 const APP_CACHE_PREFIXES = ["calculadora-tattoo-", "mishiro-orcamentos-"];
 const CURRENT_CACHE_NAMES = [CACHE_NAME, RUNTIME_CACHE_NAME];
 const APP_SHELL_URL = "./index.html";
@@ -33,6 +33,7 @@ const APP_ASSETS = [
   "./src/main.js",
   "./src/mishiro-brand.js",
   "./src/mishiro-brand-v2.js",
+  "./src/mishiro-navegacao-segura.js",
   "./src/mishiro-pdf-tools.js",
   "./src/mishiro-pdf-direct.js",
   "./src/mishiro-ux.js",
