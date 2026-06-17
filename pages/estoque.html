@@ -16,35 +16,62 @@
 <body data-page="estoque">
   <div id="app" class="app-frame">
     <main id="appMain" class="page-shell">
-      <header class="page-header">
-        <span class="eyebrow">Estoque</span>
-        <h1>Insumos do estúdio</h1>
-        <p>Cadastro por categoria, com cálculo real por caixa, unidade, frasco, embalagem, pacote ou rolo.</p>
+      <header class="page-header inventory-page-header">
+        <div>
+          <span class="eyebrow">Banco local de insumos</span>
+          <h1>Estoque</h1>
+          <p>Cadastro por categoria, com cálculo real por caixa, unidade, frasco, embalagem, pacote ou rolo.</p>
+        </div>
+        <div class="inventory-header-actions">
+          <strong class="counter-pill" id="inventoryCounter">0 itens</strong>
+          <button class="button button-primary" id="openItemModalButton" type="button"><i data-lucide="plus" aria-hidden="true"></i>Novo item</button>
+          <button class="button button-secondary" id="restoreReferenceStockButton" type="button"><i data-lucide="rotate-ccw" aria-hidden="true"></i>Restaurar base</button>
+        </div>
       </header>
-      <section class="stock-grid">
-        <form id="formEstoque" class="panel-card stock-form" autocomplete="off">
-          <header class="section-title"><span>Novo item</span><h2>Cadastro inteligente</h2></header>
-          <section class="category-choice-grid" id="categoryChoiceGrid" aria-label="Categorias de estoque"></section>
-          <div class="stock-helper" id="categoryHelper"></div>
-          <div class="dynamic-fields-grid" id="dynamicFieldsGrid"></div>
-          <section class="unit-cost-preview" id="unitCostPreview" aria-live="polite">
-            <span>Prévia do cálculo</span>
-            <strong>R$ 0,00</strong>
-            <small>Preencha os campos para calcular o custo de uso.</small>
-          </section>
-          <button class="button button-primary" type="submit">Salvar item</button>
-          <p id="statusEstoque" class="form-status" aria-live="polite"></p>
-        </form>
-        <section class="panel-card stock-list-panel">
-          <header class="section-title"><span>Lista</span><h2>Itens cadastrados</h2></header>
-          <div class="toolbar-inline"><label class="field"><span>Buscar</span><input id="buscaEstoque" type="search" placeholder="Nome, categoria, marca, cor ou numeração" /></label></div>
-          <section class="chip-row compact-chip-row" id="filtrosEstoque" aria-label="Filtros de categoria"></section>
-          <div id="alertasEstoque" class="alert-list"></div>
-          <div id="listaEstoque" class="stock-list"></div>
-        </section>
+
+      <section class="panel-card stock-list-panel">
+        <div class="toolbar-grid old-toolbar-grid">
+          <label class="field"><span>Pesquisar no estoque</span><input id="buscaEstoque" type="search" placeholder="Marca, categoria, numeração, cor ou nome" /></label>
+          <button class="button button-secondary" id="clearInventorySearchButton" type="button"><i data-lucide="x" aria-hidden="true"></i>Limpar</button>
+        </div>
+        <section class="chip-row compact-chip-row" id="filtrosEstoque" aria-label="Filtros de categoria"></section>
+        <div id="alertasEstoque" class="alert-list"></div>
+        <section id="listaEstoque" class="inventory-grid" aria-label="Itens cadastrados"></section>
       </section>
     </main>
   </div>
+
+  <dialog class="modal-card inventory-modal" id="itemModal">
+    <form id="formEstoque" class="stock-form" autocomplete="off" method="dialog">
+      <div class="modal-header">
+        <div>
+          <span>Novo item</span>
+          <h2>Cadastrar insumo</h2>
+        </div>
+        <button class="icon-button" id="closeItemModalButton" type="button" aria-label="Fechar cadastro"><i data-lucide="x" aria-hidden="true"></i></button>
+      </div>
+
+      <section class="form-step-panel">
+        <div class="step-heading"><strong>Etapa 1</strong><span>Escolha a categoria principal</span></div>
+        <section class="category-choice-grid" id="categoryChoiceGrid" aria-label="Categorias de estoque"></section>
+      </section>
+
+      <section class="form-step-panel">
+        <div class="step-heading"><strong>Etapa 2</strong><span>Preencha a ficha do item</span></div>
+        <div class="stock-helper" id="categoryHelper"></div>
+        <div class="dynamic-fields-grid" id="dynamicFieldsGrid"></div>
+      </section>
+
+      <section class="unit-cost-preview" id="unitCostPreview" aria-live="polite">
+        <span>Prévia do cálculo</span>
+        <strong>R$ 0,00</strong>
+        <small>Preencha os campos para calcular o custo de uso.</small>
+      </section>
+      <button class="button button-primary full-button" type="submit"><i data-lucide="save" aria-hidden="true"></i>Salvar item</button>
+      <p id="statusEstoque" class="form-status" aria-live="polite"></p>
+    </form>
+  </dialog>
+
   <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js" defer></script>
   <script type="module" src="../src/pages/estoque.js"></script>
 </body>
