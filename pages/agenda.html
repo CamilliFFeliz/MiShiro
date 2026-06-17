@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#360a75" />
+  <link rel="manifest" href="../manifest.webmanifest" />
+  <link rel="icon" href="../icons/icon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="../assets/css/base.css" />
+  <link rel="stylesheet" href="../assets/css/tokens.css" />
+  <link rel="stylesheet" href="../assets/css/layout.css" />
+  <link rel="stylesheet" href="../assets/css/components.css" />
+  <link rel="stylesheet" href="../assets/css/agenda.css" />
+  <title>MiShiro Tattoo • Agenda</title>
+</head>
+<body data-page="agenda">
+  <div id="app" class="app-frame">
+    <main id="appMain" class="page-shell">
+      <header class="page-header"><span class="eyebrow">Agenda</span><h1>Calendário do estúdio</h1><p>Acompanhe os orçamentos agendados e os atendimentos do mês.</p></header>
+      <section class="agenda-header panel-card">
+        <button id="mesAnterior" class="button button-ghost" type="button">Anterior</button>
+        <strong id="mesAtual">Mês</strong>
+        <button id="proximoMes" class="button button-ghost" type="button">Próximo</button>
+      </section>
+      <section class="agenda-summary" aria-label="Resumo da agenda">
+        <article class="metric-card"><span>No mês</span><strong id="totalMes">0</strong><p>agendamentos</p></article>
+        <article class="metric-card"><span>No dia</span><strong id="totalDia">0</strong><p>selecionado</p></article>
+      </section>
+      <section class="calendar-card panel-card">
+        <div class="week-row"><span>Dom</span><span>Seg</span><span>Ter</span><span>Qua</span><span>Qui</span><span>Sex</span><span>Sáb</span></div>
+        <div id="calendario" class="calendar-grid"></div>
+      </section>
+      <section class="panel-card"><header class="section-title"><span>Bloquinhos de notas</span><h2 id="tituloEventos">Eventos do dia</h2></header><div id="listaEventos" class="note-list"></div></section>
+    </main>
+  </div>
+  <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js" defer></script>
+  <script type="module" src="../src/pages/agenda.js"></script>
+</body>
+</html>
