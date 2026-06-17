@@ -3,7 +3,8 @@ const BRAND_TAGLINE = "Propostas e custos para tattoo";
 const BRAND_DESCRIPTION = "PWA offline para estoque, precificação e geração de propostas em PDF para estúdios de tatuagem.";
 const BRAND_STYLESHEETS = [
   { id: "mishiro-brand-css", href: "mishiro.css" },
-  { id: "mishiro-pdf-tools-css", href: "mishiro-pdf-tools.css" }
+  { id: "mishiro-pdf-tools-css", href: "mishiro-pdf-tools.css" },
+  { id: "mishiro-mvc-css", href: "mvc-mishiro.css" }
 ];
 const SVG_NAMESPACE = "http://www.w3.org/2000/svg";
 
