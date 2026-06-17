@@ -2,7 +2,7 @@ import { montarLayout } from "../shared/layout.js";
 import { formatarMoeda, normalizarNumero } from "../shared/formatters.js";
 import { vazio, escapar, mostrarStatus, atualizarIcones } from "../shared/ui.js";
 import { iniciarBancoLocal } from "../models/banco-local.js";
-import { cadastrarItemEstoque, listarItensEstoque, listarAlertasEstoqueBaixo, calcularResumoEstoque, calcularCustoUnitario } from "../services/estoque-service.js";
+import { cadastrarItemEstoque, listarItensEstoque, listarAlertasEstoqueBaixo, calcularResumoEstoque, calcularCustoUnitario, garantirEstoqueInicial, restaurarEstoqueReferencia } from "../services/estoque-service.js";
 import { BUSINESS_CATEGORIES, CATEGORY_ALL, CATEGORY_DEFINITIONS, CATEGORY_ORDER, normalizeCategory, normalizeItemPayload, UNIT_PURCHASE_CATEGORIES, PURCHASE_MODE_BOX, getItemSpecification, getMeasureLabel } from "../shared/stock-catalog.js";
 
 let itens = [];
@@ -10,11 +10,12 @@ let termo = "";
 let categoriaFormulario = BUSINESS_CATEGORIES[0];
 let categoriaFiltro = CATEGORY_ALL;
 
-montarLayout({ paginaAtual: "estoque", titulo: "Estoque", subtitulo: "Insumos" });
+montarLayout({ paginaAtual: "estoque", titulo: "Estoque", subtitulo: "Banco local" });
 iniciar();
 
 async function iniciar() {
   await iniciarBancoLocal();
+  await garantirEstoqueInicial();
   vincularEventos();
   renderCategoriasFormulario();
   renderCamposDinamicos();
@@ -25,6 +26,10 @@ async function iniciar() {
 
 function vincularEventos() {
   document.querySelector("#formEstoque")?.addEventListener("submit", salvarItem);
+  document.querySelector("#openItemModalButton")?.addEventListener("click", abrirModalEstoque);
+  document.querySelector("#closeItemModalButton")?.addEventListener("click", fecharModalEstoque);
+  document.querySelector("#restoreReferenceStockButton")?.addEventListener("click", restaurarBaseReferencia);
+  document.querySelector("#clearInventorySearchButton")?.addEventListener("click", () => { termo = ""; document.querySelector("#buscaEstoque").value = ""; render(); });
   document.querySelector("#buscaEstoque")?.addEventListener("input", (evento) => { termo = evento.target.value.toLowerCase(); render(); });
   document.querySelector("#categoryChoiceGrid")?.addEventListener("click", (evento) => {
     const botao = evento.target.closest("[data-form-category]");
@@ -53,6 +58,24 @@ async function carregar() {
   render();
 }
 
+function abrirModalEstoque() {
+  document.querySelector("#formEstoque")?.reset();
+  categoriaFormulario = BUSINESS_CATEGORIES[0];
+  renderCategoriasFormulario();
+  renderCamposDinamicos();
+  document.querySelector("#itemModal")?.showModal?.();
+}
+
+function fecharModalEstoque() {
+  document.querySelector("#itemModal")?.close?.();
+}
+
+async function restaurarBaseReferencia() {
+  await restaurarEstoqueReferencia({ somenteSeVazio: false });
+  await carregar();
+  mostrarStatus(document.querySelector("#statusEstoque"), "Estoque base restaurado.");
+}
+
 function renderCategoriasFormulario() {
   const grid = document.querySelector("#categoryChoiceGrid");
   if (!grid) return;
@@ -64,12 +87,9 @@ function renderCamposDinamicos() {
   const helper = document.querySelector("#categoryHelper");
   const definicao = CATEGORY_DEFINITIONS[categoriaFormulario];
   if (!grid || !definicao) return;
-
   if (helper) helper.textContent = definicao.helper;
-
   const dadosAtuais = lerDadosFormulario();
   if (!dadosAtuais.purchaseMode && UNIT_PURCHASE_CATEGORIES.includes(categoriaFormulario)) dadosAtuais.purchaseMode = PURCHASE_MODE_BOX;
-
   grid.innerHTML = definicao.fields.filter((campo) => campoVisivel(campo, dadosAtuais)).map((campo) => renderCampo(campo, dadosAtuais[campo.key])).join("");
   atualizarPrevia();
 }
@@ -78,12 +98,10 @@ function renderCampo(campo, valor = "") {
   if (campo.type === "select") {
     return `<label class="field"><span>${escapar(campo.label)}</span><select data-item-field="${campo.key}" ${campo.required ? "required" : ""}>${campo.options.map((opcao) => `<option value="${opcao.value}" ${opcao.value === valor ? "selected" : ""}>${escapar(opcao.label)}</option>`).join("")}</select></label>`;
   }
-
   if (campo.type === "measure") {
-    const unidadeAtual = valor && campo.options.includes(valor) ? valor : campo.options[0];
+    const unidadeAtual = campo.options.includes(valor) ? valor : campo.options[0];
     return `<label class="field measure-field"><span>${escapar(campo.label)}</span><div class="measure-input"><input data-item-field="packageQuantity" inputmode="${campo.inputMode || "decimal"}" placeholder="${escapar(campo.placeholder || "")}" ${campo.required ? "required" : ""}/><select data-item-field="measureUnit">${campo.options.map((opcao) => `<option value="${opcao}" ${opcao === unidadeAtual ? "selected" : ""}>${opcao}</option>`).join("")}</select></div></label>`;
   }
-
   return `<label class="field"><span>${escapar(campo.label)}</span><input data-item-field="${campo.key}" type="text" inputmode="${campo.inputMode || "text"}" placeholder="${escapar(campo.placeholder || "")}" value="${escapar(valor)}" ${campo.required ? "required" : ""}/></label>`;
 }
 
@@ -96,16 +114,12 @@ async function salvarItem(evento) {
   evento.preventDefault();
   const dados = lerDadosFormulario();
   const payload = normalizeItemPayload(categoriaFormulario, dados, normalizarNumero);
-
   if (!payload.nome || payload.precoEmbalagem <= 0 || payload.quantidadeEmbalagem <= 0 || payload.quantidadeAtual <= 0) {
     mostrarStatus(document.querySelector("#statusEstoque"), "Preencha os campos obrigatórios com valores válidos.");
     return;
   }
-
   await cadastrarItemEstoque(payload);
-  evento.target.reset();
-  renderCamposDinamicos();
-  mostrarStatus(document.querySelector("#statusEstoque"), "Item salvo no IndexedDB.");
+  fecharModalEstoque();
   await carregar();
 }
 
@@ -121,8 +135,8 @@ function atualizarPrevia() {
   if (!preview) return;
   const payload = normalizeItemPayload(categoriaFormulario, lerDadosFormulario(), normalizarNumero);
   const custo = calcularCustoUnitario(payload);
-  const valorEstoque = custo * normalizarNumero(payload.quantidadeAtual) * (categoriaFormulario === "Tintas" || categoriaFormulario === "Pastosos" || categoriaFormulario === "Materiais de Extensão" ? normalizarNumero(payload.quantidadeEmbalagem || 1) : 1);
-  preview.innerHTML = `<span>Custo por ${escapar(getMeasureLabel(payload.unidadeMedida))}</span><strong>${formatarMoeda(custo)}</strong><small>Valor estimado em estoque: ${formatarMoeda(valorEstoque)}</small>`;
+  const valorEstoque = normalizarNumero(payload.precoEmbalagem) * normalizarNumero(payload.quantidadeAtual);
+  preview.innerHTML = `<span>Custo por ${escapar(getMeasureLabel(payload.unidadeMedida))}</span><strong>${formatarMoeda(custo)}</strong><small>Valor financeiro total: ${formatarMoeda(valorEstoque)}</small>`;
 }
 
 function renderFiltros() {
@@ -132,6 +146,8 @@ function renderFiltros() {
 }
 
 async function render() {
+  const counter = document.querySelector("#inventoryCounter");
+  if (counter) counter.textContent = `${itens.length} ${itens.length === 1 ? "item" : "itens"}`;
   const alertas = await listarAlertasEstoqueBaixo();
   document.querySelector("#alertasEstoque").innerHTML = alertas.length ? alertas.map((item) => `<div class="alert-card">Estoque baixo: <strong>${escapar(item.nome)}</strong> (${item.quantidadeAtual} ${escapar(item.unidadeMedida)})</div>`).join("") : "";
   const filtrados = itens.filter((item) => {
@@ -141,9 +157,10 @@ async function render() {
     return bateTermo && bateCategoria;
   });
   document.querySelector("#listaEstoque").innerHTML = filtrados.length ? filtrados.map(card).join("") : vazio("Nenhum item encontrado.");
+  atualizarIcones();
 }
 
 function card(item) {
   const resumo = calcularResumoEstoque(item);
-  return `<article class="stock-card"><strong>${escapar(item.nome)}</strong><span>${escapar(item.categoria)} · ${escapar(getItemSpecification(item) || "Sem especificação")}</span><div class="stock-meta"><span>Atual: ${resumo.quantidadeAtual} ${escapar(item.unidadeMedida)}</span><span>Custo uso: ${formatarMoeda(resumo.custoUnitario)}</span><span>Valor em estoque: ${formatarMoeda(resumo.valorTotal)}</span><span>Mínimo: ${resumo.quantidadeMinima}</span></div><div class="stock-bar"><i style="width:${resumo.percentualMinimo}%"></i></div></article>`;
+  return `<article class="inventory-card stock-card"><div class="card-topline"><span class="category-pill">${escapar(item.categoria)}</span>${resumo.estoqueBaixo ? `<span class="low-stock-tag">Estoque baixo</span>` : ""}</div><div class="inventory-title-row"><div class="product-avatar" aria-hidden="true">${escapar((item.nome || "?").slice(0, 1).toUpperCase())}</div><div><h3>${escapar(item.nome)}</h3><span>${escapar(getItemSpecification(item) || "Sem especificação")}</span></div></div><div class="stock-metric-grid"><div class="stock-metric is-featured"><span>Valor financeiro total</span><strong>${formatarMoeda(resumo.valorTotal)}</strong></div><div class="stock-metric"><span>Custo por ${escapar(getMeasureLabel(item.unidadeMedida))}</span><strong>${formatarMoeda(resumo.custoUnitario)}</strong></div></div><p class="card-note">Estoque: ${resumo.quantidadeAtual} ${escapar(item.unidadeMedida)} · embalagem de ${normalizarNumero(item.quantidadeEmbalagem)} ${escapar(item.unidadeMedida)} por ${formatarMoeda(item.precoEmbalagem)}</p></article>`;
 }
