@@ -10,6 +10,7 @@ const PAGINAS = [
 
 export function montarLayout({ paginaAtual, titulo, subtitulo }) {
   aplicarTemaInicial();
+  carregarCamadaVisualPro();
   const app = document.querySelector("#app");
   if (!app || document.querySelector(".app-sidebar")) return;
   const base = obterBase();
@@ -36,6 +37,14 @@ function criarSidebar(base, atual) {
   return `<div class="brand-block"><div class="brand-mark"><img src="${base}img/mishiro-simbolo-escuro.jpg.jpg" alt="" /></div><div><strong>MiShiro Tattoo</strong><span>Gestão local do estúdio</span></div></div><nav class="sidebar-nav">${PAGINAS.map(([id, nome, icone, href]) => `<a class="nav-link ${id === atual ? "is-active" : ""}" href="${base}${href}"><span><i data-lucide="${icone}"></i></span>${nome}</a>`).join("")}</nav><div class="sidebar-footer"><span>IndexedDB</span><strong>Dados salvos no navegador</strong></div>`;
 }
 
+function carregarCamadaVisualPro() {
+  if (document.querySelector("#mishiro-pro-ui-css")) return;
+  const link = document.createElement("link");
+  link.id = "mishiro-pro-ui-css";
+  link.rel = "stylesheet";
+  link.href = `${obterBase()}assets/css/pro-ui.css`;
+  document.head.append(link);
+}
 function obterBase() { return location.pathname.includes("/pages/") ? "../" : "./"; }
 function abrirMenu() { document.querySelector("#sidebar")?.classList.add("is-open"); const drawer = document.querySelector("#drawerBackdrop"); if (drawer) drawer.hidden = false; }
 function fecharMenu() { document.querySelector("#sidebar")?.classList.remove("is-open"); const drawer = document.querySelector("#drawerBackdrop"); if (drawer) drawer.hidden = true; }
