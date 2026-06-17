@@ -16,26 +16,29 @@
 <body data-page="estoque">
   <div id="app" class="app-frame">
     <main id="appMain" class="page-shell">
-      <header class="page-header"><span class="eyebrow">Estoque</span><h1>Insumos do estúdio</h1><p>Cadastre materiais, acompanhe quantidades e visualize alertas de estoque baixo.</p></header>
+      <header class="page-header">
+        <span class="eyebrow">Estoque</span>
+        <h1>Insumos do estúdio</h1>
+        <p>Cadastro por categoria, com cálculo real por caixa, unidade, frasco, embalagem, pacote ou rolo.</p>
+      </header>
       <section class="stock-grid">
-        <form id="formEstoque" class="panel-card stock-form">
-          <header class="section-title"><span>Novo item</span><h2>Cadastro rápido</h2></header>
-          <div class="form-grid compact">
-            <label class="field"><span>Nome</span><input id="nomeItem" required placeholder="Ex: Cartucho 09RL" /></label>
-            <label class="field"><span>Categoria</span><input id="categoriaItem" placeholder="Agulhas, tintas, descartáveis..." /></label>
-            <label class="field"><span>Marca</span><input id="marcaItem" placeholder="Marca" /></label>
-            <label class="field"><span>Unidade</span><input id="unidadeItem" placeholder="un, ml, g, m" /></label>
-            <label class="field"><span>Preço embalagem</span><input id="precoItem" inputmode="decimal" placeholder="50,00" /></label>
-            <label class="field"><span>Qtd. embalagem</span><input id="qtdEmbalagem" inputmode="decimal" placeholder="10" /></label>
-            <label class="field"><span>Qtd. atual</span><input id="qtdAtual" inputmode="decimal" placeholder="10" /></label>
-            <label class="field"><span>Qtd. mínima</span><input id="qtdMinima" inputmode="decimal" placeholder="2" /></label>
-          </div>
+        <form id="formEstoque" class="panel-card stock-form" autocomplete="off">
+          <header class="section-title"><span>Novo item</span><h2>Cadastro inteligente</h2></header>
+          <section class="category-choice-grid" id="categoryChoiceGrid" aria-label="Categorias de estoque"></section>
+          <div class="stock-helper" id="categoryHelper"></div>
+          <div class="dynamic-fields-grid" id="dynamicFieldsGrid"></div>
+          <section class="unit-cost-preview" id="unitCostPreview" aria-live="polite">
+            <span>Prévia do cálculo</span>
+            <strong>R$ 0,00</strong>
+            <small>Preencha os campos para calcular o custo de uso.</small>
+          </section>
           <button class="button button-primary" type="submit">Salvar item</button>
           <p id="statusEstoque" class="form-status" aria-live="polite"></p>
         </form>
         <section class="panel-card stock-list-panel">
           <header class="section-title"><span>Lista</span><h2>Itens cadastrados</h2></header>
-          <div class="toolbar-inline"><label class="field"><span>Buscar</span><input id="buscaEstoque" type="search" placeholder="Nome, categoria ou marca" /></label></div>
+          <div class="toolbar-inline"><label class="field"><span>Buscar</span><input id="buscaEstoque" type="search" placeholder="Nome, categoria, marca, cor ou numeração" /></label></div>
+          <section class="chip-row compact-chip-row" id="filtrosEstoque" aria-label="Filtros de categoria"></section>
           <div id="alertasEstoque" class="alert-list"></div>
           <div id="listaEstoque" class="stock-list"></div>
         </section>
