@@ -3,7 +3,7 @@ import { formatarMoeda, normalizarNumero } from "../shared/formatters.js";
 import { escapar, mostrarStatus, vazio, atualizarIcones } from "../shared/ui.js";
 import { lerLocalJson, salvarLocalJson } from "../shared/storage.js";
 import { iniciarBancoLocal } from "../models/banco-local.js";
-import { listarItensEstoque, calcularCustoUnitario, criarSnapshotItemEstoque } from "../services/estoque-service.js";
+import { listarItensEstoque, calcularCustoUnitario, criarSnapshotItemEstoque, garantirEstoqueInicial } from "../services/estoque-service.js";
 import { criarOrcamento } from "../services/orcamentos-service.js";
 import { CATEGORY_ALL, CATEGORY_ORDER, getItemSpecification, getMeasureLabel, getMeasureSuffix, getMinimumQuantity, getUsageRules, adjustQuantity, sanitizeUsageQuantity } from "../shared/stock-catalog.js";
 
@@ -20,6 +20,7 @@ iniciar();
 
 async function iniciar() {
   await iniciarBancoLocal();
+  await garantirEstoqueInicial();
   carregarPerfil();
   itensEstoque = await listarItensEstoque();
   vincularEventos();
@@ -76,7 +77,6 @@ function renderStockPicker() {
     const bateCategoria = categoriaFiltro === CATEGORY_ALL || item.categoria === categoriaFiltro;
     return bateTermo && bateCategoria;
   });
-
   lista.innerHTML = filtrados.length ? filtrados.map(renderPickerCard).join("") : vazio("Nenhum insumo encontrado para adicionar ao orçamento.");
   atualizarIcones();
 }
@@ -84,24 +84,7 @@ function renderStockPicker() {
 function renderPickerCard(item) {
   const rules = getUsageRules(item);
   const suffix = getMeasureSuffix(item.unidadeMedida);
-  return `<article class="picker-card" data-inventory-item-id="${escapar(item.id)}">
-    <div class="picker-info">
-      <strong>${escapar(item.nome)}</strong>
-      <span>${escapar(item.categoria)} · ${escapar(getItemSpecification(item) || "Sem especificação")}</span>
-      <small>${formatarMoeda(calcularCustoUnitario(item))} por ${escapar(getMeasureLabel(item.unidadeMedida))}</small>
-    </div>
-    <div class="picker-actions">
-      <label class="stepper-field">
-        <span>Quantidade usada</span>
-        <div class="quantity-stepper" data-suffix="${escapar(suffix)}">
-          <button type="button" data-picker-step="decrease" aria-label="Diminuir quantidade">−</button>
-          <input data-picker-quantity type="text" inputmode="${rules.inputMode}" value="${rules.defaultValue}" />
-          <button type="button" data-picker-step="increase" aria-label="Aumentar quantidade">+</button>
-        </div>
-      </label>
-      <button class="button button-primary" type="button" data-add-to-budget>Adicionar</button>
-    </div>
-  </article>`;
+  return `<article class="picker-card" data-inventory-item-id="${escapar(item.id)}"><div class="picker-info"><strong>${escapar(item.nome)}</strong><span>${escapar(item.categoria)} · ${escapar(getItemSpecification(item) || "Sem especificação")}</span><small>${formatarMoeda(calcularCustoUnitario(item))} por ${escapar(getMeasureLabel(item.unidadeMedida))}</small></div><div class="picker-actions"><label class="stepper-field"><span>Quantidade usada</span><div class="quantity-stepper" data-suffix="${escapar(suffix)}"><button type="button" data-picker-step="decrease" aria-label="Diminuir quantidade">−</button><input data-picker-quantity type="text" inputmode="${rules.inputMode}" value="${rules.defaultValue}" /><button type="button" data-picker-step="increase" aria-label="Aumentar quantidade">+</button></div></label><button class="button button-primary" type="button" data-add-to-budget>Adicionar</button></div></article>`;
 }
 
 function handlePickerClick(evento) {
@@ -113,7 +96,6 @@ function handlePickerClick(evento) {
     if (item && input) input.value = adjustQuantity(item, input.value, step.dataset.pickerStep, getMinimumQuantity(item), normalizarNumero);
     return;
   }
-
   const add = evento.target.closest("[data-add-to-budget]");
   if (!add) return;
   const card = add.closest("[data-inventory-item-id]");
@@ -133,11 +115,8 @@ function adicionarMaterial(itemId, rawQuantidade) {
   if (!item) return;
   const quantidade = sanitizeUsageQuantity(item, rawQuantidade, getMinimumQuantity(item), normalizarNumero);
   const existente = materiais.find((registro) => registro.item.id === item.id);
-  if (existente) {
-    existente.quantidade = sanitizeUsageQuantity(item, normalizarNumero(existente.quantidade) + quantidade, getMinimumQuantity(item), normalizarNumero);
-  } else {
-    materiais.push({ id: `cart-${crypto.randomUUID?.() || Date.now()}`, item, quantidade });
-  }
+  if (existente) existente.quantidade = sanitizeUsageQuantity(item, normalizarNumero(existente.quantidade) + quantidade, getMinimumQuantity(item), normalizarNumero);
+  else materiais.push({ id: `cart-${crypto.randomUUID?.() || Date.now()}`, item, quantidade });
   renderMateriais();
   recalcular();
 }
@@ -153,21 +132,7 @@ function renderItemCarrinho(registro, index) {
   const rules = getUsageRules(registro.item);
   const suffix = getMeasureSuffix(registro.item.unidadeMedida);
   const subtotal = calcularCustoUnitario(registro.item) * normalizarNumero(registro.quantidade);
-  return `<article class="cart-card-row" data-cart-index="${index}">
-    <div class="cart-card-row__title">
-      <strong>${escapar(registro.item.nome)}</strong>
-      <span>${escapar(getItemSpecification(registro.item) || registro.item.categoria)} · ${formatarMoeda(calcularCustoUnitario(registro.item))}/${escapar(getMeasureLabel(registro.item.unidadeMedida))}</span>
-    </div>
-    <label class="stepper-field compact-stepper-field">
-      <span>Uso</span>
-      <div class="quantity-stepper" data-suffix="${escapar(suffix)}">
-        <button type="button" data-cart-step="decrease" aria-label="Diminuir quantidade">−</button>
-        <input data-cart-quantity type="text" inputmode="${rules.inputMode}" value="${registro.quantidade}" />
-        <button type="button" data-cart-step="increase" aria-label="Aumentar quantidade">+</button>
-      </div>
-    </label>
-    <div class="cart-card-row__total"><span>${formatarMoeda(subtotal)}</span><small>Subtotal</small><button class="button button-ghost" type="button" data-remove-cart-item>Remover</button></div>
-  </article>`;
+  return `<article class="cart-card-row" data-cart-index="${index}"><div class="cart-card-row__title"><strong>${escapar(registro.item.nome)}</strong><span>${escapar(getItemSpecification(registro.item) || registro.item.categoria)} · ${formatarMoeda(calcularCustoUnitario(registro.item))}/${escapar(getMeasureLabel(registro.item.unidadeMedida))}</span></div><label class="stepper-field compact-stepper-field"><span>Uso</span><div class="quantity-stepper" data-suffix="${escapar(suffix)}"><button type="button" data-cart-step="decrease" aria-label="Diminuir quantidade">−</button><input data-cart-quantity type="text" inputmode="${rules.inputMode}" value="${registro.quantidade}" /><button type="button" data-cart-step="increase" aria-label="Aumentar quantidade">+</button></div></label><div class="cart-card-row__total"><span>${formatarMoeda(subtotal)}</span><small>Subtotal</small><button class="button button-ghost" type="button" data-remove-cart-item>Remover</button></div></article>`;
 }
 
 function handleCartClick(evento) {
@@ -183,7 +148,6 @@ function handleCartClick(evento) {
     recalcular();
     return;
   }
-
   const remove = evento.target.closest("[data-remove-cart-item]");
   if (remove) {
     const row = remove.closest("[data-cart-index]");
