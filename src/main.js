@@ -5,6 +5,7 @@ import { setupMiShiroPdfExports } from "./mishiro-pdf-tools.js";
 import { setupDirectPdfExport } from "./mishiro-pdf-direct.js";
 import { setupMiShiroExperienceLayer } from "./mishiro-ux.js";
 import { setupStudioProLayer } from "./mishiro-studio-pro.js";
+import { iniciarNavegacaoSegura } from "./mishiro-navegacao-segura.js";
 import { iniciarAplicacaoMvc } from "./mvc/controladores/controlador-mvc.js";
 import { registerServiceWorkerUpdateFlow } from "./pwa.js";
 
@@ -16,6 +17,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   setupMiShiroPdfExports();
   setupDirectPdfExport();
   setupStudioProLayer();
+  iniciarNavegacaoSegura();
   await iniciarAplicacaoMvc();
   setupMiShiroExperienceLayer();
   registerServiceWorkerUpdateFlow();
