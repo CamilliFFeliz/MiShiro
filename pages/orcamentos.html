@@ -20,11 +20,11 @@
       <header class="page-header">
         <span class="eyebrow">Orçamentos</span>
         <h1 id="pageHeading">Criar proposta de tatuagem</h1>
-        <p>Preencha as etapas principais, estime materiais e salve o orçamento no banco local do navegador.</p>
+        <p>Monte uma proposta real com cliente, arte, materiais em formato de carrinho, imagem de referência e resumo financeiro.</p>
       </header>
 
       <section class="budget-flow" aria-label="Fluxo de orçamento">
-        <span>Cliente</span><span>Tatuagem</span><span>Materiais</span><span>Resumo</span>
+        <span>Cliente</span><span>Tatuagem</span><span>Carrinho</span><span>PDF</span>
       </section>
 
       <form id="formOrcamento" class="budget-page-grid">
@@ -46,7 +46,7 @@
           </div>
         </section>
 
-        <section class="panel-card">
+        <section class="panel-card tattoo-panel">
           <header class="section-title"><span>Tatuagem</span><h2>Dados da arte</h2></header>
           <div class="form-grid compact">
             <label class="field"><span>Tamanho</span><input id="tamanhoTatuagem" name="tamanhoTatuagem" placeholder="Ex: 15 cm" /></label>
@@ -55,16 +55,21 @@
             <label class="field"><span>Complexidade</span><select id="complexidade"><option value="simples">Simples</option><option value="media">Média</option><option value="alta">Alta</option><option value="realismo">Realismo / alta complexidade</option></select></label>
           </div>
           <label class="field"><span>Observações para o cliente</span><textarea id="observacoesCliente" rows="4" placeholder="Detalhes da proposta, sessões, cuidados ou combinações."></textarea></label>
+          <div class="reference-upload">
+            <label class="field"><span>Imagem de referência da tatuagem</span><input id="imagemReferencia" type="file" accept="image/png,image/jpeg,image/webp" /></label>
+            <figure id="previewImagem" class="reference-preview is-empty"><span>Nenhuma imagem adicionada</span></figure>
+          </div>
         </section>
 
         <section class="panel-card materials-panel">
-          <header class="section-title"><span>Materiais</span><h2>Estimativa de insumos</h2></header>
+          <header class="section-title"><span>Carrinho de materiais</span><h2>Itens estimados do orçamento</h2></header>
           <div class="materials-picker">
             <label class="field"><span>Item do estoque</span><select id="itemEstoqueSelect"></select></label>
             <label class="field"><span>Quantidade usada</span><input id="quantidadeUsada" inputmode="decimal" placeholder="1" /></label>
-            <button class="button button-secondary" id="adicionarMaterial" type="button">Adicionar material</button>
+            <button class="button button-secondary" id="adicionarMaterial" type="button">Adicionar ao carrinho</button>
           </div>
-          <div id="listaMateriais" class="material-list"></div>
+          <div id="detalheItemSelecionado" class="selected-stock-detail"></div>
+          <div id="listaMateriais" class="cart-list"></div>
         </section>
 
         <section class="panel-card presets-panel">
@@ -88,11 +93,12 @@
           <dl class="summary-list">
             <div><dt>Materiais</dt><dd id="totalMateriais">R$ 0,00</dd></div>
             <div><dt>Mão de obra</dt><dd id="totalMaoObra">R$ 0,00</dd></div>
-            <div><dt>Subtotal</dt><dd id="subtotalOrcamento">R$ 0,00</dd></div>
+            <div><dt>Subtotal com margem</dt><dd id="subtotalOrcamento">R$ 0,00</dd></div>
             <div class="summary-final"><dt>Valor final</dt><dd id="valorFinal">R$ 0,00</dd></div>
           </dl>
           <div class="action-stack">
             <button class="button button-primary" type="submit">Salvar orçamento</button>
+            <button class="button button-secondary" id="gerarPdf" type="button">Gerar PDF com imagem</button>
             <button class="button button-secondary" id="copiarResumo" type="button">Copiar resumo</button>
             <button class="button button-ghost" id="limparOrcamento" type="button">Limpar</button>
           </div>
@@ -102,6 +108,7 @@
     </main>
   </div>
   <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
   <script type="module" src="../src/pages/orcamentos.js"></script>
 </body>
 </html>
