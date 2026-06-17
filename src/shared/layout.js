@@ -42,7 +42,7 @@ function carregarCamadaVisualPro() {
   const link = document.createElement("link");
   link.id = "mishiro-pro-ui-css";
   link.rel = "stylesheet";
-  link.href = `${obterBase()}assets/css/pro-ui.css`;
+  link.href = `${obterBase()}assets/css/pro-ui.css?v=20260617.2`;
   document.head.append(link);
 }
 function obterBase() { return location.pathname.includes("/pages/") ? "../" : "./"; }
