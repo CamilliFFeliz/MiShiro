@@ -3,22 +3,25 @@
 .counter-pill { display:inline-grid; min-height:38px; place-items:center; padding:8px 12px; border:1px solid var(--border); border-radius:999px; background:rgba(54,10,117,.24); color:var(--text); font-weight:900; }
 .stock-list-panel { min-height: 240px; }
 .old-toolbar-grid { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:10px; align-items:end; margin-bottom:14px; }
-.inventory-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:14px; }
-.inventory-card { display:grid; gap:12px; padding:14px; border:1px solid var(--border); border-radius:20px; background:rgba(255,255,255,.052); }
+.inventory-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:16px; align-items:stretch; }
+.inventory-card { display:grid; grid-template-rows:auto auto auto 1fr auto; gap:14px; min-width:0; padding:16px; border:1px solid var(--border); border-radius:22px; background:linear-gradient(145deg, rgba(255,255,255,.075), rgba(255,255,255,.032)); box-shadow:0 18px 42px rgba(0,0,0,.22); }
+.inventory-card:hover { border-color:var(--border-strong); transform:translateY(-1px); transition:.18s ease; }
 .card-topline { display:flex; flex-wrap:wrap; justify-content:space-between; gap:8px; align-items:center; }
-.category-pill, .low-stock-tag { display:inline-flex; align-items:center; gap:6px; min-height:30px; padding:6px 10px; border-radius:999px; font-size:.76rem; font-weight:900; }
+.category-pill, .low-stock-tag { display:inline-flex; align-items:center; gap:6px; min-height:30px; padding:6px 10px; border-radius:999px; font-size:.74rem; font-weight:900; letter-spacing:.02em; }
 .category-pill { color:#fff; background:rgba(54,10,117,.34); border:1px solid var(--border); }
 .low-stock-tag { color:#fff; background:rgba(184,155,234,.25); border:1px solid var(--border-strong); }
-.inventory-title-row { display:grid; grid-template-columns:46px minmax(0,1fr); gap:10px; align-items:center; }
-.product-avatar { width:46px; height:46px; display:grid; place-items:center; border-radius:16px; color:#fff; background:linear-gradient(135deg,#7a45c7,#360a75); font-weight:1000; }
-.inventory-title-row h3 { color:var(--text); font-size:1rem; line-height:1.15; overflow-wrap:anywhere; }
-.inventory-title-row span { color:var(--text-soft); font-size:.86rem; }
+.inventory-title-row { display:grid; grid-template-columns:48px minmax(0,1fr); gap:12px; align-items:center; }
+.product-avatar { width:48px; height:48px; display:grid; place-items:center; border-radius:17px; color:#fff; background:linear-gradient(135deg,#7a45c7,#360a75); font-weight:1000; box-shadow:0 12px 30px rgba(54,10,117,.32); }
+.inventory-title-row h3 { color:var(--text); font-size:1.03rem; line-height:1.16; overflow-wrap:anywhere; }
+.inventory-title-row span { color:var(--text-soft); font-size:.86rem; line-height:1.35; }
 .stock-metric-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-.stock-metric { min-width:0; padding:10px; border:1px solid var(--border); border-radius:14px; background:rgba(255,255,255,.045); }
-.stock-metric span { display:block; color:var(--text-muted); font-size:.68rem; font-weight:900; text-transform:uppercase; letter-spacing:.06em; }
-.stock-metric strong { display:block; margin-top:4px; color:var(--text); font-size:clamp(.95rem,4vw,1.25rem); overflow-wrap:anywhere; }
-.stock-metric.is-featured { background:rgba(54,10,117,.22); border-color:var(--border-strong); }
-.card-note { color:var(--text-soft); font-size:.86rem; line-height:1.45; }
+.stock-metric { min-width:0; padding:11px; border:1px solid var(--border); border-radius:15px; background:rgba(255,255,255,.045); }
+.stock-metric span { display:block; color:var(--text-muted); font-size:.66rem; font-weight:900; text-transform:uppercase; letter-spacing:.06em; }
+.stock-metric strong { display:block; margin-top:5px; color:var(--text); font-size:clamp(.96rem,4vw,1.28rem); overflow-wrap:anywhere; }
+.stock-metric.is-featured { background:rgba(54,10,117,.23); border-color:var(--border-strong); }
+.card-note { align-self:end; color:var(--text-soft); font-size:.86rem; line-height:1.48; }
+.inventory-card-actions { display:grid; grid-template-columns:1fr; gap:8px; padding-top:2px; }
+.inventory-card-actions .button { width:100%; min-height:42px; }
 .category-choice-grid { display:grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap:10px; }
 .category-choice { display:grid; gap:5px; min-height: 92px; padding:12px; border:1px solid var(--border); border-radius:16px; background:rgba(255,255,255,.045); color:var(--text); text-align:left; }
 .category-choice strong { line-height:1.1; }
@@ -38,6 +41,7 @@
 .inventory-modal::backdrop { background:rgba(0,0,0,.62); backdrop-filter:blur(8px); }
 .modal-header { display:flex; justify-content:space-between; gap:12px; align-items:center; margin-bottom:14px; }
 .modal-header span { color:var(--text-muted); font-size:.72rem; font-weight:900; text-transform:uppercase; letter-spacing:.08em; }
+.modal-header h2 { color:var(--text); font-size:clamp(1.3rem,5vw,1.9rem); letter-spacing:-.045em; }
 .stock-form { display:grid; gap:14px; }
 .full-button { width:100%; }
 .chip-row { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px; }
@@ -45,5 +49,5 @@
 .filter-chip.is-active { color:#fff; background:rgba(54,10,117,.34); border-color:var(--border-strong); }
 .alert-list { display:grid; gap:8px; margin-bottom: 12px; }
 .alert-card { padding:10px 12px; border:1px solid rgba(184,155,234,.32); border-radius:14px; background:rgba(54,10,117,.2); color:var(--text); }
-@media (max-width: 720px) { .inventory-page-header, .inventory-header-actions { display:grid; justify-content:stretch; } .inventory-header-actions > * { width:100%; } .old-toolbar-grid, .category-choice-grid, .dynamic-fields-grid, .stock-metric-grid { grid-template-columns:1fr; } }
-@media (max-width: 420px) { .measure-input { grid-template-columns:1fr; } .inventory-grid { grid-template-columns:1fr; } }
+@media (max-width: 720px) { .inventory-page-header, .inventory-header-actions { display:grid; justify-content:stretch; } .inventory-header-actions > * { width:100%; } .old-toolbar-grid, .category-choice-grid, .dynamic-fields-grid, .stock-metric-grid { grid-template-columns:1fr; } .inventory-grid { grid-template-columns:1fr; } }
+@media (max-width: 420px) { .measure-input { grid-template-columns:1fr; } .inventory-card { padding:14px; border-radius:19px; } }
