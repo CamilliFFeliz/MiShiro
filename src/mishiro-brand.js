@@ -1,44 +1,19 @@
 const BRAND_NAME = "MiShiro Tattoo";
-const BRAND_TAGLINE = "Estúdio, proposta e custos";
-const BRAND_DESCRIPTION = "PWA offline para estoque, precificação e geração de propostas em PDF para estúdios de tatuagem.";
+const BRAND_TAGLINE = "Orçamentos, agenda e estoque";
+const BRAND_DESCRIPTION = "PWA mobile-first para estoque, agenda, precificação e geração de propostas em PDF para estúdios de tatuagem.";
 const BRAND_STYLESHEETS = [
   { id: "mishiro-brand-css", href: "assets/css/identidade.css" },
   { id: "mishiro-pdf-tools-css", href: "assets/css/pdf.css" },
   { id: "mishiro-mvc-css", href: "assets/css/mvc.css" },
   { id: "mishiro-theme-css", href: "assets/css/tema-mishiro.css" },
-  { id: "mishiro-logo-img-css", href: "assets/css/logos-img.css" }
+  { id: "mishiro-logo-img-css", href: "assets/css/logos-img.css" },
+  { id: "mishiro-mobile-polish-css", href: "assets/css/polimento-mobile.css" }
 ];
 const LOGOS = {
-  simboloClaro: [
-    "img/mishiro-simbolo-claro.jpg",
-    "img/mishiro-simbolo-claro.jpeg",
-    "img/logo-simbolo-claro.jpg",
-    "img/logo-clara.jpg",
-    "img/file_000000009ac071f58efa72eb3e63c450.jpg",
-    "assets/brand/mishiro-simbolo-claro.svg"
-  ],
-  simboloEscuro: [
-    "img/mishiro-simbolo-escuro.jpg",
-    "img/mishiro-simbolo-escuro.jpeg",
-    "img/logo-simbolo-escuro.jpg",
-    "img/logo-escura.jpg",
-    "img/file_000000001580720e9165a282ed095498.jpg",
-    "assets/brand/mishiro-simbolo-escuro.svg"
-  ],
-  logoClara: [
-    "img/mishiro-logo-clara.jpg",
-    "img/mishiro-logo-clara.jpeg",
-    "img/logo-clara.jpg",
-    "img/file_000000004b84720e9c9aa771dda79440.jpg",
-    "assets/brand/mishiro-logo-clara.svg"
-  ],
-  logoEscura: [
-    "img/mishiro-logo-escura.jpg",
-    "img/mishiro-logo-escura.jpeg",
-    "img/logo-escura.jpg",
-    "img/file_00000000d01c720e8a24e33fcaafef80.webp",
-    "assets/brand/mishiro-logo-escura.svg"
-  ]
+  simboloClaro: ["img/mishiro-simbolo-claro.jpg", "assets/brand/mishiro-simbolo-claro.svg"],
+  simboloEscuro: ["img/mishiro-simbolo-escuro.jpg.jpg", "assets/brand/mishiro-simbolo-escuro.svg"],
+  logoClaro: ["img/mishiro-logo-claro.jpg", "assets/brand/mishiro-logo-clara.svg"],
+  logoEscuro: ["img/mishiro-logo-escuro.jpg", "assets/brand/mishiro-logo-escura.svg"]
 };
 
 export function applyMiShiroBranding() {
@@ -89,7 +64,7 @@ function updateSidebarBrand() {
 
   if (brandName) brandName.textContent = BRAND_NAME;
   if (brandTagline) brandTagline.textContent = BRAND_TAGLINE;
-  if (sidebarFooterLabel) sidebarFooterLabel.textContent = "Base local";
+  if (sidebarFooterLabel) sidebarFooterLabel.textContent = "Banco local seguro";
 }
 
 function updateHeroBrand() {
@@ -99,27 +74,27 @@ function updateHeroBrand() {
   const heroLogo = document.createElement("div");
   heroLogo.className = "mishiro-hero-brand";
   heroLogo.append(
-    createBrandImage(LOGOS.logoClara, "mishiro-hero-logo brand-logo-clara"),
-    createBrandImage(LOGOS.logoEscura, "mishiro-hero-logo brand-logo-escura")
+    createBrandImage(LOGOS.logoClaro, "mishiro-hero-logo brand-logo-clara"),
+    createBrandImage(LOGOS.logoEscuro, "mishiro-hero-logo brand-logo-escura")
   );
   heroCard.prepend(heroLogo);
 }
 
 function updateHomeCopy() {
-  setText(".hero-card .eyebrow", BRAND_NAME);
-  setText("#homeTitle", "Orçamento, agenda e estoque com a identidade da MiShiro Tattoo.");
-  setText(".hero-card p", "Controle insumos, monte propostas, acompanhe a agenda e gere PDFs com uma estética alinhada ao estúdio: roxo profundo, contraste limpo e visual inspirado na marca MiShiro.");
+  setText(".hero-card .eyebrow", "MiShiro Tattoo • Gestão do estúdio");
+  setText("#homeTitle", "Orçamentos bonitos, estoque organizado e agenda pronta para o dia a dia do estúdio.");
+  setText(".hero-card p", "Monte propostas com identidade visual, acompanhe insumos, organize atendimentos e mantenha seus dados salvos localmente. Pensado primeiro para celular, mas confortável também no computador.");
 
   const flowSteps = document.querySelectorAll(".flow-card article");
-  updateFlowStep(flowSteps[0], "Cadastre o insumo", "Cada categoria usa uma ficha própria para evitar custo errado por unidade, ml, g ou metro.");
-  updateFlowStep(flowSteps[1], "Calcule o atendimento", "Some materiais, tempo, valor da hora, margem e desconto sem refazer contas manualmente.");
-  updateFlowStep(flowSteps[2], "Entregue o PDF", "Gere uma proposta limpa, com resumo financeiro, tabela de itens e imagem de referência.");
+  updateFlowStep(flowSteps[0], "Cadastre os materiais", "Registre cartuchos, tintas, descartáveis e demais insumos com custo real de uso.");
+  updateFlowStep(flowSteps[1], "Monte a proposta", "Some materiais, tempo de sessão, margem, desconto e imagem de referência em uma ficha clara.");
+  updateFlowStep(flowSteps[2], "Acompanhe o fechamento", "Exporte o PDF, marque aceite, agende a sessão e só desconte o estoque quando o trabalho for confirmado.");
 
   const pdfFeatureCard = Array.from(document.querySelectorAll(".feature-card")).find((card) => card.textContent.includes("PDF"));
   if (pdfFeatureCard) {
-    setTextWithin(pdfFeatureCard, "span", "PDF de proposta");
-    setTextWithin(pdfFeatureCard, "strong", "Resumo + referência");
-    setTextWithin(pdfFeatureCard, "p", "Exporta cliente, imagem, composição de custos, desconto e valor final em um layout mais profissional.");
+    setTextWithin(pdfFeatureCard, "span", "Proposta visual");
+    setTextWithin(pdfFeatureCard, "strong", "PDF para cliente");
+    setTextWithin(pdfFeatureCard, "p", "Gera uma proposta mais limpa, com dados essenciais, imagem de referência e valor final pronto para envio.");
   }
 }
 
