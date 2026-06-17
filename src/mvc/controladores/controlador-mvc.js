@@ -16,9 +16,11 @@ const STATUS_PIPELINE = [
 ];
 const DIAS_SEMANA = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 const FORMATADOR_MES = new Intl.DateTimeFormat("pt-BR", { month: "long", year: "numeric" });
+const FORMATADOR_DIA_COMPLETO = new Intl.DateTimeFormat("pt-BR", { weekday: "long", day: "2-digit", month: "long" });
 
 let elementos = {};
 let dataAgendaAtual = new Date();
+let dataAgendaSelecionada = formatarDataChave(new Date());
 
 export async function iniciarAplicacaoMvc() {
   await iniciarBancoLocal();
@@ -50,7 +52,7 @@ function criarTelasMvc() {
       <div class="alertas-estoque-mvc" id="alertasEstoqueMvc"></div>
       <div class="pipeline-mvc" id="pipelineMvc"></div>
     </section>
-    <section class="screen-panel tela-mvc" id="agendaMvcScreen" data-screen="agendaMvc">
+    <section class="screen-panel tela-mvc agenda-tela-mvc" id="agendaMvcScreen" data-screen="agendaMvc">
       <div class="section-header"><div><span>MVC / Agenda</span><h2>Agenda</h2></div><button class="secondary-button" id="atualizarAgendaMvc" type="button"><i data-lucide="refresh-cw"></i>Atualizar</button></div>
       <div class="agenda-cabecalho-mvc glass-panel">
         <button class="ghost-button" type="button" data-agenda-mes="anterior"><i data-lucide="chevron-left"></i>Anterior</button>
@@ -58,14 +60,35 @@ function criarTelasMvc() {
         <button class="ghost-button" type="button" data-agenda-mes="proximo">Próximo<i data-lucide="chevron-right"></i></button>
       </div>
       <div class="agenda-resumo-mvc" id="agendaResumoMvc"></div>
-      <div class="agenda-mvc calendario-mvc" id="agendaMvc"></div>
+      <section class="calendario-retangular-mvc glass-panel" aria-label="Calendário mensal">
+        <div class="agenda-semana-mvc">${DIAS_SEMANA.map((dia) => `<span>${dia}</span>`).join("")}</div>
+        <div class="agenda-mvc agenda-grade-mvc" id="agendaMvc"></div>
+      </section>
+      <section class="agenda-notas-mvc glass-panel" aria-labelledby="agendaNotasTituloMvc">
+        <div class="agenda-notas-cabecalho-mvc">
+          <div><span>Bloquinhos de notas</span><h3 id="agendaNotasTituloMvc">Agendamentos do dia</h3></div>
+          <small id="agendaNotasResumoMvc"></small>
+        </div>
+        <div class="agenda-notas-lista-mvc" id="agendaNotasListaMvc"></div>
+      </section>
     </section>
     <section class="screen-panel tela-mvc" id="backupMvcScreen" data-screen="backupMvc">
       <div class="section-header"><div><span>MVC / Segurança dos dados</span><h2>Backup local</h2></div></div>
       <div class="backup-mvc glass-panel"><p>O GitHub Pages não grava banco no servidor. O MiShiro usa IndexedDB no navegador e backup JSON para proteção.</p><div class="backup-acoes-mvc"><button class="primary-button" id="exportarBackupMvc" type="button"><i data-lucide="download"></i>Exportar backup completo</button><button class="secondary-button" id="importarBackupMvc" type="button"><i data-lucide="upload"></i>Importar backup</button><button class="ghost-button" id="persistenciaMvc" type="button"><i data-lucide="shield-check"></i>Ativar persistência local</button></div><input id="arquivoBackupMvc" type="file" accept="application/json,.json" hidden /><p class="status-mvc" id="statusBackupMvc" aria-live="polite"></p></div>
     </section>
   `);
-  elementos = { pipeline: document.querySelector("#pipelineMvc"), agenda: document.querySelector("#agendaMvc"), agendaMes: document.querySelector("#agendaMesAtualMvc"), agendaResumo: document.querySelector("#agendaResumoMvc"), alertas: document.querySelector("#alertasEstoqueMvc"), statusBackup: document.querySelector("#statusBackupMvc"), arquivoBackup: document.querySelector("#arquivoBackupMvc") };
+  elementos = {
+    pipeline: document.querySelector("#pipelineMvc"),
+    agenda: document.querySelector("#agendaMvc"),
+    agendaMes: document.querySelector("#agendaMesAtualMvc"),
+    agendaResumo: document.querySelector("#agendaResumoMvc"),
+    agendaNotasTitulo: document.querySelector("#agendaNotasTituloMvc"),
+    agendaNotasResumo: document.querySelector("#agendaNotasResumoMvc"),
+    agendaNotasLista: document.querySelector("#agendaNotasListaMvc"),
+    alertas: document.querySelector("#alertasEstoqueMvc"),
+    statusBackup: document.querySelector("#statusBackupMvc"),
+    arquivoBackup: document.querySelector("#arquivoBackupMvc")
+  };
   atualizarIcones();
 }
 
@@ -74,8 +97,16 @@ function vincularEventosMvc() {
     const destino = evento.target.closest("[data-screen-target]");
     if (destino) fecharMenuResponsivo();
     if (destino?.dataset.screenTarget?.endsWith("Mvc")) abrirTelaMvc(destino.dataset.screenTarget);
+
     const botaoMes = evento.target.closest("[data-agenda-mes]");
     if (botaoMes) await navegarMesAgenda(botaoMes.dataset.agendaMes);
+
+    const diaAgenda = evento.target.closest("[data-agenda-dia]");
+    if (diaAgenda) {
+      dataAgendaSelecionada = diaAgenda.dataset.agendaDia;
+      await renderizarAgendaMvc();
+    }
+
     const acao = evento.target.closest("[data-acao-mvc]");
     if (acao) await executarAcaoMvc(acao.dataset.acaoMvc, acao.dataset.orcamentoId);
   });
@@ -93,6 +124,7 @@ function vincularEventosMvc() {
 async function navegarMesAgenda(direcao) {
   const ajuste = direcao === "proximo" ? 1 : -1;
   dataAgendaAtual = new Date(dataAgendaAtual.getFullYear(), dataAgendaAtual.getMonth() + ajuste, 1);
+  dataAgendaSelecionada = formatarDataChave(new Date(dataAgendaAtual.getFullYear(), dataAgendaAtual.getMonth(), 1));
   await renderizarAgendaMvc();
 }
 
@@ -115,6 +147,8 @@ async function agendarPeloPrompt(orcamentoId) {
   const horaInicio = window.prompt("Hora de início:", "10:00") || "";
   const horaFim = window.prompt("Hora de fim:", "") || "";
   await agendarOrcamento(orcamentoId, { data, horaInicio, horaFim });
+  dataAgendaAtual = converterData(data) || dataAgendaAtual;
+  dataAgendaSelecionada = data;
 }
 
 function abrirTelaMvc(nomeTela) {
@@ -149,23 +183,45 @@ async function renderizarAgendaMvc() {
   const inicioGrade = new Date(ano, mes, 1 - primeiroDia.getDay());
   const dias = Array.from({ length: 42 }, (_, indice) => new Date(inicioGrade.getFullYear(), inicioGrade.getMonth(), inicioGrade.getDate() + indice));
   const agendamentosMes = agendamentos.filter((item) => converterData(item.data)?.getMonth() === mes && converterData(item.data)?.getFullYear() === ano);
+  const agendamentosDia = agendamentos.filter((item) => item.data === dataAgendaSelecionada);
 
   if (elementos.agendaMes) elementos.agendaMes.textContent = capitalizar(FORMATADOR_MES.format(dataAgendaAtual));
-  if (elementos.agendaResumo) elementos.agendaResumo.innerHTML = `<article><strong>${agendamentosMes.length}</strong><span>agendamentos no mês</span></article><article><strong>${contarProximosAgendamentos(agendamentos)}</strong><span>próximos 7 dias</span></article><article><strong>${agendamentos.filter((item) => item.status === "agendado").length}</strong><span>pendentes</span></article>`;
+  if (elementos.agendaResumo) elementos.agendaResumo.innerHTML = `<article><strong>${agendamentosMes.length}</strong><span>agendamentos no mês</span></article><article><strong>${contarProximosAgendamentos(agendamentos)}</strong><span>próximos 7 dias</span></article><article><strong>${agendamentosDia.length}</strong><span>no dia selecionado</span></article>`;
 
-  elementos.agenda.innerHTML = `<div class="agenda-semana-mvc">${DIAS_SEMANA.map((dia) => `<span>${dia}</span>`).join("")}</div><div class="agenda-grade-mvc">${dias.map((dia) => renderizarDiaCalendario(dia, mes, agendamentos, orcamentosPorId)).join("")}</div>`;
+  elementos.agenda.innerHTML = dias.map((dia) => renderizarDiaCalendario(dia, mes, agendamentos, orcamentosPorId)).join("");
+  renderizarBlocosNotasAgenda(agendamentosDia.length ? agendamentosDia : agendamentosMes, orcamentosPorId, agendamentosDia.length > 0);
 }
 
 function renderizarDiaCalendario(dia, mesAtual, agendamentos, orcamentosPorId) {
   const chave = formatarDataChave(dia);
   const eventos = agendamentos.filter((item) => item.data === chave);
   const foraDoMes = dia.getMonth() !== mesAtual;
-  const hoje = chave === new Date().toISOString().slice(0, 10);
-  return `<article class="dia-agenda-mvc ${foraDoMes ? "fora-mes" : ""} ${hoje ? "hoje" : ""}"><header><strong>${dia.getDate()}</strong>${eventos.length ? `<span>${eventos.length}</span>` : ""}</header><div>${eventos.map((evento) => renderizarEventoCalendario(evento, orcamentosPorId.get(evento.orcamentoId))).join("")}</div></article>`;
+  const hoje = chave === formatarDataChave(new Date());
+  const selecionado = chave === dataAgendaSelecionada;
+  const primeiroEvento = eventos[0];
+  const primeiroOrcamento = primeiroEvento ? orcamentosPorId.get(primeiroEvento.orcamentoId) : null;
+  return `<button type="button" class="dia-calendario-mvc ${foraDoMes ? "fora-mes" : ""} ${hoje ? "hoje" : ""} ${selecionado ? "selecionado" : ""}" data-agenda-dia="${chave}">
+    <span class="numero-dia-mvc">${dia.getDate()}</span>
+    ${eventos.length ? `<span class="marcador-dia-mvc">${eventos.length}</span>` : ""}
+    <span class="resumo-dia-mvc">${primeiroEvento ? `${primeiroEvento.horaInicio || "Horário"} · ${primeiroOrcamento?.clienteNomeSnapshot || "Cliente"}` : ""}</span>
+  </button>`;
 }
 
-function renderizarEventoCalendario(evento, orcamento) {
-  return `<section class="evento-agenda-mvc"><strong>${evento.horaInicio || "Horário"}</strong><span>${orcamento?.clienteNomeSnapshot || "Cliente"}</span><small>${orcamento?.nome || "Orçamento"}</small></section>`;
+function renderizarBlocosNotasAgenda(agendamentos, orcamentosPorId, filtradoPorDia) {
+  if (!elementos.agendaNotasLista) return;
+  const dataSelecionada = converterData(dataAgendaSelecionada);
+  if (elementos.agendaNotasTitulo) elementos.agendaNotasTitulo.textContent = filtradoPorDia && dataSelecionada ? capitalizar(FORMATADOR_DIA_COMPLETO.format(dataSelecionada)) : "Agendamentos do mês";
+  if (elementos.agendaNotasResumo) elementos.agendaNotasResumo.textContent = filtradoPorDia ? "Mostrando apenas o dia selecionado" : "Nenhum evento neste dia; mostrando o mês";
+  elementos.agendaNotasLista.innerHTML = agendamentos.length ? agendamentos.map((evento) => renderizarBlocoNotaAgenda(evento, orcamentosPorId.get(evento.orcamentoId))).join("") : `<article class="nota-agenda-mvc nota-vazia-mvc"><strong>Nenhum agendamento</strong><p>Os bloquinhos aparecerão aqui quando houver orçamentos agendados.</p></article>`;
+}
+
+function renderizarBlocoNotaAgenda(evento, orcamento) {
+  return `<article class="nota-agenda-mvc">
+    <div class="nota-topo-mvc"><span>${formatarDataNota(evento.data)}</span><strong>${evento.horaInicio || "Horário a definir"}</strong></div>
+    <h4>${orcamento?.clienteNomeSnapshot || "Cliente não informado"}</h4>
+    <p>${orcamento?.nome || "Orçamento sem nome"}</p>
+    <small>${evento.observacoes || "Sem observações cadastradas."}</small>
+  </article>`;
 }
 
 async function renderizarAlertasEstoqueMvc() {
@@ -215,6 +271,11 @@ function converterData(valor) {
 
 function formatarDataChave(data) {
   return `${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, "0")}-${String(data.getDate()).padStart(2, "0")}`;
+}
+
+function formatarDataNota(valor) {
+  const data = converterData(valor);
+  return data ? `${String(data.getDate()).padStart(2, "0")}/${String(data.getMonth() + 1).padStart(2, "0")}` : "Sem data";
 }
 
 function contarProximosAgendamentos(agendamentos) {
