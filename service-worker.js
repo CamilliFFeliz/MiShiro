@@ -1,5 +1,5 @@
-const CACHE_NAME = "mishiro-static-v27-estoque-antigo-restaurado";
-const RUNTIME_CACHE_NAME = "mishiro-runtime-v27-estoque-antigo-restaurado";
+const CACHE_NAME = "mishiro-static-v28-edicao-estoque";
+const RUNTIME_CACHE_NAME = "mishiro-runtime-v28-edicao-estoque";
 const APP_CACHE_PREFIXES = ["calculadora-tattoo-", "mishiro-orcamentos-", "mishiro-static-", "mishiro-runtime-"];
 const CURRENT_CACHE_NAMES = [CACHE_NAME, RUNTIME_CACHE_NAME];
 const APP_SHELL_URL = "./index.html";
