@@ -1,64 +1,63 @@
-const CACHE_NAME = "mishiro-orcamentos-static-v23-orcamento-backup-corrigidos";
-const RUNTIME_CACHE_NAME = "mishiro-orcamentos-runtime-v23-orcamento-backup-corrigidos";
-const APP_CACHE_PREFIXES = ["calculadora-tattoo-", "mishiro-orcamentos-"];
+const CACHE_NAME = "mishiro-static-v24-paginas-reais";
+const RUNTIME_CACHE_NAME = "mishiro-runtime-v24-paginas-reais";
+const APP_CACHE_PREFIXES = ["calculadora-tattoo-", "mishiro-orcamentos-", "mishiro-static-", "mishiro-runtime-"];
 const CURRENT_CACHE_NAMES = [CACHE_NAME, RUNTIME_CACHE_NAME];
 const APP_SHELL_URL = "./index.html";
 const LUCIDE_CDN_URL = "https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js";
-const HTML2PDF_CDN_URL = "https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js";
-const EXTERNAL_ASSET_URLS = [LUCIDE_CDN_URL, HTML2PDF_CDN_URL];
 const APP_ASSETS = [
   "./",
   APP_SHELL_URL,
-  "./style.css",
+  "./pages/dashboard.html",
+  "./pages/orcamentos.html",
+  "./pages/estoque.html",
+  "./pages/agenda.html",
+  "./pages/pipeline.html",
+  "./pages/relatorios.html",
+  "./pages/backup.html",
+  "./pages/configuracoes.html",
   "./assets/css/base.css",
-  "./assets/css/identidade.css",
-  "./assets/css/pdf.css",
-  "./assets/css/experiencia.css",
-  "./assets/css/estudio-pro.css",
-  "./assets/css/mvc.css",
-  "./assets/css/tema-mishiro.css",
-  "./assets/css/logos-img.css",
-  "./assets/css/polimento-mobile.css",
-  "./assets/css/paleta-360a75.css",
-  "./assets/css/orcamento-backup.css",
+  "./assets/css/tokens.css",
+  "./assets/css/layout.css",
+  "./assets/css/components.css",
+  "./assets/css/dashboard.css",
+  "./assets/css/orcamentos.css",
+  "./assets/css/estoque.css",
+  "./assets/css/agenda.css",
+  "./assets/css/pipeline.css",
+  "./assets/css/relatorios.css",
+  "./assets/css/backup.css",
+  "./assets/css/configuracoes.css",
   "./assets/favicon/favicon.svg",
   "./img/mishiro-logo-claro.jpg",
   "./img/mishiro-logo-escuro.jpg",
   "./img/mishiro-simbolo-claro.jpg",
   "./img/mishiro-simbolo-escuro.jpg.jpg",
-  "./assets/brand/mishiro-logo-clara.svg",
-  "./assets/brand/mishiro-logo-escura.svg",
-  "./assets/brand/mishiro-simbolo-claro.svg",
-  "./assets/brand/mishiro-simbolo-escuro.svg",
-  "./js/main.js",
-  "./src/main.js",
-  "./src/mishiro-brand.js",
-  "./src/mishiro-brand-v2.js",
-  "./src/mishiro-navegacao-segura.js",
-  "./src/mishiro-orcamento.js",
-  "./src/mishiro-backup-json.js",
-  "./src/mishiro-pdf-tools.js",
-  "./src/mishiro-pdf-direct.js",
-  "./src/mishiro-ux.js",
-  "./src/mishiro-studio-pro.js",
+  "./src/shared/layout.js",
+  "./src/shared/storage.js",
+  "./src/shared/formatters.js",
+  "./src/shared/ui.js",
+  "./src/pages/dashboard.js",
+  "./src/pages/orcamentos.js",
+  "./src/pages/estoque.js",
+  "./src/pages/agenda.js",
+  "./src/pages/pipeline.js",
+  "./src/pages/relatorios.js",
+  "./src/pages/backup.js",
+  "./src/pages/configuracoes.js",
+  "./src/services/estoque-service.js",
+  "./src/services/orcamentos-service.js",
+  "./src/services/agenda-service.js",
+  "./src/services/backup-service.js",
+  "./src/models/banco-local.js",
+  "./src/models/esquema-banco.js",
   "./src/mvc/modelos/esquema-banco.js",
   "./src/mvc/modelos/banco-local.js",
   "./src/mvc/modelos/backup-local.js",
   "./src/mvc/servicos/servico-estoque.js",
   "./src/mvc/servicos/servico-orcamentos.js",
   "./src/mvc/servicos/servico-agendamentos.js",
-  "./src/mvc/controladores/controlador-mvc.js",
-  "./src/dom.js",
-  "./src/state.js",
-  "./src/budget.js",
-  "./src/inventory.js",
-  "./src/pdf.js",
-  "./src/pwa.js",
-  "./src/utils.js",
   "./manifest.webmanifest",
-  "./icons/icon.svg",
-  "./icons/mishiro.svg",
-  "./assets/icons/mishiro.svg"
+  "./icons/icon.svg"
 ];
 
 self.addEventListener("install", (event) => {
@@ -81,13 +80,13 @@ self.addEventListener("message", (event) => {
 async function cacheApplicationShell() {
   const cache = await caches.open(CACHE_NAME);
   await cache.addAll(APP_ASSETS);
-  await Promise.all(EXTERNAL_ASSET_URLS.map(cacheExternalAsset));
+  await cacheExternalAsset(LUCIDE_CDN_URL);
 }
 
 async function cacheExternalAsset(assetUrl) {
   try {
     const response = await fetch(assetUrl, { mode: "cors" });
-    if (response && response.ok) {
+    if (response?.ok) {
       const cache = await caches.open(RUNTIME_CACHE_NAME);
       await cache.put(assetUrl, response);
     }
@@ -107,11 +106,11 @@ async function handleRequest(request) {
 }
 
 async function getExternalAssetResponse(request, requestUrl) {
-  if (!EXTERNAL_ASSET_URLS.includes(requestUrl.href)) return fetch(request);
+  if (requestUrl.href !== LUCIDE_CDN_URL) return fetch(request);
   const cachedResponse = await caches.match(request);
   try {
     const networkResponse = await fetch(request);
-    if (networkResponse && networkResponse.ok) {
+    if (networkResponse?.ok) {
       const cache = await caches.open(RUNTIME_CACHE_NAME);
       await cache.put(request, networkResponse.clone());
       return networkResponse;
@@ -123,13 +122,13 @@ async function getExternalAssetResponse(request, requestUrl) {
 async function getNavigationResponse(request) {
   try {
     const networkResponse = await fetch(request);
-    if (networkResponse && networkResponse.ok) {
+    if (networkResponse?.ok) {
       const cache = await caches.open(CACHE_NAME);
-      await cache.put(APP_SHELL_URL, networkResponse.clone());
+      await cache.put(request, networkResponse.clone());
     }
     return networkResponse;
   } catch {
-    const cachedResponse = await caches.match(APP_SHELL_URL);
+    const cachedResponse = await caches.match(request) || await caches.match(APP_SHELL_URL);
     return cachedResponse || Response.error();
   }
 }
@@ -138,7 +137,7 @@ async function getLocalAssetResponse(request) {
   const cachedResponse = await caches.match(request);
   try {
     const networkResponse = await fetch(request);
-    if (networkResponse && networkResponse.ok) {
+    if (networkResponse?.ok) {
       const cache = await caches.open(CACHE_NAME);
       await cache.put(request, networkResponse.clone());
       return networkResponse;
