@@ -1,0 +1,3 @@
+.backup-grid { display:grid; gap: clamp(14px,4vw,22px); }
+.backup-grid .panel-card { display:grid; gap:14px; }
+@media (min-width: 840px) { .backup-grid { grid-template-columns: 1fr 1fr; } }
