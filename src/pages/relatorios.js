@@ -31,7 +31,7 @@ function renderCategorias(itens) {
   });
   const lista = Array.from(grupos.values()).sort((a, b) => b.total - a.total);
   const max = Math.max(...lista.map((item) => item.total), 1);
-  renderLista("#graficoCategorias", lista, (item) => `${item.nome} | ${formatarMoeda(item.total)} | ${item.quantidade} itens | ${Math.max((item.total / max) * 100, 4).toFixed(0)}%`);
+  renderLista("#graficoCategorias", lista, (item) => `<header><strong>${escapeHtml(item.nome)}</strong><span>${formatarMoeda(item.total)}</span></header><p>${item.quantidade} ${item.quantidade === 1 ? "item cadastrado" : "itens cadastrados"}</p><div class="report-bar"><i style="width:${Math.max((item.total / max) * 100, 4).toFixed(0)}%"></i></div>`);
 }
 
 function renderSaudeEstoque(itens) {
@@ -41,8 +41,12 @@ function renderSaudeEstoque(itens) {
   setText("#itensEmFalta", falta.length);
   setText("#itensBaixos", baixo.length);
   setText("#itensOk", ok.length);
-  renderLista("#listaEmFalta", falta, (item) => `${item.nome} | ${item.categoria} | ${Number(item.quantidadeAtual)} ${item.unidadeMedida}`);
-  renderLista("#listaBaixo", baixo, (item) => `${item.nome} | ${item.categoria} | ${Number(item.quantidadeAtual)} ${item.unidadeMedida} / mínimo ${Number(item.quantidadeMinima)}`);
+  renderLista("#listaEmFalta", falta, itemLinhaEstoque);
+  renderLista("#listaBaixo", baixo, itemLinhaEstoque);
+}
+
+function itemLinhaEstoque(item) {
+  return `<header><strong>${escapeHtml(item.nome)}</strong><span>${escapeHtml(item.categoria)}</span></header><p>${Number(item.quantidadeAtual)} ${escapeHtml(item.unidadeMedida)} em estoque · mínimo ${Number(item.quantidadeMinima)}</p>`;
 }
 
 function renderAgenda(agendamentos) {
@@ -62,8 +66,8 @@ function renderAgenda(agendamentos) {
   setText("#agendaConcluidos", concluidos.length);
   setText("#agendaProximos", proximos.length);
   setText("#taxaCancelamento", `${doMes.length ? Math.round((cancelados.length / doMes.length) * 100) : 0}%`);
-  renderLista("#listaCancelamentos", cancelados, (item) => `${formatarData(item.data)} | ${item.motivoCancelamento || "Sem motivo informado"}`);
-  renderLista("#listaProximosAgenda", proximos.slice(0, 8), (item) => `${formatarData(item.data)} ${item.horaInicio || ""} | ${item.status}`);
+  renderLista("#listaCancelamentos", cancelados, (item) => `<header><strong>${formatarData(item.data)}</strong><span>Cancelado</span></header><p>${escapeHtml(item.motivoCancelamento || "Sem motivo informado")}</p>`);
+  renderLista("#listaProximosAgenda", proximos.slice(0, 8), (item) => `<header><strong>${formatarData(item.data)} ${escapeHtml(item.horaInicio || "")}</strong><span>${escapeHtml(rotuloAgenda(item.status))}</span></header><p>${escapeHtml(item.observacoes || "Atendimento agendado")}</p>`);
 }
 
 function renderLista(selector, lista, formatador) {
@@ -71,21 +75,29 @@ function renderLista(selector, lista, formatador) {
   if (!alvo) return;
   alvo.replaceChildren();
   if (!lista.length) {
-    const vazio = document.createElement("p");
-    vazio.className = "empty-state";
-    vazio.textContent = "Sem registros para exibir.";
-    alvo.append(vazio);
+    const estado = document.createElement("p");
+    estado.className = "empty-state report-empty-state";
+    estado.textContent = "Sem registros para exibir.";
+    alvo.append(estado);
     return;
   }
   lista.forEach((item) => {
     const artigo = document.createElement("article");
     artigo.className = "report-row compact-row";
-    artigo.textContent = formatador(item);
+    artigo.innerHTML = formatador(item);
     alvo.append(artigo);
   });
+}
+
+function rotuloAgenda(status) {
+  return ({ agendado: "Agendado", confirmado: "Confirmado", remarcado: "Remarcado", realizado: "Realizado", concluido: "Concluído", cancelado: "Cancelado" })[status] || status || "Agenda";
 }
 
 function setText(selector, valor) {
   const alvo = document.querySelector(selector);
   if (alvo) alvo.textContent = valor;
+}
+
+function escapeHtml(valor) {
+  return String(valor ?? "").replace(/[&<>'"]/g, (caractere) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" })[caractere]);
 }
