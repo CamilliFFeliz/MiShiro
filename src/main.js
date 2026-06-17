@@ -9,6 +9,7 @@ import { iniciarAplicacaoMvc } from "./mvc/controladores/controlador-mvc.js";
 import { registerServiceWorkerUpdateFlow } from "./pwa.js";
 
 document.addEventListener("DOMContentLoaded", async () => {
+  carregarEstiloMvc();
   await initializeApp();
   applyMiShiroBranding();
   applyMiShiroBrandV2();
@@ -19,3 +20,12 @@ document.addEventListener("DOMContentLoaded", async () => {
   setupMiShiroExperienceLayer();
   registerServiceWorkerUpdateFlow();
 });
+
+function carregarEstiloMvc() {
+  if (document.getElementById("mishiro-mvc-css")) return;
+  const folha = document.createElement("link");
+  folha.id = "mishiro-mvc-css";
+  folha.rel = "stylesheet";
+  folha.href = "assets/css/mvc.css";
+  document.head.append(folha);
+}

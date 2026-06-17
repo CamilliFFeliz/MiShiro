@@ -2,9 +2,9 @@ const BRAND_NAME = "MiShiro Orçamentos";
 const BRAND_TAGLINE = "Propostas e custos para tattoo";
 const BRAND_DESCRIPTION = "PWA offline para estoque, precificação e geração de propostas em PDF para estúdios de tatuagem.";
 const BRAND_STYLESHEETS = [
-  { id: "mishiro-brand-css", href: "mishiro.css" },
-  { id: "mishiro-pdf-tools-css", href: "mishiro-pdf-tools.css" },
-  { id: "mishiro-mvc-css", href: "mvc-mishiro.css" }
+  { id: "mishiro-brand-css", href: "assets/css/identidade.css" },
+  { id: "mishiro-pdf-tools-css", href: "assets/css/pdf.css" },
+  { id: "mishiro-mvc-css", href: "assets/css/mvc.css" }
 ];
 const SVG_NAMESPACE = "http://www.w3.org/2000/svg";
 
@@ -74,7 +74,7 @@ function updateHomeCopy() {
 
   const flowSteps = document.querySelectorAll(".flow-card article");
   updateFlowStep(flowSteps[0], "Cadastre o insumo", "Cada categoria usa uma ficha própria para evitar custo errado por unidade, ml, g ou metro.");
-  updateFlowStep(flowSteps[1], "Calcule o atendimento", "Some material usado, duração, valor da hora, margem e desconto sem refazer contas manualmente.");
+  updateFlowStep(flowSteps[1], "Calcule o atendimento", "Some materiais, tempo, valor da hora, margem e desconto sem refazer contas manualmente.");
   updateFlowStep(flowSteps[2], "Entregue o PDF", "Gere uma proposta limpa, com resumo financeiro, tabela de itens e imagem de referência.");
 
   const pdfFeatureCard = Array.from(document.querySelectorAll(".feature-card"))
