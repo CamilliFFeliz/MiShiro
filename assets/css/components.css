@@ -18,13 +18,16 @@
 .field { display:grid; gap:6px; min-width:0; }
 .field span { color:var(--text-muted); font-size:.78rem; font-weight:850; }
 .field input, .field select, .field textarea { min-height:46px; padding: 10px 12px; border:1px solid var(--border); border-radius: 14px; color:var(--text); background: rgba(255,255,255,.07); }
+.field select { appearance: none; -webkit-appearance: none; padding-right: 38px; background-image: linear-gradient(45deg, transparent 50%, var(--color-purple-200) 50%), linear-gradient(135deg, var(--color-purple-200) 50%, transparent 50%); background-position: calc(100% - 20px) 20px, calc(100% - 14px) 20px; background-size: 6px 6px, 6px 6px; background-repeat: no-repeat; }
+.field select option { color: #130f18; background: #ffffff; }
+html[data-theme="dark"] .field select option { color: #ffffff; background: #210548; }
 .field textarea { resize: vertical; min-height: 110px; }
 .field input:focus, .field select:focus, .field textarea:focus { border-color: var(--color-purple-300); box-shadow: 0 0 0 4px rgba(54,10,117,.24); outline:none; }
 .form-status { min-height: 22px; color: var(--text-soft); }
-.note-list, .stock-list, .material-list, .report-list { display:grid; gap:10px; }
-.note-card, .stock-card, .material-card, .pipeline-card, .report-row { min-width:0; padding: 12px; border:1px solid var(--border); border-radius: 16px; background: rgba(255,255,255,.055); }
-.note-card strong, .stock-card strong, .material-card strong, .pipeline-card strong { display:block; color:var(--text); overflow-wrap:anywhere; }
-.note-card span, .stock-card span, .material-card span, .pipeline-card span { color:var(--text-soft); font-size:.88rem; }
+.note-list, .stock-list, .material-list, .cart-list, .report-list { display:grid; gap:10px; }
+.note-card, .stock-card, .material-card, .cart-card-row, .pipeline-card, .report-row { min-width:0; padding: 12px; border:1px solid var(--border); border-radius: 16px; background: rgba(255,255,255,.055); }
+.note-card strong, .stock-card strong, .material-card strong, .cart-card-row strong, .pipeline-card strong { display:block; color:var(--text); overflow-wrap:anywhere; }
+.note-card span, .stock-card span, .material-card span, .cart-card-row span, .pipeline-card span { color:var(--text-soft); font-size:.88rem; }
 .empty-state { padding: 14px; border:1px dashed var(--border); border-radius: 16px; color:var(--text-soft); text-align:center; }
 .toolbar-inline { display:grid; gap:10px; margin-bottom: 14px; }
 @media (max-width: 720px) { .metric-grid, .form-grid.compact { grid-template-columns:1fr; } .action-row > *, .action-stack > * { width:100%; } .button { width:100%; } }
