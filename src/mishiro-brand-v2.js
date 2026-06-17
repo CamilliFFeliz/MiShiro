@@ -6,7 +6,8 @@ const EXTRA_STYLES = [
   ["mishiro-theme-css", "assets/css/tema-mishiro.css"],
   ["mishiro-logo-img-css", "assets/css/logos-img.css"],
   ["mishiro-mobile-polish-css", "assets/css/polimento-mobile.css"],
-  ["mishiro-paleta-final-css", "assets/css/paleta-360a75.css"]
+  ["mishiro-paleta-final-css", "assets/css/paleta-360a75.css"],
+  ["mishiro-orcamento-backup-css", "assets/css/orcamento-backup.css"]
 ];
 const NAV_ICONS = new Map([
   ["home", "layout-dashboard"],
