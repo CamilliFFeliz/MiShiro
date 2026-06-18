@@ -3,17 +3,21 @@ import { criarIdentificador, LOJAS, normalizarNumero, obterDataIso, STATUS_ORCAM
 import { criarMovimentoEstoque } from "./servico-estoque.js";
 
 const DIAS_RETENCAO_RECUSADOS = 10;
+const STATUS_NAO_EDITAVEIS = new Set([STATUS_ORCAMENTO.concluido, STATUS_ORCAMENTO.cancelado, STATUS_ORCAMENTO.recusado]);
 
 export async function listarOrcamentos() {
-  return obterTodos(LOJAS.orcamentos);
+  const registros = await obterTodos(LOJAS.orcamentos);
+  return registros.map(normalizarOrcamentoLegado);
 }
 
 export async function listarOrcamentosPorStatus(status) {
-  return obterPorIndice(LOJAS.orcamentos, "porStatus", status);
+  const registros = await obterPorIndice(LOJAS.orcamentos, "porStatus", status);
+  return registros.map(normalizarOrcamentoLegado);
 }
 
 export async function obterOrcamento(orcamentoId) {
-  return obterPorId(LOJAS.orcamentos, orcamentoId);
+  const registro = await obterPorId(LOJAS.orcamentos, orcamentoId);
+  return registro ? normalizarOrcamentoLegado(registro) : null;
 }
 
 export async function listarItensOrcamento(orcamentoId) {
@@ -21,8 +25,9 @@ export async function listarItensOrcamento(orcamentoId) {
 }
 
 export async function criarOrcamento(dados = {}, itens = []) {
+  validarCamposObrigatorios(dados);
   const agora = obterDataIso();
-  const orcamento = montarOrcamento(dados, {}, agora);
+  const orcamento = recalcularFinanceiro(montarOrcamento(dados, {}, agora), itens);
   await gravarOrcamentoComItens(orcamento, itens, { substituirItens: false });
   return orcamento;
 }
@@ -30,7 +35,10 @@ export async function criarOrcamento(dados = {}, itens = []) {
 export async function atualizarOrcamento(orcamentoId, dados = {}, itens = []) {
   const atual = await obterOrcamento(orcamentoId);
   if (!atual) throw new Error("Orçamento não encontrado para edição.");
-  const orcamento = montarOrcamento({ ...dados, id: orcamentoId, status: dados.status || atual.status, criadoEm: atual.criadoEm }, atual, obterDataIso());
+  if (STATUS_NAO_EDITAVEIS.has(atual.status) && dados.status !== atual.status) throw new Error("Este orçamento está encerrado e não pode voltar para um status ativo sem uma reabertura explícita.");
+  validarCamposObrigatorios({ ...atual, ...dados });
+  const montado = montarOrcamento({ ...dados, id: orcamentoId, status: dados.status || atual.status, criadoEm: atual.criadoEm }, atual, obterDataIso());
+  const orcamento = recalcularFinanceiro(montado, itens);
   await gravarOrcamentoComItens(orcamento, itens, { substituirItens: true });
   return orcamento;
 }
@@ -60,24 +68,34 @@ export async function limparOrcamentosRecusadosExpirados(referencia = new Date()
   return expirados.length;
 }
 
-export async function marcarOrcamentoComoExportado(orcamentoId) {
-  return atualizarStatusOrcamento(orcamentoId, STATUS_ORCAMENTO.aguardandoCliente, { exportadoEm: obterDataIso(), aguardandoClienteEm: obterDataIso() });
+export async function enviarParaAprovacao(orcamentoId) {
+  return atualizarStatusOrcamento(orcamentoId, STATUS_ORCAMENTO.aguardandoCliente, (orcamento, agora) => {
+    validarCamposObrigatorios(orcamento);
+    if ([STATUS_ORCAMENTO.recusado, STATUS_ORCAMENTO.cancelado, STATUS_ORCAMENTO.concluido].includes(orcamento.status)) throw new Error("Um orçamento encerrado não pode ser enviado para aprovação.");
+    return { aguardandoClienteEm: agora };
+  });
 }
 
-export async function enviarParaAprovacao(orcamentoId) {
-  return atualizarStatusOrcamento(orcamentoId, STATUS_ORCAMENTO.aguardandoCliente, { aguardandoClienteEm: obterDataIso() });
+export async function marcarOrcamentoComoExportado(orcamentoId) {
+  return enviarParaAprovacao(orcamentoId);
 }
 
 export async function aceitarOrcamento(orcamentoId) {
-  return atualizarStatusOrcamento(orcamentoId, STATUS_ORCAMENTO.aceito, { aceitoEm: obterDataIso() });
+  return atualizarStatusOrcamento(orcamentoId, STATUS_ORCAMENTO.aceito, (orcamento, agora) => {
+    if (orcamento.status !== STATUS_ORCAMENTO.aguardandoCliente) throw new Error("Somente propostas aguardando aprovação podem ser aprovadas.");
+    return { aceitoEm: agora, motivoRecusa: "" };
+  });
 }
 
 export async function recusarOrcamento(orcamentoId, motivo = "") {
-  return atualizarStatusOrcamento(orcamentoId, STATUS_ORCAMENTO.recusado, { recusadoEm: obterDataIso(), motivoRecusa: String(motivo || "") });
+  return atualizarStatusOrcamento(orcamentoId, STATUS_ORCAMENTO.recusado, (orcamento, agora) => {
+    if (orcamento.status !== STATUS_ORCAMENTO.aguardandoCliente) throw new Error("Somente propostas aguardando aprovação podem ser reprovadas.");
+    return { recusadoEm: agora, motivoRecusa: String(motivo || "") };
+  });
 }
 
 export async function concluirOrcamento(orcamentoId) {
-  return atualizarStatusOrcamento(orcamentoId, STATUS_ORCAMENTO.concluido, { concluidoEm: obterDataIso() });
+  return atualizarStatusOrcamento(orcamentoId, STATUS_ORCAMENTO.concluido, () => ({ concluidoEm: obterDataIso() }));
 }
 
 export async function descontarEstoqueDoOrcamento(orcamentoId) {
@@ -85,8 +103,9 @@ export async function descontarEstoqueDoOrcamento(orcamentoId) {
   await executarTransacao([LOJAS.orcamentos, LOJAS.itensOrcamento, LOJAS.itensEstoque, LOJAS.movimentosEstoque, LOJAS.metadadosBackup], "readwrite", async ({ lojas }) => {
     const orcamento = await converterRequisicao(lojas[LOJAS.orcamentos].get(orcamentoId));
     if (!orcamento) throw new Error("Orçamento não encontrado.");
-    if (!([STATUS_ORCAMENTO.agendado, STATUS_ORCAMENTO.concluido].includes(orcamento.status))) throw new Error("Agende ou conclua a sessão antes de descontar o estoque.");
+    if (![STATUS_ORCAMENTO.agendado, STATUS_ORCAMENTO.concluido].includes(orcamento.status)) throw new Error("Agende ou conclua a sessão antes de descontar o estoque.");
     if (orcamento.estoqueDescontadoEm) throw new Error("Este orçamento já teve estoque descontado.");
+
     const itens = await converterRequisicao(lojas[LOJAS.itensOrcamento].index("porOrcamento").getAll(orcamentoId));
     const lista = [];
     for (const itemOrcamento of itens) {
@@ -97,11 +116,13 @@ export async function descontarEstoqueDoOrcamento(orcamentoId) {
       if (atual < usado) throw new Error(`Estoque insuficiente para ${itemEstoque.nome}.`);
       lista.push({ itemEstoque, usado, atual });
     }
+
     for (const registro of lista) {
       const novo = registro.atual - registro.usado;
       await converterRequisicao(lojas[LOJAS.itensEstoque].put({ ...registro.itemEstoque, quantidadeAtual: novo, atualizadoEm: obterDataIso() }));
-      await converterRequisicao(lojas[LOJAS.movimentosEstoque].put(criarMovimentoEstoque({ itemEstoqueId: registro.itemEstoque.id, orcamentoId, tipo: TIPO_MOVIMENTO_ESTOQUE.usoOrcamento, quantidade: registro.usado, quantidadeAnterior: registro.atual, quantidadeNova: novo, motivo: "Uso em orçamento agendado" })));
+      await converterRequisicao(lojas[LOJAS.movimentosEstoque].put(criarMovimentoEstoque({ itemEstoqueId: registro.itemEstoque.id, orcamentoId, tipo: TIPO_MOVIMENTO_ESTOQUE.usoOrcamento, quantidade: registro.usado, quantidadeAnterior: registro.atual, quantidadeNova: novo, motivo: "Uso em orçamento concluído" })));
     }
+
     orcamentoAtualizado = { ...orcamento, status: STATUS_ORCAMENTO.estoqueDescontado, estoqueDescontadoEm: obterDataIso(), atualizadoEm: obterDataIso() };
     await converterRequisicao(lojas[LOJAS.orcamentos].put(orcamentoAtualizado));
     await marcarBancoAlterado(lojas);
@@ -110,13 +131,21 @@ export async function descontarEstoqueDoOrcamento(orcamentoId) {
 }
 
 async function gravarOrcamentoComItens(orcamento, itens, { substituirItens }) {
-  await executarTransacao([LOJAS.orcamentos, LOJAS.itensOrcamento, LOJAS.metadadosBackup], "readwrite", async ({ lojas }) => {
+  await executarTransacao([LOJAS.orcamentos, LOJAS.itensOrcamento, LOJAS.itensEstoque, LOJAS.metadadosBackup], "readwrite", async ({ lojas }) => {
+    const itensValidos = itens.filter((item) => normalizarNumero(item.quantidadeUsada) > 0);
+    for (const item of itensValidos) {
+      const estoque = await converterRequisicao(lojas[LOJAS.itensEstoque].get(item.itemEstoqueId));
+      if (!estoque) continue;
+      if (normalizarNumero(item.quantidadeUsada) > normalizarNumero(estoque.quantidadeAtual)) throw new Error(`A quantidade de ${item.nomeItemSnapshot || estoque.nome} é maior que o estoque disponível.`);
+    }
+
     if (substituirItens) {
       const existentes = await converterRequisicao(lojas[LOJAS.itensOrcamento].index("porOrcamento").getAll(orcamento.id));
       for (const item of existentes) await converterRequisicao(lojas[LOJAS.itensOrcamento].delete(item.id));
     }
+
     await converterRequisicao(lojas[LOJAS.orcamentos].put(orcamento));
-    for (const item of itens) {
+    for (const item of itensValidos) {
       await converterRequisicao(lojas[LOJAS.itensOrcamento].put({ ...item, id: item.id || criarIdentificador("item-orcamento"), orcamentoId: orcamento.id }));
     }
     await marcarBancoAlterado(lojas);
@@ -124,38 +153,33 @@ async function gravarOrcamentoComItens(orcamento, itens, { substituirItens }) {
 }
 
 function montarOrcamento(dados = {}, anterior = {}, agora = obterDataIso()) {
-  const statusPadrao = STATUS_ORCAMENTO.aguardandoCliente;
-  const status = dados.status || anterior.status || statusPadrao;
-  const valorHora = normalizarNumero(dados.valorHora ?? anterior.valorHora);
-  const duracaoSessao = normalizarNumero(dados.duracaoSessao ?? anterior.duracaoSessao);
-  const custoMaterialSnapshot = normalizarNumero(dados.custoMaterialSnapshot ?? anterior.custoMaterialSnapshot);
-  const custoMaoObraSnapshot = normalizarNumero(dados.custoMaoObraSnapshot ?? anterior.custoMaoObraSnapshot);
-  const subtotalSnapshot = normalizarNumero(dados.subtotalSnapshot ?? anterior.subtotalSnapshot ?? (custoMaterialSnapshot + custoMaoObraSnapshot));
-  const descontoValorSnapshot = normalizarNumero(dados.descontoValorSnapshot ?? anterior.descontoValorSnapshot);
+  const status = dados.status || anterior.status || STATUS_ORCAMENTO.rascunho;
   const imagensReferencia = Array.isArray(dados.imagensReferencia)
     ? dados.imagensReferencia.filter((referencia) => referencia?.dataUrl)
     : Array.isArray(anterior.imagensReferencia) ? anterior.imagensReferencia : [];
+
   return {
     ...anterior,
     id: dados.id || anterior.id || criarIdentificador("orcamento"),
-    nome: dados.nome ?? anterior.nome ?? "Orçamento",
+    nome: dados.nome ?? anterior.nome ?? "",
     clienteId: dados.clienteId ?? anterior.clienteId ?? null,
     clienteNomeSnapshot: dados.clienteNomeSnapshot ?? anterior.clienteNomeSnapshot ?? "",
     clienteIdade: dados.clienteIdade ?? anterior.clienteIdade ?? "",
     clienteTelefone: dados.clienteTelefone ?? anterior.clienteTelefone ?? "",
     clienteEmail: dados.clienteEmail ?? anterior.clienteEmail ?? "",
     clienteAlergias: dados.clienteAlergias ?? anterior.clienteAlergias ?? "",
+    clienteCuidados: dados.clienteCuidados ?? anterior.clienteCuidados ?? "",
     clienteObservacoes: dados.clienteObservacoes ?? anterior.clienteObservacoes ?? "",
     horarioPreferencial: dados.horarioPreferencial ?? anterior.horarioPreferencial ?? "",
-    status,
-    valorHora,
-    duracaoSessao,
+    status: normalizarStatusLegado(status),
+    valorHora: normalizarNumero(dados.valorHora ?? anterior.valorHora),
+    duracaoSessao: normalizarNumero(dados.duracaoSessao ?? anterior.duracaoSessao),
     percentualMargemLucro: normalizarNumero(dados.percentualMargemLucro ?? anterior.percentualMargemLucro),
     percentualDesconto: normalizarNumero(dados.percentualDesconto ?? anterior.percentualDesconto),
-    custoMaterialSnapshot,
-    custoMaoObraSnapshot,
-    subtotalSnapshot,
-    descontoValorSnapshot,
+    custoMaterialSnapshot: normalizarNumero(dados.custoMaterialSnapshot ?? anterior.custoMaterialSnapshot),
+    custoMaoObraSnapshot: normalizarNumero(dados.custoMaoObraSnapshot ?? anterior.custoMaoObraSnapshot),
+    subtotalSnapshot: normalizarNumero(dados.subtotalSnapshot ?? anterior.subtotalSnapshot),
+    descontoValorSnapshot: normalizarNumero(dados.descontoValorSnapshot ?? anterior.descontoValorSnapshot),
     lucroValorSnapshot: normalizarNumero(dados.lucroValorSnapshot ?? anterior.lucroValorSnapshot),
     valorFinalSnapshot: normalizarNumero(dados.valorFinalSnapshot ?? anterior.valorFinalSnapshot),
     imagemReferencia: dados.imagemReferencia ?? anterior.imagemReferencia ?? imagensReferencia[0]?.dataUrl ?? "",
@@ -166,24 +190,46 @@ function montarOrcamento(dados = {}, anterior = {}, agora = obterDataIso()) {
     complexidade: dados.complexidade ?? anterior.complexidade ?? "",
     observacoesCliente: dados.observacoesCliente ?? anterior.observacoesCliente ?? "",
     exportadoEm: anterior.exportadoEm || null,
-    aguardandoClienteEm: anterior.aguardandoClienteEm || (status === STATUS_ORCAMENTO.aguardandoCliente ? agora : null),
+    aguardandoClienteEm: status === STATUS_ORCAMENTO.aguardandoCliente ? (anterior.aguardandoClienteEm || agora) : anterior.aguardandoClienteEm || null,
     aceitoEm: anterior.aceitoEm || null,
     recusadoEm: anterior.recusadoEm || null,
     motivoRecusa: anterior.motivoRecusa || "",
     agendadoEm: anterior.agendadoEm || null,
+    canceladoEm: anterior.canceladoEm || null,
+    motivoCancelamento: anterior.motivoCancelamento || "",
+    concluidoEm: anterior.concluidoEm || null,
+    historicoAgendamentos: Array.isArray(anterior.historicoAgendamentos) ? anterior.historicoAgendamentos : [],
     estoqueDescontadoEm: anterior.estoqueDescontadoEm || null,
     estoqueDesfeitoEm: anterior.estoqueDesfeitoEm || null,
-    concluidoEm: anterior.concluidoEm || null,
     arquivadoEm: anterior.arquivadoEm || null,
     criadoEm: dados.criadoEm || anterior.criadoEm || agora,
     atualizadoEm: agora
   };
 }
 
-async function atualizarStatusOrcamento(orcamentoId, status, extras = {}) {
+function recalcularFinanceiro(orcamento, itens) {
+  const material = arredondar(itens.reduce((total, item) => total + normalizarNumero(item.subtotalSnapshot), 0));
+  const maoObra = arredondar(normalizarNumero(orcamento.valorHora) * normalizarNumero(orcamento.duracaoSessao));
+  const subtotal = arredondar(material + maoObra);
+  const desconto = arredondar(subtotal * normalizarNumero(orcamento.percentualDesconto) / 100);
+  const lucro = arredondar(subtotal * normalizarNumero(orcamento.percentualMargemLucro) / 100);
+  return {
+    ...orcamento,
+    custoMaterialSnapshot: material,
+    custoMaoObraSnapshot: maoObra,
+    subtotalSnapshot: subtotal,
+    descontoValorSnapshot: desconto,
+    lucroValorSnapshot: lucro,
+    valorFinalSnapshot: arredondar(Math.max(subtotal - desconto, 0))
+  };
+}
+
+async function atualizarStatusOrcamento(orcamentoId, status, extrasFactory = () => ({})) {
   const orcamento = await obterOrcamento(orcamentoId);
   if (!orcamento) throw new Error("Orçamento não encontrado.");
-  const atualizado = { ...orcamento, ...extras, status, atualizadoEm: obterDataIso() };
+  const agora = obterDataIso();
+  const extras = extrasFactory(orcamento, agora);
+  const atualizado = { ...orcamento, ...extras, status, atualizadoEm: agora };
   await executarTransacao([LOJAS.orcamentos, LOJAS.metadadosBackup], "readwrite", async ({ lojas }) => {
     await converterRequisicao(lojas[LOJAS.orcamentos].put(atualizado));
     await marcarBancoAlterado(lojas);
@@ -191,7 +237,28 @@ async function atualizarStatusOrcamento(orcamentoId, status, extras = {}) {
   return atualizado;
 }
 
+function validarCamposObrigatorios(dados) {
+  const erros = [];
+  if (!String(dados.nome || "").trim()) erros.push("Nome do orçamento");
+  if (!String(dados.clienteNomeSnapshot || "").trim()) erros.push("Nome do cliente");
+  if (erros.length) throw new Error(`Preencha: ${erros.join(" e ")}.`);
+}
+
+function normalizarOrcamentoLegado(orcamento) {
+  return { ...orcamento, status: normalizarStatusLegado(orcamento.status) };
+}
+
+function normalizarStatusLegado(status) {
+  if (status === STATUS_ORCAMENTO.exportado) return STATUS_ORCAMENTO.aguardandoCliente;
+  if (status === STATUS_ORCAMENTO.estoqueDescontado) return STATUS_ORCAMENTO.concluido;
+  return status || STATUS_ORCAMENTO.rascunho;
+}
+
 async function marcarBancoAlterado(lojas) {
   const atual = await converterRequisicao(lojas[LOJAS.metadadosBackup].get("principal")) || { id: "principal" };
   await converterRequisicao(lojas[LOJAS.metadadosBackup].put({ ...atual, bancoAlteradoEm: obterDataIso(), atualizadoEm: obterDataIso() }));
+}
+
+function arredondar(valor) {
+  return Math.round((normalizarNumero(valor) + Number.EPSILON) * 100) / 100;
 }
