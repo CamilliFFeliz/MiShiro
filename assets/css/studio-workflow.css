@@ -853,35 +853,3 @@ html[data-theme="light"] {
     margin-right: 0;
   }
 }
-
-
-/* Correções visuais objetivas da agenda. */
-body[data-page="agenda"] { overflow-x: clip; }
-body[data-page="agenda"]::after { display: none; }
-dialog.workflow-modal:not([open]) { display: none !important; visibility: hidden; }
-body[data-page="agenda"] .agenda-workflow-grid,
-body[data-page="agenda"] .pipeline-layout,
-body[data-page="agenda"] .workflow-card { min-width: 0; }
-body[data-page="agenda"] #boardPipeline {
-  max-width: 100%;
-  overflow-x: auto;
-  overflow-y: visible;
-  overscroll-behavior-x: contain;
-  -webkit-overflow-scrolling: touch;
-}
-body[data-page="agenda"] .board-workflow {
-  grid-template-columns: repeat(6, minmax(190px, 1fr));
-  min-width: 0;
-}
-.schedule-colors label.is-selected {
-  border-color: var(--studio-text);
-  box-shadow: 0 0 0 3px rgba(139, 92, 246, .35);
-}
-@media (max-width: 900px) {
-  body[data-page="agenda"] .board-workflow { grid-template-columns: repeat(6, 190px); }
-}
-@media (max-width: 620px) {
-  body[data-page="agenda"] .calendar-card-workflow { padding: 12px; }
-  body[data-page="agenda"] .calendar-grid-workflow { gap: 4px; }
-  body[data-page="agenda"] .calendar-day-workflow { min-height: 48px; padding: 5px; }
-}

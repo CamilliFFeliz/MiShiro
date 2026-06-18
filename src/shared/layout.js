@@ -13,7 +13,6 @@ const PAGINAS_MOBILE = ["dashboard", "orcamentos", "estoque", "agenda", "relator
 export function montarLayout({ paginaAtual, titulo, subtitulo }) {
   aplicarTemaInicial();
   carregarCamadaVisualPro();
-  carregarComplementosDaPagina(paginaAtual);
   const app = document.querySelector("#app");
   if (!app || document.querySelector(".app-sidebar")) return;
 
@@ -62,8 +61,6 @@ function carregarCamadaVisualPro() {
   carregarCssFinal("mishiro-app-refinements-css", "assets/css/app-refinements.css?v=20260618.1");
   carregarCssFinal("mishiro-theme-audit-css", "assets/css/theme-audit.css?v=20260618.2");
 }
-
-function carregarComplementosDaPagina() {}
 
 function carregarCssFinal(id, caminho) {
   if (document.querySelector(`#${id}`)) return;

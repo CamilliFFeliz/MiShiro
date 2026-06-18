@@ -14,8 +14,6 @@ export async function iniciarOrcamentos() {
   renderizarFiltrosEstoque();
   renderizarEstoqueOrcamento();
   renderizarItensCarrinho();
-  document.documentElement.dataset.orcamentoEstoquePronto = "true";
-  document.dispatchEvent(new Event("orcamento:estoque-pronto"));
 }
 
 iniciarOrcamentos();

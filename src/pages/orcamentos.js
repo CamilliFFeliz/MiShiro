@@ -1,6 +1,4 @@
-["budget-main.js", "budget-events-init.js", "budget-persistence-init.js", "budget-pdf.js"].forEach((arquivo) => {
-  const modulo = document.createElement("script");
-  modulo.type = "module";
-  modulo.src = new URL(`./${arquivo}`, import.meta.url).href;
-  document.head.append(modulo);
-});
+import "./budget-main.js";
+import "./budget-events.js";
+import "./budget-persistence.js";
+import "./budget-pdf.js";

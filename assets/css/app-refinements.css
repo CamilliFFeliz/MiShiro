@@ -311,19 +311,18 @@ html[data-theme="dark"] .field select option {
 }
 
 body[data-page="dashboard"] .dashboard-hero {
-  min-height: 0;
+  min-height: clamp(360px, 60vh, 560px);
   display: grid;
   align-items: center;
-  gap: clamp(16px, 3vw, 24px);
-  padding: clamp(18px, 4vw, 30px);
+  gap: clamp(18px, 4vw, 34px);
+  padding: clamp(22px, 5vw, 42px);
   background: radial-gradient(circle at 88% 12%, rgba(139, 92, 246, .24), transparent 30rem), linear-gradient(145deg, rgba(255, 255, 255, .1), rgba(255, 255, 255, .035));
 }
 
 body[data-page="dashboard"] .page-hero__brand {
-  width: min(100%, 260px);
-  justify-self: center;
-  margin-inline: auto;
-  padding: 14px;
+  width: min(100%, 320px);
+  justify-self: start;
+  padding: 16px;
   border: 1px solid rgba(238, 231, 255, .12);
   border-radius: 28px;
   background: rgba(255, 255, 255, .055);

@@ -1,5 +1,5 @@
-const CACHE_NAME = "mishiro-static-v36-preservado";
-const RUNTIME_CACHE_NAME = "mishiro-runtime-v36-preservado";
+const CACHE_NAME = "mishiro-static-v36-consolidado";
+const RUNTIME_CACHE_NAME = "mishiro-runtime-v36-consolidado";
 const APP_CACHE_PREFIXES = ["calculadora-tattoo-", "mishiro-orcamentos-", "mishiro-static-", "mishiro-runtime-"];
 const CURRENT_CACHE_NAMES = [CACHE_NAME, RUNTIME_CACHE_NAME];
 const APP_SHELL_URL = "./index.html";
@@ -8,15 +8,14 @@ const JSPDF_CDN_URL = "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.
 const EXTERNAL_ASSET_URLS = [LUCIDE_CDN_URL, JSPDF_CDN_URL];
 const APP_ASSETS = [
   "./", APP_SHELL_URL,
-  "./pages/orcamentos.html", "./pages/estoque.html", "./pages/agenda.html", "./pages/relatorios.html", "./pages/backup.html", "./pages/configuracoes.html",
-  "./assets/css/base.css", "./assets/css/tokens.css", "./assets/css/layout.css", "./assets/css/components.css",
-  "./assets/css/pro-ui.css", "./assets/css/pro-polish.css", "./assets/css/app-refinements.css", "./assets/css/theme-audit.css",
-  "./assets/css/dashboard.css", "./assets/css/orcamentos.css", "./assets/css/operations-budget.css", "./assets/css/estoque.css", "./assets/css/agenda.css", "./assets/css/relatorios.css", "./assets/css/backup.css", "./assets/css/configuracoes.css", "./assets/css/studio-workflow.css",
+  "./pages/dashboard.html", "./pages/orcamentos.html", "./pages/estoque.html", "./pages/agenda.html", "./pages/pipeline.html", "./pages/relatorios.html", "./pages/backup.html", "./pages/configuracoes.html",
+  "./manifest.webmanifest", "./icons/icon.svg", "./assets/favicon/favicon.svg",
   "./img/mishiro-logo-claro.jpg", "./img/mishiro-logo-escuro.jpg", "./img/mishiro-simbolo-claro.jpg", "./img/mishiro-simbolo-escuro.jpg.jpg",
+  "./assets/css/base.css", "./assets/css/tokens.css", "./assets/css/layout.css", "./assets/css/components.css", "./assets/css/dashboard.css", "./assets/css/orcamentos.css", "./assets/css/operations-budget.css", "./assets/css/estoque.css", "./assets/css/agenda.css", "./assets/css/relatorios.css", "./assets/css/backup.css", "./assets/css/configuracoes.css", "./assets/css/studio-workflow.css", "./assets/css/pro-ui.css", "./assets/css/pro-polish.css", "./assets/css/app-refinements.css", "./assets/css/theme-audit.css",
   "./src/shared/layout.js", "./src/shared/storage.js", "./src/shared/formatters.js", "./src/shared/ui.js", "./src/shared/stock-catalog.js", "./src/shared/reference-stock.js", "./src/shared/pdf-theme.js",
-  "./src/pages/dashboard.js", "./src/pages/orcamentos.js", "./src/pages/budget-main.js", "./src/pages/budget-events-init.js", "./src/pages/budget-events-small.js", "./src/pages/budget-persistence-init.js", "./src/pages/budget-persistence-small.js", "./src/pages/budget-ui.js", "./src/pages/budget-pdf.js", "./src/pages/orcamentos-export.js", "./src/pages/orcamentos-v3-data.js", "./src/pages/orcamentos-v3-stock-view.js", "./src/pages/orcamentos-v3-cart-view.js", "./src/pages/estoque.js", "./src/pages/agenda.js", "./src/pages/relatorios.js", "./src/pages/backup.js", "./src/pages/configuracoes.js",
-  "./src/services/estoque-service.js", "./src/services/orcamentos-service.js", "./src/services/agenda-service.js", "./src/models/banco-local.js", "./src/models/esquema-banco.js", "./src/mvc/modelos/esquema-banco.js", "./src/mvc/modelos/banco-local.js", "./src/mvc/servicos/servico-estoque.js", "./src/mvc/servicos/servico-orcamentos.js", "./src/mvc/servicos/servico-agendamentos.js",
-  "./manifest.webmanifest", "./icons/icon.svg"
+  "./src/models/banco-local.js", "./src/models/esquema-banco.js",
+  "./src/services/estoque-service.js", "./src/services/orcamentos-service.js", "./src/services/agenda-service.js", "./src/services/backup-service.js",
+  "./src/pages/dashboard.js", "./src/pages/orcamentos.js", "./src/pages/budget-main.js", "./src/pages/budget-events.js", "./src/pages/budget-persistence.js", "./src/pages/budget-pdf.js", "./src/pages/budget-ui.js", "./src/pages/orcamentos-v3-data.js", "./src/pages/orcamentos-v3-stock-view.js", "./src/pages/orcamentos-v3-cart-view.js", "./src/pages/orcamentos-export.js", "./src/pages/estoque.js", "./src/pages/agenda.js", "./src/pages/relatorios.js", "./src/pages/backup.js", "./src/pages/configuracoes.js"
 ];
 
 self.addEventListener("install", (event) => { event.waitUntil(cacheApplicationShell().finally(() => self.skipWaiting())); });

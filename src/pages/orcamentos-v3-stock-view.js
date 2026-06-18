@@ -27,5 +27,5 @@ function cardEstoque(item) {
 }
 
 function stepper(quantidade, limite) {
-  return `<div class="ops-stepper"><button type="button" data-step="decrease" aria-label="Diminuir quantidade" ${quantidade <= 0 ? "disabled" : ""}>−</button><input type="number" data-step-input inputmode="numeric" min="0" max="${formatarQuantidade(limite)}" step="1" value="${formatarQuantidade(quantidade)}" aria-label="Quantidade selecionada" /><button type="button" data-step="increase" aria-label="Aumentar quantidade" ${quantidade >= limite ? "disabled" : ""}>+</button></div>`;
+  return `<div class="ops-stepper"><button type="button" data-step="decrease" aria-label="Diminuir quantidade" ${quantidade <= 0 ? "disabled" : ""}>−</button><input data-step-input inputmode="numeric" value="${formatarQuantidade(quantidade)}" aria-label="Quantidade selecionada" /><button type="button" data-step="increase" aria-label="Aumentar quantidade" ${quantidade >= limite ? "disabled" : ""}>+</button></div>`;
 }

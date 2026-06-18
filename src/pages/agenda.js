@@ -12,7 +12,7 @@ const COLUNAS = [
   { titulo: "Para Agendar", status: [STATUS_ORCAMENTO.aceito] },
   { titulo: "Agendado", status: [STATUS_ORCAMENTO.agendado] },
   { titulo: "Concluído", status: [STATUS_ORCAMENTO.concluido, STATUS_ORCAMENTO.estoqueDescontado] },
-  { titulo: "Reprovados", status: [STATUS_ORCAMENTO.recusado] },
+  { titulo: "Recusados", status: [STATUS_ORCAMENTO.recusado] },
   { titulo: "Cancelados", status: [STATUS_ORCAMENTO.cancelado] }
 ];
 let dataAtual = new Date();
@@ -36,7 +36,6 @@ function vincularEventos() {
   document.querySelector("#proximoMes")?.addEventListener("click", () => mudarMes(1));
   document.querySelector("#agendaForm")?.addEventListener("submit", salvarAgendamento);
   document.querySelector("#agendaHoraInicio")?.addEventListener("change", calcularFim);
-  document.querySelectorAll("input[name='agendaCor']").forEach((campo) => campo.addEventListener("change", atualizarSelecaoCor));
   document.addEventListener("click", tratarClique);
 }
 
@@ -167,13 +166,13 @@ async function tratarAcaoEvento(acao, id) {
     fecharModal("eventoDiaModal");
     return carregar();
   }
-
   if (acao === "cancelar") {
     const motivo = window.prompt("Motivo do cancelamento (opcional):", "");
-    if (motivo === null) return;
+    if (motivo === null || !window.confirm("Confirmar o cancelamento desta sessão?")) return;
     await cancelarAgendamento(id, motivo);
+    fecharModal("eventoDiaModal");
+    return carregar();
   }
-
   if (acao === "concluir") await concluirAgendamento(id);
   fecharModal("eventoDiaModal");
   await carregar();
@@ -191,7 +190,6 @@ function abrirAgendamento({ orcamentoId = "", agendamentoId = "" }) {
   definir("#agendaHoraFim", evento?.horaFim || somarHoras(inicio, orcamento?.duracaoSessao || 1));
   definir("#agendaObservacoes", evento?.observacoes || "");
   document.querySelectorAll("input[name='agendaCor']").forEach((campo) => { campo.checked = campo.value === (evento?.cor || "#8B5CF6"); });
-  atualizarSelecaoCor();
   document.querySelector("#agendaModalLabel").textContent = evento ? "Reagendar sessão" : "Agendar orçamento";
   document.querySelector("#agendaModalTitle").textContent = orcamento ? `${orcamento.clienteNomeSnapshot} · ${orcamento.nome}` : "Sessão";
   document.querySelector("#agendaModal")?.showModal();
@@ -201,12 +199,6 @@ function abrirAgendamento({ orcamentoId = "", agendamentoId = "" }) {
 function calcularFim() {
   const orcamento = orcamentosPorId.get(valor("#agendaOrcamentoId"));
   definir("#agendaHoraFim", somarHoras(valor("#agendaHoraInicio"), orcamento?.duracaoSessao || 1));
-}
-
-function atualizarSelecaoCor() {
-  document.querySelectorAll(".schedule-colors label").forEach((rotulo) => {
-    rotulo.classList.toggle("is-selected", Boolean(rotulo.querySelector("input")?.checked));
-  });
 }
 
 async function salvarAgendamento(evento) {

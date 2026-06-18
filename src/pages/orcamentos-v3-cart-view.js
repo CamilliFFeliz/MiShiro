@@ -14,9 +14,9 @@ export function renderizarItensCarrinho() {
 function cardCarrinho(registro) {
   const { item, quantidade } = registro;
   const opcional = item.categoria === CATEGORY_OPTIONAL;
-  return `<article class="ops-cart-row ${opcional ? "ops-cart-row--optional" : ""}" data-cart-id="${escapar(item.id)}"><div><strong>${escapar(item.nome)}</strong><small>${escapar(item.categoria)}${opcional ? " · opcional" : ""} · ${formatarMoeda(calcularCustoUnitario(item))} por ${escapar(resumoUnidade(item))}</small></div>${stepper(quantidade, quantidadeDisponivel(item))}<strong class="ops-cart-row__subtotal">${formatarMoeda(totalDoRegistro(registro))}</strong><button class="ops-cart-remove" type="button" data-cart-remove aria-label="Remover ${escapar(item.nome)} do carrinho" title="Remover item">Remover</button></article>`;
+  return `<article class="ops-cart-row ${opcional ? "ops-cart-row--optional" : ""}" data-cart-id="${escapar(item.id)}"><div><strong>${escapar(item.nome)}</strong><small>${escapar(item.categoria)}${opcional ? " · opcional" : ""} · ${formatarMoeda(calcularCustoUnitario(item))} por ${escapar(resumoUnidade(item))}</small></div>${stepper(quantidade, quantidadeDisponivel(item))}<strong class="ops-cart-row__subtotal">${formatarMoeda(totalDoRegistro(registro))}</strong></article>`;
 }
 
 function stepper(quantidade, limite) {
-  return `<div class="ops-stepper"><button type="button" data-step="decrease" aria-label="Diminuir quantidade" ${quantidade <= 0 ? "disabled" : ""}>−</button><input type="number" data-step-input inputmode="numeric" min="0" max="${formatarQuantidade(limite)}" step="1" value="${formatarQuantidade(quantidade)}" aria-label="Quantidade selecionada" /><button type="button" data-step="increase" aria-label="Aumentar quantidade" ${quantidade >= limite ? "disabled" : ""}>+</button></div>`;
+  return `<div class="ops-stepper"><button type="button" data-step="decrease" aria-label="Diminuir quantidade" ${quantidade <= 0 ? "disabled" : ""}>−</button><input data-step-input inputmode="numeric" value="${formatarQuantidade(quantidade)}" aria-label="Quantidade selecionada" /><button type="button" data-step="increase" aria-label="Aumentar quantidade" ${quantidade >= limite ? "disabled" : ""}>+</button></div>`;
 }

@@ -46,14 +46,3 @@ html[data-theme="light"] { --ops-surface: rgba(255,255,255,.9); --ops-raised: rg
 .ops-empty { display:grid; place-items:center; min-height:92px; padding:16px; border:1px dashed var(--ops-line-strong); border-radius:16px; color:var(--ops-muted); text-align:center; }
 @media(max-width:900px){.ops-grid{grid-template-columns:repeat(2,minmax(0,1fr));}.ops-financial-summary{grid-template-columns:repeat(3,minmax(0,1fr));}}
 @media(max-width:660px){.ops-grid,.ops-cart-summary,.ops-financial-summary{grid-template-columns:1fr;}.ops-span-2{grid-column:auto;}.ops-stock-toolbar{grid-template-columns:1fr;}.ops-stock-toolbar .button{width:100%;}.ops-stock-list{grid-template-columns:1fr;}.ops-cart-row{grid-template-columns:1fr auto;}.ops-cart-row__subtotal{grid-column:1/-1;}.ops-actions .button{width:100%;}.ops-actions__spacer{display:none;}}
-
-
-/* Correções de carrinho e quantidade. */
-.ops-stepper { grid-template-columns: 44px 64px 44px; min-height: 46px; border-color: var(--ops-line-strong); background: var(--ops-raised); }
-.ops-stepper button { width: 44px; min-height: 44px; touch-action: manipulation; -webkit-user-select: none; user-select: none; }
-.ops-stepper input { min-height: 44px; color: var(--ops-text); background: var(--ops-raised); }
-.ops-stepper input:focus { outline: 0; box-shadow: inset 0 0 0 2px var(--ops-line-strong); }
-.ops-cart-remove { min-width: 44px; min-height: 44px; padding: 8px 10px; border: 1px solid rgba(241,120,146,.62); border-radius: 12px; color: #fff; background: #9f2948; cursor: pointer; font-size: .78rem; font-weight: 850; touch-action: manipulation; }
-.ops-cart-remove:hover,.ops-cart-remove:focus-visible { background: #bf3659; outline: 3px solid rgba(241,120,146,.28); outline-offset: 2px; }
-html[data-theme="light"] .ops-cart-remove { color: #fff; background: #a52b4a; }
-@media(max-width:660px){.ops-cart-row{grid-template-columns:minmax(0,1fr) auto;}.ops-cart-row>div:first-child,.ops-cart-row .ops-stepper{grid-column:1/-1;}.ops-cart-row__subtotal{grid-column:auto;}.ops-cart-remove{min-width:76px;}}
