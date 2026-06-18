@@ -125,12 +125,16 @@ async function gravarOrcamentoComItens(orcamento, itens, { substituirItens }) {
 
 function montarOrcamento(dados = {}, anterior = {}, agora = obterDataIso()) {
   const statusPadrao = STATUS_ORCAMENTO.aguardandoCliente;
+  const status = dados.status || anterior.status || statusPadrao;
   const valorHora = normalizarNumero(dados.valorHora ?? anterior.valorHora);
   const duracaoSessao = normalizarNumero(dados.duracaoSessao ?? anterior.duracaoSessao);
   const custoMaterialSnapshot = normalizarNumero(dados.custoMaterialSnapshot ?? anterior.custoMaterialSnapshot);
   const custoMaoObraSnapshot = normalizarNumero(dados.custoMaoObraSnapshot ?? anterior.custoMaoObraSnapshot);
   const subtotalSnapshot = normalizarNumero(dados.subtotalSnapshot ?? anterior.subtotalSnapshot ?? (custoMaterialSnapshot + custoMaoObraSnapshot));
   const descontoValorSnapshot = normalizarNumero(dados.descontoValorSnapshot ?? anterior.descontoValorSnapshot);
+  const imagensReferencia = Array.isArray(dados.imagensReferencia)
+    ? dados.imagensReferencia.filter((referencia) => referencia?.dataUrl)
+    : Array.isArray(anterior.imagensReferencia) ? anterior.imagensReferencia : [];
   return {
     ...anterior,
     id: dados.id || anterior.id || criarIdentificador("orcamento"),
@@ -143,7 +147,7 @@ function montarOrcamento(dados = {}, anterior = {}, agora = obterDataIso()) {
     clienteAlergias: dados.clienteAlergias ?? anterior.clienteAlergias ?? "",
     clienteObservacoes: dados.clienteObservacoes ?? anterior.clienteObservacoes ?? "",
     horarioPreferencial: dados.horarioPreferencial ?? anterior.horarioPreferencial ?? "",
-    status: dados.status || anterior.status || statusPadrao,
+    status,
     valorHora,
     duracaoSessao,
     percentualMargemLucro: normalizarNumero(dados.percentualMargemLucro ?? anterior.percentualMargemLucro),
@@ -154,14 +158,15 @@ function montarOrcamento(dados = {}, anterior = {}, agora = obterDataIso()) {
     descontoValorSnapshot,
     lucroValorSnapshot: normalizarNumero(dados.lucroValorSnapshot ?? anterior.lucroValorSnapshot),
     valorFinalSnapshot: normalizarNumero(dados.valorFinalSnapshot ?? anterior.valorFinalSnapshot),
-    imagemReferencia: dados.imagemReferencia ?? anterior.imagemReferencia ?? "",
+    imagemReferencia: dados.imagemReferencia ?? anterior.imagemReferencia ?? imagensReferencia[0]?.dataUrl ?? "",
+    imagensReferencia,
     tamanhoTatuagem: dados.tamanhoTatuagem ?? anterior.tamanhoTatuagem ?? "",
     localCorpo: dados.localCorpo ?? anterior.localCorpo ?? "",
     coresTatuagem: dados.coresTatuagem ?? anterior.coresTatuagem ?? "",
     complexidade: dados.complexidade ?? anterior.complexidade ?? "",
     observacoesCliente: dados.observacoesCliente ?? anterior.observacoesCliente ?? "",
     exportadoEm: anterior.exportadoEm || null,
-    aguardandoClienteEm: anterior.aguardandoClienteEm || (dados.status === STATUS_ORCAMENTO.aguardandoCliente ? agora : null),
+    aguardandoClienteEm: anterior.aguardandoClienteEm || (status === STATUS_ORCAMENTO.aguardandoCliente ? agora : null),
     aceitoEm: anterior.aceitoEm || null,
     recusadoEm: anterior.recusadoEm || null,
     motivoRecusa: anterior.motivoRecusa || "",
