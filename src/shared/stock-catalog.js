@@ -5,6 +5,7 @@ export const CATEGORY_PASTES = "Pastosos";
 export const CATEGORY_DISPOSABLES = "Biossegurança e Descartáveis";
 export const CATEGORY_CLEANING = "Limpeza e Finalização";
 export const CATEGORY_LINEAR = "Materiais de Extensão";
+export const CATEGORY_OPTIONAL = "Opcional";
 export const PURCHASE_MODE_BOX = "box";
 export const PURCHASE_MODE_SINGLE = "single";
 export const MEASURE_UNIT = "un";
@@ -14,8 +15,8 @@ export const MEASURE_METER = "m";
 export const INTEGER_STEP = 1;
 export const DECIMAL_STEP = 0.5;
 
-export const UNIT_PURCHASE_CATEGORIES = [CATEGORY_NEEDLES, CATEGORY_DISPOSABLES, CATEGORY_CLEANING];
-export const CATEGORY_ORDER = [CATEGORY_ALL, CATEGORY_NEEDLES, CATEGORY_INKS, CATEGORY_PASTES, CATEGORY_DISPOSABLES, CATEGORY_CLEANING, CATEGORY_LINEAR];
+export const UNIT_PURCHASE_CATEGORIES = [CATEGORY_NEEDLES, CATEGORY_DISPOSABLES, CATEGORY_CLEANING, CATEGORY_OPTIONAL];
+export const CATEGORY_ORDER = [CATEGORY_ALL, CATEGORY_NEEDLES, CATEGORY_INKS, CATEGORY_PASTES, CATEGORY_DISPOSABLES, CATEGORY_CLEANING, CATEGORY_LINEAR, CATEGORY_OPTIONAL];
 export const BUSINESS_CATEGORIES = CATEGORY_ORDER.filter((category) => category !== CATEGORY_ALL);
 
 export const CATEGORY_DEFINITIONS = {
@@ -91,6 +92,19 @@ export const CATEGORY_DEFINITIONS = {
       { key: "packageQuantity", label: "Tamanho do rolo em metros", type: "number", inputMode: "decimal", placeholder: "30", required: true },
       { key: "packagePrice", label: "Preço do rolo", type: "currency", inputMode: "decimal", placeholder: "25,00", required: true },
       { key: "stockQuantity", label: "Quantidade de rolos em estoque", type: "number", inputMode: "numeric", placeholder: "2", required: true }
+    ]
+  },
+  [CATEGORY_OPTIONAL]: {
+    helper: "Itens opcionais apresentados ao cliente, como reserva de estúdio e kit de cuidados.",
+    defaultMeasure: MEASURE_UNIT,
+    fields: [
+      { key: "name", label: "Nome do opcional", type: "text", placeholder: "Ex: Kit de Cuidados", required: true },
+      { key: "brand", label: "Descrição curta", type: "text", placeholder: "Ex: sabonete, creme e brindes" },
+      { key: "purchaseMode", label: "Cobrança", type: "select", required: true, options: [{ value: PURCHASE_MODE_SINGLE, label: "Valor fixo por item" }, { value: PURCHASE_MODE_BOX, label: "Pacote / lote" }] },
+      { key: "packageQuantity", label: "Itens no pacote", type: "number", inputMode: "numeric", placeholder: "1", required: true, visibleWhen: { key: "purchaseMode", value: PURCHASE_MODE_BOX } },
+      { key: "packagePrice", label: "Valor do pacote", type: "currency", inputMode: "decimal", placeholder: "35,00", required: true, visibleWhen: { key: "purchaseMode", value: PURCHASE_MODE_BOX } },
+      { key: "singleUnitPrice", label: "Valor por item", type: "currency", inputMode: "decimal", placeholder: "35,00", required: true, visibleWhen: { key: "purchaseMode", value: PURCHASE_MODE_SINGLE } },
+      { key: "stockQuantity", label: "Quantidade disponível", type: "number", inputMode: "numeric", placeholder: "10", required: true }
     ]
   }
 };
