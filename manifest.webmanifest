@@ -1,0 +1,54 @@
+{
+  "id": "./index.html",
+  "name": "MiShiro Tattoo",
+  "short_name": "MiShiro",
+  "description": "PWA local para orçamento, estoque, agenda e relatórios de estúdio de tatuagem.",
+  "lang": "pt-BR",
+  "dir": "ltr",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#360a75",
+  "theme_color": "#360a75",
+  "icons": [
+    {
+      "src": "img/mishiro-simbolo-escuro.jpg",
+      "sizes": "1536x1536",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "img/mishiro-simbolo-claro.jpg",
+      "sizes": "1536x1536",
+      "type": "image/jpeg",
+      "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Criar orçamento",
+      "short_name": "Orçamento",
+      "url": "./pages/orcamentos.html",
+      "icons": [
+        {
+          "src": "img/mishiro-simbolo-escuro.jpg",
+          "sizes": "1536x1536",
+          "type": "image/jpeg"
+        }
+      ]
+    },
+    {
+      "name": "Abrir agenda",
+      "short_name": "Agenda",
+      "url": "./pages/agenda.html",
+      "icons": [
+        {
+          "src": "img/mishiro-simbolo-escuro.jpg",
+          "sizes": "1536x1536",
+          "type": "image/jpeg"
+        }
+      ]
+    }
+  ]
+}
