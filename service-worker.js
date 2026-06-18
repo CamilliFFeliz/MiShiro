@@ -1,5 +1,5 @@
-const CACHE_NAME = "mishiro-static-v34-studio-workflow";
-const RUNTIME_CACHE_NAME = "mishiro-runtime-v34-studio-workflow";
+const CACHE_NAME = "mishiro-static-v35-ui-audit";
+const RUNTIME_CACHE_NAME = "mishiro-runtime-v35-ui-audit";
 const APP_CACHE_PREFIXES = ["calculadora-tattoo-", "mishiro-orcamentos-", "mishiro-static-", "mishiro-runtime-"];
 const CURRENT_CACHE_NAMES = [CACHE_NAME, RUNTIME_CACHE_NAME];
 const APP_SHELL_URL = "./index.html";
