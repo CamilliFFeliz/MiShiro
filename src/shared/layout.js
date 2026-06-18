@@ -7,6 +7,7 @@ const PAGINAS = [
   ["backup", "Backup", "database-backup", "pages/backup.html"],
   ["configuracoes", "Configurações", "settings", "pages/configuracoes.html"]
 ];
+const PAGINAS_MOBILE = ["dashboard", "orcamentos", "estoque", "agenda", "relatorios"];
 
 export function montarLayout({ paginaAtual, titulo, subtitulo }) {
   aplicarTemaInicial();
@@ -25,7 +26,12 @@ export function montarLayout({ paginaAtual, titulo, subtitulo }) {
   const topbar = document.createElement("header");
   topbar.className = "app-topbar";
   topbar.innerHTML = `<button class="icon-button mobile-menu-button" id="openSidebarButton" type="button" aria-label="Abrir menu"><i data-lucide="menu"></i></button><div class="topbar-title"><span>${subtitulo || "MiShiro Tattoo"}</span><strong>${titulo || "Painel"}</strong></div><div class="topbar-actions"><button class="icon-button" id="themeToggleButton" type="button" aria-label="Alternar tema"><i data-lucide="moon"></i></button></div>`;
+  const bottomNav = document.createElement("nav");
+  bottomNav.className = "mobile-bottom-nav";
+  bottomNav.setAttribute("aria-label", "Navegação principal mobile");
+  bottomNav.innerHTML = criarBottomNav(base, paginaAtual);
   document.body.prepend(drawer, sidebar);
+  document.body.append(bottomNav);
   app.prepend(topbar);
   document.querySelector("#openSidebarButton")?.addEventListener("click", abrirMenu);
   drawer.addEventListener("click", fecharMenu);
@@ -36,10 +42,14 @@ export function montarLayout({ paginaAtual, titulo, subtitulo }) {
 function criarSidebar(base, atual) {
   return `<div class="brand-block"><div class="brand-mark"><img src="${base}img/mishiro-simbolo-escuro.jpg.jpg" alt="" /></div><div><strong>MiShiro Tattoo</strong><span>Gestão local do estúdio</span></div></div><nav class="sidebar-nav">${PAGINAS.map(([id, nome, icone, href]) => `<a class="nav-link ${id === atual ? "is-active" : ""}" href="${base}${href}"><span><i data-lucide="${icone}"></i></span>${nome}</a>`).join("")}</nav><div class="sidebar-footer"><span>IndexedDB</span><strong>Dados salvos no navegador</strong></div>`;
 }
+function criarBottomNav(base, atual) {
+  return PAGINAS.filter(([id]) => PAGINAS_MOBILE.includes(id)).map(([id, nome, icone, href]) => `<a class="${id === atual ? "is-active" : ""}" href="${base}${href}" aria-label="${nome}"><i data-lucide="${icone}"></i><span>${nome}</span></a>`).join("");
+}
 
 function carregarCamadaVisualPro() {
-  carregarCssFinal("mishiro-pro-ui-css", "assets/css/pro-ui.css?v=20260617.4");
-  carregarCssFinal("mishiro-pro-polish-css", "assets/css/pro-polish.css?v=20260617.4");
+  carregarCssFinal("mishiro-pro-ui-css", "assets/css/pro-ui.css?v=20260617.5");
+  carregarCssFinal("mishiro-pro-polish-css", "assets/css/pro-polish.css?v=20260617.5");
+  carregarCssFinal("mishiro-app-refinements-css", "assets/css/app-refinements.css?v=20260617.5");
 }
 function carregarCssFinal(id, caminho) {
   if (document.querySelector(`#${id}`)) return;
