@@ -11,115 +11,91 @@
   <link rel="stylesheet" href="../assets/css/layout.css" />
   <link rel="stylesheet" href="../assets/css/components.css" />
   <link rel="stylesheet" href="../assets/css/orcamentos.css" />
+  <link rel="stylesheet" href="../assets/css/studio-workflow.css" />
   <title>MiShiro Tattoo • Orçamentos</title>
 </head>
 <body data-page="orcamentos">
   <div id="app" class="app-frame">
-    <main id="appMain" class="page-shell budget-shell" aria-labelledby="pageHeading">
-      <header class="page-header budget-page-title">
-        <span class="eyebrow">Proposta do cliente</span>
-        <h1 id="pageHeading">Orçamentos</h1>
-        <p>Monte uma proposta clara com dados da arte, insumos usados, valores e PDF para aprovação.</p>
+    <main id="appMain" class="page-shell workflow-page" aria-labelledby="pageHeading">
+      <header class="workflow-intro">
+        <div>
+          <span class="eyebrow">Pipeline de aprovação</span>
+          <h1 id="pageHeading">Novo orçamento</h1>
+          <p>Registre o atendimento, monte a proposta e envie diretamente para aprovação e agendamento.</p>
+        </div>
+        <a class="button button-ghost" href="agenda.html"><i data-lucide="kanban-square"></i>Ver pipeline</a>
       </header>
 
-      <form id="formOrcamento" class="budget-page-grid compact-budget-grid">
-        <section class="panel-card budget-card client-card">
-          <header class="section-title compact-title">
-            <span>01 • Cliente</span>
-            <h2>Identificação</h2>
-          </header>
-          <div class="form-grid compact budget-form-grid">
-            <label class="field"><span>Nome do orçamento</span><input id="nomeOrcamento" required placeholder="Ex: Fechamento de braço" /></label>
-            <label class="field"><span>Cliente</span><input id="clienteNome" placeholder="Nome do cliente" /></label>
+      <form id="formOrcamento" class="workflow-grid" novalidate>
+        <input id="orcamentoIdEdicao" type="hidden" />
+        <section class="panel-card workflow-card">
+          <header class="section-title"><div><span>01 • Cliente</span><h2>Ficha de atendimento</h2></div></header>
+          <div class="client-form-grid">
+            <label class="field span-2"><span>Nome do cliente</span><input id="clienteNome" required placeholder="Nome completo" /></label>
+            <label class="field"><span>Idade</span><input id="clienteIdade" type="number" min="0" max="120" inputmode="numeric" placeholder="Ex: 28" /></label>
+            <label class="field"><span>Telefone / WhatsApp</span><input id="clienteTelefone" inputmode="tel" placeholder="(00) 00000-0000" /></label>
+            <label class="field span-2"><span>E-mail</span><input id="clienteEmail" type="email" placeholder="cliente@email.com" /></label>
+            <label class="field"><span>Horário preferencial</span><input id="horarioPreferencial" type="time" /></label>
+            <label class="field"><span>Título da proposta</span><input id="nomeOrcamento" required placeholder="Ex: Fechamento de antebraço" /></label>
+            <label class="field span-all"><span>Alergias, sensibilidades ou restrições</span><input id="clienteAlergias" placeholder="Ex: látex, anestésico, dermatite ou 'não informado'" /></label>
+            <label class="field span-all"><span>Observações do cliente</span><textarea id="clienteObservacoes" rows="3" placeholder="Informações pertinentes para o atendimento e o pós-tatuagem."></textarea></label>
           </div>
         </section>
 
-        <section class="panel-card budget-card tattoo-panel">
-          <header class="section-title compact-title">
-            <span>02 • Arte</span>
-            <h2>Dados da tatuagem</h2>
-          </header>
-          <div class="form-grid compact budget-form-grid">
-            <label class="field"><span>Tamanho</span><input id="tamanhoTatuagem" placeholder="Ex: 15 cm" /></label>
+        <section class="panel-card workflow-card">
+          <header class="section-title"><div><span>02 • Arte</span><h2>Detalhes da tatuagem</h2></div></header>
+          <div class="art-form-grid">
+            <label class="field"><span>Tamanho da tatuagem (cm)</span><input id="tamanhoTatuagem" inputmode="decimal" placeholder="Ex: 15" /></label>
             <label class="field"><span>Local do corpo</span><input id="localCorpo" placeholder="Ex: antebraço" /></label>
-            <label class="field"><span>Cores</span><input id="coresTatuagem" placeholder="Preto, cinza, colorida" /></label>
-            <label class="field"><span>Complexidade</span><select id="complexidade"><option value="simples">Simples</option><option value="media">Média</option><option value="alta">Alta</option><option value="realismo">Realismo / alta complexidade</option></select></label>
+            <label class="field"><span>Complexidade</span><select id="complexidade"><option value="Simples">Simples</option><option value="Média">Média</option><option value="Alta">Alta</option><option value="Realismo">Realismo</option></select></label>
+            <label class="field"><span>Cores / estilo</span><input id="coresTatuagem" placeholder="Ex: preto e cinza, fine line" /></label>
+            <label class="field span-all"><span>Observações da arte</span><textarea id="observacoesCliente" rows="4" placeholder="Composição, estilo, área a cobrir, referência de traço e demais detalhes."></textarea></label>
           </div>
-          <label class="field"><span>Observações</span><textarea id="observacoesCliente" rows="3" placeholder="Detalhes importantes da proposta."></textarea></label>
-          <div class="reference-upload pro-upload-area">
-            <input id="imagemReferencia" class="upload-input" type="file" accept="image/png,image/jpeg,image/webp" />
-            <label class="upload-button" for="imagemReferencia"><i data-lucide="image-plus"></i><strong>Adicionar imagem de referência</strong><small>PNG, JPG ou WEBP até 2 MB</small></label>
-            <figure id="previewImagem" class="reference-preview is-empty"><span>Nenhuma imagem adicionada</span></figure>
-          </div>
-        </section>
-
-        <section class="panel-card budget-card presets-panel">
-          <header class="section-title compact-title">
-            <span>03 • Base rápida</span>
-            <h2>Presets</h2>
-          </header>
-          <div class="preset-grid pro-preset-grid">
-            <button type="button" data-preset="minima"><strong>Sessão mínima</strong><span>1h</span></button>
-            <button type="button" data-preset="pequena"><strong>Pequena</strong><span>2h</span></button>
-            <button type="button" data-preset="media"><strong>Média</strong><span>4h</span></button>
-            <button type="button" data-preset="grande"><strong>Grande</strong><span>6h</span></button>
-            <button type="button" data-preset="cobertura"><strong>Cobertura</strong><span>Reforma</span></button>
+          <div class="image-art-zone">
+            <input id="imagemReferencia" type="file" accept="image/png,image/jpeg,image/webp" hidden />
+            <label class="image-icon-upload" for="imagemReferencia" title="Adicionar imagem de referência" aria-label="Adicionar imagem de referência"><i data-lucide="image-plus"></i><span class="sr-only">Adicionar arte</span></label>
+            <figure id="previewImagem" class="reference-art-card is-empty"><span>Adicione uma referência visual da arte</span></figure>
           </div>
         </section>
 
-        <section class="panel-card budget-card materials-panel">
-          <header class="section-title compact-title">
-            <span>04 • Insumos</span>
-            <h2>Adicionar materiais</h2>
-          </header>
-          <div class="picker-toolbar pro-picker-toolbar">
-            <label class="field"><span>Buscar material</span><input id="budgetSearchInput" type="search" placeholder="RL, luva, preto, vaselina" /></label>
-            <button class="button button-ghost" id="clearBudgetSearchButton" type="button"><i data-lucide="search-x"></i>Limpar</button>
-          </div>
-          <section class="chip-row compact-chip-row horizontal-chip-row" id="budgetCategoryFilters" aria-label="Filtros de insumos"></section>
-          <section id="stockPickerList" class="picker-list compact-picker-list" aria-label="Itens disponíveis do estoque"></section>
-        </section>
-
-        <aside class="panel-card budget-card summary-panel pro-summary-panel">
-          <header class="section-title compact-title">
-            <span>05 • Fechamento</span>
-            <h2>Resumo financeiro</h2>
-          </header>
-          <div class="form-grid compact price-grid">
-            <label class="field"><span>Valor da hora</span><input id="valorHora" inputmode="decimal" placeholder="150" /></label>
-            <label class="field"><span>Duração (h)</span><input id="duracaoSessao" inputmode="decimal" placeholder="3" /></label>
-            <label class="field"><span>Margem (%)</span><input id="margem" inputmode="decimal" placeholder="30" /></label>
+        <section class="panel-card workflow-card">
+          <header class="section-title"><div><span>03 • Fechamento</span><h2>Materiais, opcionais e cálculo</h2></div></header>
+          <div class="closing-form-grid">
+            <label class="field"><span>Valor da hora (R$)</span><input id="valorHora" inputmode="decimal" placeholder="Ex: 180" /></label>
+            <label class="field"><span>Duração prevista (horas)</span><input id="duracaoSessao" inputmode="decimal" placeholder="Ex: 3" /></label>
+            <label class="field"><span>Margem de lucro (%)</span><input id="margem" inputmode="decimal" placeholder="Ex: 30" /></label>
             <label class="field"><span>Desconto (%)</span><input id="desconto" inputmode="decimal" placeholder="0" /></label>
           </div>
-          <dl class="summary-list pro-summary-list">
+          <details class="materials-stack" open>
+            <summary>Materiais e itens opcionais do orçamento</summary>
+            <div class="picker-toolbar pro-picker-toolbar">
+              <label class="field"><span>Buscar item do estoque</span><input id="budgetSearchInput" type="search" placeholder="Ex: cartucho, kit, estúdio" /></label>
+              <button class="button button-ghost" id="clearBudgetSearchButton" type="button"><i data-lucide="search-x"></i>Limpar</button>
+            </div>
+            <section class="chip-row compact-chip-row horizontal-chip-row" id="budgetCategoryFilters" aria-label="Filtros de insumos"></section>
+            <section id="stockPickerList" class="picker-list compact-picker-list" aria-label="Itens disponíveis do estoque"></section>
+            <div id="listaMateriais" class="budget-materials-list"></div>
+          </details>
+          <dl class="summary-list pro-summary-list closing-summary">
             <div><dt>Materiais</dt><dd id="totalMateriais">R$ 0,00</dd></div>
-            <div><dt>Mão de obra</dt><dd id="totalMaoObra">R$ 0,00</dd></div>
+            <div><dt>Mão de Obra</dt><dd id="totalMaoObra">R$ 0,00</dd></div>
             <div><dt>Subtotal</dt><dd id="subtotalOrcamento">R$ 0,00</dd></div>
             <div><dt>Desconto</dt><dd id="valorDesconto">R$ 0,00</dd></div>
             <div class="summary-final"><dt>Valor final</dt><dd id="valorFinal">R$ 0,00</dd></div>
           </dl>
-          <div class="action-stack budget-actions">
-            <button class="button button-primary" type="submit"><i data-lucide="save"></i>Salvar orçamento</button>
-            <button class="button button-secondary" id="gerarPdf" type="button"><i data-lucide="file-down"></i>Gerar PDF</button>
-            <button class="button button-secondary" id="copiarResumo" type="button"><i data-lucide="copy"></i>Copiar resumo</button>
-            <button class="button button-ghost" id="limparOrcamento" type="button"><i data-lucide="eraser"></i>Limpar</button>
-          </div>
-          <p id="statusOrcamento" class="form-status" aria-live="polite"></p>
-        </aside>
+        </section>
+
+        <section class="workflow-actions" aria-label="Ações do orçamento">
+          <button class="button button-primary" type="submit"><i data-lucide="send"></i>Salvar orçamento</button>
+          <button class="button button-secondary" id="gerarPdfCliente" type="button"><i data-lucide="file-text"></i>Gerar PDF p/ Cliente</button>
+          <button class="button button-secondary" id="gerarPdfEstudio" type="button"><i data-lucide="file-spreadsheet"></i>Gerar PDF p/ Estúdio</button>
+          <span class="spacer"></span>
+          <button class="button button-ghost icon-only-action" id="limparOrcamento" type="button" aria-label="Limpar orçamento" title="Limpar orçamento"><i data-lucide="eraser"></i></button>
+          <p id="statusOrcamento" class="status-feedback" aria-live="polite"></p>
+        </section>
       </form>
     </main>
   </div>
-
-  <button id="floatingCartButton" class="floating-cart-button" type="button" aria-label="Abrir carrinho de materiais">
-    <i data-lucide="shopping-cart"></i>
-    <span><strong id="floatingCartCount">0 itens</strong><small id="floatingCartTotal">R$ 0,00</small></span>
-  </button>
-  <aside id="cartDrawer" class="cart-drawer" aria-label="Carrinho de materiais">
-    <header><div><span>Carrinho</span><h2>Insumos selecionados</h2></div><button id="closeCartDrawer" class="icon-button" type="button" aria-label="Fechar carrinho"><i data-lucide="x"></i></button></header>
-    <div id="listaMateriais" class="cart-list"></div>
-    <footer><span>Total de materiais</span><strong id="drawerMaterialsTotal">R$ 0,00</strong></footer>
-  </aside>
-
   <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
   <script type="module" src="../src/pages/orcamentos.js"></script>

@@ -15,15 +15,14 @@
   <link rel="stylesheet" href="assets/css/layout.css" />
   <link rel="stylesheet" href="assets/css/components.css" />
   <link rel="stylesheet" href="assets/css/dashboard.css" />
+  <link rel="stylesheet" href="assets/css/studio-workflow.css" />
   <title>MiShiro Tattoo • Dashboard</title>
 </head>
 <body data-page="dashboard">
   <div id="app" class="app-frame">
     <main id="appMain" class="page-shell" aria-labelledby="pageHeading">
       <section class="page-hero dashboard-hero">
-        <div class="page-hero__brand">
-          <img src="img/mishiro-logo-escuro.jpg" alt="MiShiro Tattoo" />
-        </div>
+        <div class="page-hero__brand"><img src="img/mishiro-logo-escuro.jpg" alt="MiShiro Tattoo" /></div>
         <div>
           <span class="eyebrow">MiShiro Tattoo • Gestão do estúdio</span>
           <h1 id="pageHeading">Painel rápido para orçar, agendar e controlar o estoque.</h1>
@@ -33,6 +32,10 @@
             <a class="button button-secondary" href="pages/estoque.html">Abrir estoque</a>
             <a class="button button-ghost" href="pages/agenda.html">Ver agenda</a>
           </div>
+          <section class="quick-alert-grid" aria-label="Alertas rápidos">
+            <article class="quick-alert"><span>Próximos agendamentos</span><strong id="alertaProximoAgendamento">Sem sessão marcada</strong><small id="alertaProximoDetalhe">Cadastre ou aprove um orçamento para agendar.</small></article>
+            <article class="quick-alert"><span>Estoque baixo</span><strong id="alertaEstoqueBaixo">0 itens</strong><small id="alertaEstoqueDetalhe">Nenhum alerta no momento.</small></article>
+          </section>
         </div>
       </section>
 
@@ -44,14 +47,8 @@
       </section>
 
       <section class="dashboard-grid">
-        <article class="panel-card">
-          <header class="section-title"><span>Próximos agendamentos</span><h2>Agenda</h2></header>
-          <div id="listaAgenda" class="note-list"></div>
-        </article>
-        <article class="panel-card">
-          <header class="section-title"><span>Orçamentos recentes</span><h2>Pipeline rápido</h2></header>
-          <div id="listaOrcamentos" class="note-list"></div>
-        </article>
+        <article class="panel-card"><header class="section-title"><span>Próximos agendamentos</span><h2>Agenda</h2></header><div id="listaAgenda" class="note-list"></div></article>
+        <article class="panel-card"><header class="section-title"><span>Orçamentos recentes</span><h2>Pipeline rápido</h2></header><div id="listaOrcamentos" class="note-list"></div></article>
       </section>
     </main>
   </div>

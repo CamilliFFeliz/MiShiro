@@ -11,16 +11,13 @@
   <link rel="stylesheet" href="../assets/css/layout.css" />
   <link rel="stylesheet" href="../assets/css/components.css" />
   <link rel="stylesheet" href="../assets/css/relatorios.css" />
+  <link rel="stylesheet" href="../assets/css/studio-workflow.css" />
   <title>MiShiro Tattoo • Relatórios</title>
 </head>
 <body data-page="relatorios">
   <div id="app" class="app-frame">
-    <main id="appMain" class="page-shell reports-shell">
-      <header class="page-header reports-title">
-        <span class="eyebrow">Indicadores</span>
-        <h1>Relatórios</h1>
-        <p>Leitura visual do estoque, investimento por categoria e desempenho mensal da agenda.</p>
-      </header>
+    <main id="appMain" class="page-shell reports-shell workflow-page">
+      <header class="workflow-intro reports-title"><div><span class="eyebrow">Indicadores</span><h1>Relatórios</h1><p>Visão de estoque, faltas por categoria e desempenho mensal da agenda.</p></div><button id="exportarRelatorioPdf" class="button button-primary" type="button"><i data-lucide="file-down"></i>Exportar PDF</button></header>
 
       <section class="metric-grid report-metrics">
         <article class="metric-card report-kpi"><span>Investimento total</span><strong id="investimentoEstoque">R$ 0,00</strong><p>Valor financeiro cadastrado.</p></article>
@@ -29,12 +26,12 @@
         <article class="metric-card report-kpi"><span>Agenda do mês</span><strong id="totalAgendaMes">0</strong><p>Eventos no período.</p></article>
       </section>
 
-      <section class="panel-card report-panel category-report-panel">
+      <section class="panel-card report-panel category-report-panel workflow-card">
         <header class="section-title"><span>Categorias</span><h2>Distribuição do estoque</h2></header>
         <div id="graficoCategorias" class="report-list category-report-list"></div>
       </section>
 
-      <section class="panel-card report-panel">
+      <section class="panel-card report-panel workflow-card">
         <header class="section-title"><span>Saúde do estoque</span><h2>Faltas, baixos e itens ok</h2></header>
         <div class="health-grid report-stat-grid">
           <article class="report-stat-card is-danger"><span>Itens em falta</span><strong id="itensEmFalta">0</strong></article>
@@ -42,12 +39,12 @@
           <article class="report-stat-card is-ok"><span>Estoque ok</span><strong id="itensOk">0</strong></article>
         </div>
         <div class="health-lists report-two-columns">
-          <section><h3>Em falta</h3><div id="listaEmFalta" class="report-list compact"></div></section>
+          <section><h3>Em falta por categoria</h3><div id="grupoFaltasCategoria" class="category-missing-groups"></div></section>
           <section><h3>Estoque baixo</h3><div id="listaBaixo" class="report-list compact"></div></section>
         </div>
       </section>
 
-      <section class="panel-card report-panel">
+      <section class="panel-card report-panel workflow-card">
         <header class="section-title"><span>Agenda</span><h2>Relatório mensal</h2></header>
         <div class="agenda-report-grid report-stat-grid agenda-stats-grid">
           <article class="report-stat-card"><span>Cancelados</span><strong id="agendaCancelados">0</strong></article>
@@ -64,6 +61,7 @@
     </main>
   </div>
   <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
   <script type="module" src="../src/pages/relatorios.js"></script>
 </body>
 </html>

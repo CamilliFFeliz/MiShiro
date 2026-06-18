@@ -1,4 +1,4 @@
-export const REFERENCE_STOCK_CREATED_AT = "2026-05-29T00:00:00.000Z";
+export const REFERENCE_STOCK_CREATED_AT = "2026-06-18T00:00:00.000Z";
 
 export const DEFAULT_REFERENCE_STOCK = [
   { id: "reference-cartucho-rl-uso-medio", categoria: "Agulhas e Cartuchos", nome: "Cartucho RL (Traço)", marca: "", linhaTipo: "Cartucho RL (Traço)", numeracao: "", formatoCompra: "single", quantidadeEmbalagem: 1, precoEmbalagem: 15, quantidadeAtual: 20, quantidadeMinima: 2, unidadeMedida: "un" },
@@ -28,7 +28,9 @@ export const DEFAULT_REFERENCE_STOCK = [
   { id: "reference-vaselina-hornet-500g", categoria: "Pastosos", nome: "Vaselina Hornet White Premium 500g", marca: "Hornet", quantidadeEmbalagem: 500, precoEmbalagem: 65, quantidadeAtual: 1, quantidadeMinima: 1, unidadeMedida: "g" },
   { id: "reference-manteiga-reilly-500g", categoria: "Pastosos", nome: "Manteiga Blend Especial Reilly 500g", marca: "Reilly Tattoo", quantidadeEmbalagem: 500, precoEmbalagem: 89, quantidadeAtual: 1, quantidadeMinima: 1, unidadeMedida: "g" },
   { id: "reference-plastico-filme-pvc-300m", categoria: "Materiais de Extensão", nome: "Plástico Filme PVC 28cm x 300m", marca: "Tecfilm", quantidadeEmbalagem: 300, precoEmbalagem: 30.51, quantidadeAtual: 1, quantidadeMinima: 1, unidadeMedida: "m" },
-  { id: "reference-tropicalderm-filme-5m", categoria: "Materiais de Extensão", nome: "Filme Protetor Para Tatuagem 10cm x 5m", marca: "TropicalDerm", quantidadeEmbalagem: 5, precoEmbalagem: 130, quantidadeAtual: 1, quantidadeMinima: 1, unidadeMedida: "m" }
+  { id: "reference-tropicalderm-filme-5m", categoria: "Materiais de Extensão", nome: "Filme Protetor Para Tatuagem 10cm x 5m", marca: "TropicalDerm", quantidadeEmbalagem: 5, precoEmbalagem: 130, quantidadeAtual: 1, quantidadeMinima: 1, unidadeMedida: "m" },
+  { id: "reference-opcional-estudio-6h", categoria: "Opcional", nome: "Estúdio — reserva de até 6 horas", marca: "Uso do estúdio por sessão de até 6 horas", formatoCompra: "single", quantidadeEmbalagem: 1, precoEmbalagem: 120, quantidadeAtual: 99, quantidadeMinima: 0, unidadeMedida: "un", observacoes: "Valor fixo de R$ 120,00 por até 6 horas." },
+  { id: "reference-opcional-kit-cuidados", categoria: "Opcional", nome: "Kit de Cuidados", marca: "Sabonete líquido próprio, creme para uso e brindes", formatoCompra: "single", quantidadeEmbalagem: 1, precoEmbalagem: 35, quantidadeAtual: 20, quantidadeMinima: 2, unidadeMedida: "un", observacoes: "Valor fixo de R$ 35,00." }
 ];
 
 export function clonarEstoqueReferencia() {

@@ -11,20 +11,63 @@
   <link rel="stylesheet" href="../assets/css/layout.css" />
   <link rel="stylesheet" href="../assets/css/components.css" />
   <link rel="stylesheet" href="../assets/css/agenda.css" />
-  <title>MiShiro Tattoo • Agenda</title>
+  <link rel="stylesheet" href="../assets/css/studio-workflow.css" />
+  <title>MiShiro Tattoo • Agenda e Pipeline</title>
 </head>
 <body data-page="agenda">
   <div id="app" class="app-frame">
-    <main id="appMain" class="page-shell">
-      <header class="page-header"><span class="eyebrow">Agenda + Pipeline</span><h1>Agenda</h1><p>Calendário visual, orçamentos para agendar e acompanhamento compacto do fluxo.</p></header>
-      <section class="agenda-header panel-card"><button id="mesAnterior" class="button button-ghost" type="button">Anterior</button><strong id="mesAtual">Mês</strong><button id="proximoMes" class="button button-ghost" type="button">Próximo</button></section>
-      <section class="agenda-summary" aria-label="Resumo da agenda"><article class="metric-card"><span>No mês</span><strong id="totalMes">0</strong><p>agendamentos</p></article><article class="metric-card"><span>No dia</span><strong id="totalDia">0</strong><p>selecionado</p></article><article class="metric-card"><span>Para agendar</span><strong id="totalParaAgendar">0</strong><p>aceitos sem data</p></article><article class="metric-card"><span>Cancelados</span><strong id="totalCanceladosMes">0</strong><p>no mês</p></article></section>
-      <section class="agenda-layout"><section class="calendar-card panel-card"><div class="week-row"><span>Dom</span><span>Seg</span><span>Ter</span><span>Qua</span><span>Qui</span><span>Sex</span><span>Sáb</span></div><div id="calendario" class="calendar-grid"></div></section><aside class="panel-card"><header class="section-title"><span>Dia selecionado</span><h2 id="tituloEventos">Eventos do dia</h2></header><div id="listaEventos" class="note-list"></div></aside></section>
-      <section class="panel-card"><header class="section-title"><span>Pipeline compacto</span><h2>Fluxo dos orçamentos</h2></header><div id="pipelineResumo" class="pipeline-summary"></div></section>
-      <section class="panel-card"><header class="section-title"><span>Para agendar</span><h2>Orçamentos aceitos sem data ativa</h2></header><div id="listaParaAgendar" class="note-list"></div></section>
+    <main id="appMain" class="page-shell workflow-page">
+      <header class="workflow-intro">
+        <div><span class="eyebrow">Agenda + Pipeline</span><h1>Agenda do estúdio</h1><p>Organize aprovações, marque sessões e acompanhe o andamento de cada orçamento.</p></div>
+        <a class="button button-primary" href="orcamentos.html"><i data-lucide="plus"></i>Novo orçamento</a>
+      </header>
+
+      <section class="agenda-workflow-grid">
+        <article class="panel-card workflow-card calendar-card-workflow">
+          <div class="calendar-control"><button id="mesAnterior" class="button button-ghost" type="button"><i data-lucide="chevron-left"></i>Anterior</button><strong id="mesAtual">Mês</strong><button id="proximoMes" class="button button-ghost" type="button">Próximo<i data-lucide="chevron-right"></i></button></div>
+          <div class="calendar-grid-workflow" id="semanaCalendario" aria-hidden="true"></div>
+          <div id="calendario" class="calendar-grid-workflow" aria-label="Calendário mensal"></div>
+        </article>
+        <aside class="panel-card workflow-card">
+          <header class="section-title"><div><span>Eventos do mês</span><h2>Próximas sessões</h2></div></header>
+          <div id="eventosMesMini" class="month-events-list"></div>
+        </aside>
+      </section>
+
+      <section class="pipeline-layout">
+        <article class="panel-card workflow-card">
+          <header class="section-title"><div><span>01.1 Aguardando aprovação</span><h2>Propostas enviadas</h2></div></header>
+          <div id="listaAprovacao" class="approval-list"></div>
+        </article>
+        <article class="panel-card workflow-card">
+          <header class="section-title"><div><span>01.2 Aprovado</span><h2>Prontos para agendar</h2></div></header>
+          <div id="listaAprovados" class="approved-list"></div>
+        </article>
+      </section>
+
+      <section class="panel-card workflow-card">
+        <header class="section-title"><div><span>01.4 Fluxos dos Orçamentos</span><h2>Board de acompanhamento</h2></div></header>
+        <div id="boardPipeline" class="board-workflow"></div>
+      </section>
     </main>
   </div>
-  <dialog id="agendaModal" class="modal-card agenda-modal"><form id="agendaForm" method="dialog" class="schedule-form"><header class="modal-header"><div><span id="agendaModalLabel">Agendar</span><h2 id="agendaModalTitle">Sessão</h2></div><button class="icon-button" id="fecharAgendaModal" type="button">×</button></header><input id="agendaOrcamentoId" type="hidden" /><input id="agendaId" type="hidden" /><label><span>Data</span><input id="agendaData" type="date" required /></label><label><span>Início</span><input id="agendaHoraInicio" type="time" required /></label><label><span>Fim</span><input id="agendaHoraFim" type="time" /></label><label><span>Observações</span><input id="agendaObservacoes" placeholder="Ex: sinal pago, levar referência" /></label><button class="button button-primary" type="submit">Salvar agendamento</button></form></dialog>
+
+  <dialog id="orcamentoModal" class="modal-card workflow-modal"><div id="orcamentoModalContent" class="workflow-modal-content"></div></dialog>
+  <dialog id="eventoDiaModal" class="modal-card workflow-modal"><div id="eventoDiaContent" class="workflow-modal-content"></div></dialog>
+  <dialog id="agendaModal" class="modal-card workflow-modal">
+    <form id="agendaForm" class="workflow-modal-content" method="dialog">
+      <header class="modal-header"><div><span id="agendaModalLabel">Agendar</span><h2 id="agendaModalTitle">Sessão</h2></div><button class="icon-button" data-close-modal="agendaModal" type="button" aria-label="Fechar"><i data-lucide="x"></i></button></header>
+      <input id="agendaOrcamentoId" type="hidden" /><input id="agendaId" type="hidden" />
+      <div class="form-grid compact">
+        <label class="field"><span>Data</span><input id="agendaData" type="date" required /></label>
+        <label class="field"><span>Hora de início</span><input id="agendaHoraInicio" type="time" required /></label>
+        <label class="field"><span>Hora final calculada</span><input id="agendaHoraFim" type="time" required /></label>
+        <label class="field"><span>Observações</span><input id="agendaObservacoes" placeholder="Ex: sinal pago, levar referência" /></label>
+      </div>
+      <fieldset class="field"><span>Cor do evento</span><div class="schedule-colors"><label style="background:#8b5cf6"><input type="radio" name="agendaCor" value="#8B5CF6" checked /></label><label style="background:#c4b5fd"><input type="radio" name="agendaCor" value="#C4B5FD" /></label><label style="background:#ffffff;border-color:#d9c8ee"><input type="radio" name="agendaCor" value="#FFFFFF" /></label><label style="background:#e9d5ff"><input type="radio" name="agendaCor" value="#E9D5FF" /></label></div></fieldset>
+      <div class="modal-actions"><button class="button button-primary" type="submit"><i data-lucide="calendar-check"></i>Salvar agendamento</button></div>
+    </form>
+  </dialog>
   <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js" defer></script>
   <script type="module" src="../src/pages/agenda.js"></script>
 </body>
