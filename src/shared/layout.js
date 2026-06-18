@@ -60,6 +60,7 @@ function carregarCamadaVisualPro() {
   carregarCssFinal("mishiro-pro-ui-css", "assets/css/pro-ui.css?v=20260618.1");
   carregarCssFinal("mishiro-pro-polish-css", "assets/css/pro-polish.css?v=20260618.1");
   carregarCssFinal("mishiro-app-refinements-css", "assets/css/app-refinements.css?v=20260618.1");
+  carregarCssFinal("mishiro-theme-audit-css", "assets/css/theme-audit.css?v=20260618.2");
 }
 
 function carregarComplementosDaPagina(paginaAtual) {
