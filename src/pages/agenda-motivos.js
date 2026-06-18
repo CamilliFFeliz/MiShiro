@@ -4,6 +4,10 @@ import { escapar, atualizarIcones } from "../shared/ui.js";
 import { formatarMoeda } from "../shared/formatters.js";
 import { STATUS_ORCAMENTO } from "../models/esquema-banco.js";
 
+const estilo = document.createElement("style");
+estilo.textContent = `body[data-page="agenda"]{overflow-x:clip}body[data-page="agenda"] .workflow-page{gap:18px}body[data-page="agenda"] .agenda-workflow-grid{grid-template-columns:minmax(0,1fr) minmax(290px,.72fr);align-items:start}body[data-page="agenda"] .pipeline-layout{grid-template-columns:repeat(2,minmax(0,1fr);align-items:start}body[data-page="agenda"] .board-workflow{grid-template-columns:repeat(6,minmax(210px,1fr);min-width:1260px;overflow:visible}body[data-page="agenda"] #boardPipeline{overflow-x:auto;overflow-y:visible;padding-bottom:8px}dialog.workflow-modal:not([open]){display:none}.schedule-colors label{position:relative;pointer-events:auto}.schedule-colors label input{pointer-events:none}.schedule-colors label:has(input:checked){border:3px solid var(--text);box-shadow:0 0 0 3px rgba(139,92,246,.3)}@media(max-width:900px){body[data-page="agenda"] .agenda-workflow-grid,body[data-page="agenda"] .pipeline-layout{grid-template-columns:1fr}}`;
+document.head.append(estilo);
+
 document.addEventListener("click", async (evento) => {
   const botao = evento.target.closest('[data-event-action="cancelar"]');
   if (!botao) return;
