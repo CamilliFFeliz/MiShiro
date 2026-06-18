@@ -23,6 +23,7 @@ export const STATUS_ORCAMENTO = Object.freeze({
   agendado: "agendado",
   estoqueDescontado: "estoque_descontado",
   concluido: "concluido",
+  cancelado: "cancelado",
   arquivado: "arquivado"
 });
 
