@@ -1,2 +1,5 @@
 import "./orcamentos-workflow.js";
-import "./orcamentos-aprimoramentos.js";
+
+window.setTimeout(() => {
+  import("./orcamentos-aprimoramentos.js");
+}, 350);
