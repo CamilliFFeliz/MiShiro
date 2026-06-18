@@ -1,0 +1,2 @@
+.settings-grid { display:grid; gap: clamp(14px,4vw,22px); }
+@media (min-width: 900px) { .settings-grid { grid-template-columns: 1fr 1fr; align-items:start; } }

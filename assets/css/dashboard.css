@@ -1,0 +1,17 @@
+.dashboard-hero { margin-bottom: 2px; }
+.dashboard-grid { display:grid; grid-template-columns: 1fr; gap: clamp(14px,4vw,22px); }
+.metric-card-alert strong { color: var(--color-purple-200); }
+@media (min-width: 920px) { .dashboard-grid { grid-template-columns: 1fr 1fr; } .metric-grid { grid-template-columns: repeat(4, minmax(0,1fr)); } }
+
+
+/* Organização compacta da tela inicial. */
+body[data-page="dashboard"] .dashboard-hero { min-height: 0; gap: clamp(16px,3vw,24px); padding: clamp(18px,4vw,30px); }
+body[data-page="dashboard"] .page-hero__brand { justify-self: center; margin-inline: auto; width: min(100%, 260px); }
+@media (max-width: 720px) {
+  body[data-page="dashboard"] .metric-grid { grid-template-columns: repeat(2, minmax(0,1fr)); gap: 10px; }
+  body[data-page="dashboard"] .metric-card { min-width: 0; padding: 14px; }
+  body[data-page="dashboard"] .metric-card p { font-size: .8rem; }
+}
+@media (max-width: 420px) {
+  body[data-page="dashboard"] .metric-grid { grid-template-columns: 1fr; }
+}
