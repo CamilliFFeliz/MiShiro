@@ -2,7 +2,7 @@ import { montarLayout } from "../shared/layout.js";
 import { chaveData, capitalizar, mesLongo, formatarData, formatarMoeda } from "../shared/formatters.js";
 import { escapar, vazio, atualizarIcones } from "../shared/ui.js";
 import { iniciarBancoLocal } from "../models/banco-local.js";
-import { listarAgendamentos, agendarOrcamento, reagendarAgendamento, cancelarAgendamento, concluirAgendamento } from "../services/agenda-service.js";
+import { listarAgendamentos, agendarOrcamento, reagendarAgendamento, solicitarReagendamento, cancelarAgendamento, concluirAgendamento } from "../services/agenda-service.js";
 import { listarOrcamentos, listarItensOrcamento, aceitarOrcamento, recusarOrcamento, excluirOrcamento, limparOrcamentosRecusadosExpirados } from "../services/orcamentos-service.js";
 import { STATUS_AGENDAMENTO, STATUS_ORCAMENTO } from "../models/esquema-banco.js";
 
@@ -67,7 +67,7 @@ function renderizarCalendario() {
   const mes = dataAtual.getMonth();
   const inicio = new Date(ano, mes, 1 - new Date(ano, mes, 1).getDay());
   const dias = Array.from({ length: 42 }, (_, indice) => new Date(inicio.getFullYear(), inicio.getMonth(), inicio.getDate() + indice));
-  const ativos = agendamentos.filter((evento) => evento.status !== STATUS_AGENDAMENTO.cancelado);
+  const ativos = agendamentos.filter((evento) => ![STATUS_AGENDAMENTO.cancelado, STATUS_AGENDAMENTO.remarcado].includes(evento.status));
   document.querySelector("#calendario").innerHTML = dias.map((dia) => {
     const data = chaveData(dia);
     const eventos = ativos.filter((evento) => evento.data === data);
@@ -79,7 +79,7 @@ function renderizarCalendario() {
 
 function renderizarEventosMes() {
   const mes = `${dataAtual.getFullYear()}-${String(dataAtual.getMonth() + 1).padStart(2, "0")}`;
-  const eventos = agendamentos.filter((evento) => evento.data?.startsWith(mes) && evento.status !== STATUS_AGENDAMENTO.cancelado).sort(compararEvento).slice(0, 8);
+  const eventos = agendamentos.filter((evento) => evento.data?.startsWith(mes) && ![STATUS_AGENDAMENTO.cancelado, STATUS_AGENDAMENTO.remarcado].includes(evento.status)).sort(compararEvento).slice(0, 8);
   const alvo = document.querySelector("#eventosMesMini");
   alvo.innerHTML = eventos.length ? eventos.map((evento) => {
     const orcamento = orcamentosPorId.get(evento.orcamentoId);
@@ -147,7 +147,7 @@ async function abrirOrcamento(id) {
 
 function abrirDia(data) {
   selecionada = data;
-  const lista = agendamentos.filter((evento) => evento.data === data && evento.status !== STATUS_AGENDAMENTO.cancelado).sort(compararEvento);
+  const lista = agendamentos.filter((evento) => evento.data === data && ![STATUS_AGENDAMENTO.cancelado, STATUS_AGENDAMENTO.remarcado].includes(evento.status)).sort(compararEvento);
   document.querySelector("#eventoDiaContent").innerHTML = `<header class="modal-header"><div><span>Agenda do dia</span><h2>${formatarData(data)}</h2></div><button class="icon-button" data-close-modal="eventoDiaModal" type="button"><i data-lucide="x"></i></button></header><div class="event-status-list">${lista.length ? lista.map((evento) => cardEvento(evento)).join("") : "<p class=\"empty-inline\">Nenhum agendamento neste dia.</p>"}</div>`;
   document.querySelector("#eventoDiaModal")?.showModal();
   renderizarCalendario();
@@ -161,8 +161,9 @@ function cardEvento(evento) {
 
 async function tratarAcaoEvento(acao, id) {
   if (acao === "reagendar") {
+    await solicitarReagendamento(id, "Reagendamento solicitado na agenda");
     fecharModal("eventoDiaModal");
-    return abrirAgendamento({ agendamentoId: id });
+    return carregar();
   }
   if (acao === "cancelar") await cancelarAgendamento(id, "Cancelado na agenda");
   if (acao === "concluir") await concluirAgendamento(id);
