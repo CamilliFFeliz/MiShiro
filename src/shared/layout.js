@@ -13,6 +13,7 @@ const PAGINAS_MOBILE = ["dashboard", "orcamentos", "estoque", "agenda", "relator
 export function montarLayout({ paginaAtual, titulo, subtitulo }) {
   aplicarTemaInicial();
   carregarCamadaVisualPro();
+  carregarComplementosDaPagina(paginaAtual);
   const app = document.querySelector("#app");
   if (!app || document.querySelector(".app-sidebar")) return;
 
@@ -59,6 +60,10 @@ function carregarCamadaVisualPro() {
   carregarCssFinal("mishiro-pro-ui-css", "assets/css/pro-ui.css?v=20260618.1");
   carregarCssFinal("mishiro-pro-polish-css", "assets/css/pro-polish.css?v=20260618.1");
   carregarCssFinal("mishiro-app-refinements-css", "assets/css/app-refinements.css?v=20260618.1");
+}
+
+function carregarComplementosDaPagina(paginaAtual) {
+  if (paginaAtual === "agenda") import("../pages/agenda-motivos.js");
 }
 
 function carregarCssFinal(id, caminho) {
