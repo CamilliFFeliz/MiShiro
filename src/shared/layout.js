@@ -38,8 +38,8 @@ function criarSidebar(base, atual) {
 }
 
 function carregarCamadaVisualPro() {
-  carregarCssFinal("mishiro-pro-ui-css", "assets/css/pro-ui.css?v=20260617.3");
-  carregarCssFinal("mishiro-pro-polish-css", "assets/css/pro-polish.css?v=20260617.3");
+  carregarCssFinal("mishiro-pro-ui-css", "assets/css/pro-ui.css?v=20260617.4");
+  carregarCssFinal("mishiro-pro-polish-css", "assets/css/pro-polish.css?v=20260617.4");
 }
 function carregarCssFinal(id, caminho) {
   if (document.querySelector(`#${id}`)) return;
