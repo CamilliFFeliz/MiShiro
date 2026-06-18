@@ -1,147 +1,215 @@
 import { montarLayout } from "../shared/layout.js";
-import { chaveData, capitalizar, mesLongo, formatarData } from "../shared/formatters.js";
-import { vazio, escapar, atualizarIcones } from "../shared/ui.js";
+import { chaveData, capitalizar, mesLongo, formatarData, formatarMoeda } from "../shared/formatters.js";
+import { escapar, vazio, atualizarIcones } from "../shared/ui.js";
 import { iniciarBancoLocal } from "../models/banco-local.js";
-import { listarAgendamentos, agendarOrcamento, atualizarAgendamento, cancelarAgendamento, concluirAgendamento } from "../services/agenda-service.js";
-import { listarOrcamentos } from "../services/orcamentos-service.js";
+import { listarAgendamentos, agendarOrcamento, reagendarAgendamento, cancelarAgendamento, concluirAgendamento } from "../services/agenda-service.js";
+import { listarOrcamentos, listarItensOrcamento, aceitarOrcamento, recusarOrcamento, excluirOrcamento, limparOrcamentosRecusadosExpirados } from "../services/orcamentos-service.js";
 import { STATUS_AGENDAMENTO, STATUS_ORCAMENTO } from "../models/esquema-banco.js";
 
+const DIAS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+const COLUNAS = [
+  { titulo: "Aguardando", status: [STATUS_ORCAMENTO.aguardandoCliente] },
+  { titulo: "Para Agendar", status: [STATUS_ORCAMENTO.aceito] },
+  { titulo: "Agendado", status: [STATUS_ORCAMENTO.agendado] },
+  { titulo: "Concluído", status: [STATUS_ORCAMENTO.concluido, STATUS_ORCAMENTO.estoqueDescontado] },
+  { titulo: "Recusados", status: [STATUS_ORCAMENTO.recusado] }
+];
 let dataAtual = new Date();
 let selecionada = chaveData(new Date());
 let agendamentos = [];
-let orcamentosLista = [];
-let orcamentos = new Map();
-let agendamentosPorOrcamento = new Map();
+let orcamentos = [];
+let orcamentosPorId = new Map();
 
-montarLayout({ paginaAtual: "agenda", titulo: "Agenda", subtitulo: "Calendário" });
+montarLayout({ paginaAtual: "agenda", titulo: "Agenda", subtitulo: "Pipeline" });
 iniciar();
 
 async function iniciar() {
   await iniciarBancoLocal();
-  document.querySelector("#mesAnterior")?.addEventListener("click", () => mudarMes(-1));
-  document.querySelector("#proximoMes")?.addEventListener("click", () => mudarMes(1));
-  document.querySelector("#agendaForm")?.addEventListener("submit", salvarAgendaModal);
-  document.querySelector("#fecharAgendaModal")?.addEventListener("click", fecharModal);
-  document.querySelector("#listaParaAgendar")?.addEventListener("click", handleParaAgendarClick);
-  document.querySelector("#listaEventos")?.addEventListener("click", handleEventoClick);
+  vincularEventos();
   await carregar();
   atualizarIcones();
 }
 
+function vincularEventos() {
+  document.querySelector("#mesAnterior")?.addEventListener("click", () => mudarMes(-1));
+  document.querySelector("#proximoMes")?.addEventListener("click", () => mudarMes(1));
+  document.querySelector("#agendaForm")?.addEventListener("submit", salvarAgendamento);
+  document.querySelector("#agendaHoraInicio")?.addEventListener("change", calcularFim);
+  document.addEventListener("click", tratarClique);
+}
+
 async function carregar() {
-  const dados = await Promise.all([listarAgendamentos(), listarOrcamentos()]);
-  agendamentos = dados[0];
-  orcamentosLista = dados[1];
-  orcamentos = new Map(orcamentosLista.map((o) => [o.id, o]));
-  agendamentosPorOrcamento = new Map(agendamentos.map((a) => [a.orcamentoId, a]));
-  render();
+  await limparOrcamentosRecusadosExpirados();
+  [agendamentos, orcamentos] = await Promise.all([listarAgendamentos(), listarOrcamentos()]);
+  orcamentosPorId = new Map(orcamentos.map((orcamento) => [orcamento.id, orcamento]));
+  renderizar();
 }
 
 function mudarMes(delta) {
   dataAtual = new Date(dataAtual.getFullYear(), dataAtual.getMonth() + delta, 1);
   selecionada = chaveData(new Date(dataAtual.getFullYear(), dataAtual.getMonth(), 1));
-  render();
+  renderizar();
 }
 
-function render() {
+function renderizar() {
+  document.querySelector("#mesAtual").textContent = capitalizar(mesLongo.format(dataAtual));
+  document.querySelector("#semanaCalendario").innerHTML = DIAS.map((dia) => `<span class="calendar-week-label">${dia}</span>`).join("");
+  renderizarCalendario();
+  renderizarEventosMes();
+  renderizarAprovacao();
+  renderizarAprovados();
+  renderizarBoard();
+  atualizarIcones();
+}
+
+function renderizarCalendario() {
   const ano = dataAtual.getFullYear();
   const mes = dataAtual.getMonth();
-  const primeiro = new Date(ano, mes, 1);
-  const inicio = new Date(ano, mes, 1 - primeiro.getDay());
-  const dias = Array.from({ length: 42 }, (_, i) => new Date(inicio.getFullYear(), inicio.getMonth(), inicio.getDate() + i));
-  const prefixoMes = `${ano}-${String(mes + 1).padStart(2, "0")}`;
-  const ativos = agendamentos.filter((a) => a.status !== STATUS_AGENDAMENTO.cancelado);
-  const mesEventos = ativos.filter((a) => a.data?.startsWith(prefixoMes));
-  const diaEventos = ativos.filter((a) => a.data === selecionada);
-  const canceladosMes = agendamentos.filter((a) => a.data?.startsWith(prefixoMes) && a.status === STATUS_AGENDAMENTO.cancelado);
-  const paraAgendar = obterOrcamentosParaAgendar();
-  document.querySelector("#mesAtual").textContent = capitalizar(mesLongo.format(dataAtual));
-  document.querySelector("#totalMes").textContent = mesEventos.length;
-  document.querySelector("#totalDia").textContent = diaEventos.length;
-  document.querySelector("#totalParaAgendar").textContent = paraAgendar.length;
-  document.querySelector("#totalCanceladosMes").textContent = canceladosMes.length;
-  document.querySelector("#calendario").innerHTML = dias.map((dia) => diaHtml(dia, mes, ativos)).join("");
-  document.querySelectorAll("[data-dia]").forEach((botao) => botao.addEventListener("click", () => { selecionada = botao.dataset.dia; render(); }));
-  renderEventos(diaEventos.length ? diaEventos : mesEventos, diaEventos.length > 0);
-  renderPipelineResumo();
-  renderParaAgendar(paraAgendar);
+  const inicio = new Date(ano, mes, 1 - new Date(ano, mes, 1).getDay());
+  const dias = Array.from({ length: 42 }, (_, indice) => new Date(inicio.getFullYear(), inicio.getMonth(), inicio.getDate() + indice));
+  const ativos = agendamentos.filter((evento) => evento.status !== STATUS_AGENDAMENTO.cancelado);
+  document.querySelector("#calendario").innerHTML = dias.map((dia) => {
+    const data = chaveData(dia);
+    const eventos = ativos.filter((evento) => evento.data === data);
+    const classes = ["calendar-day-workflow", dia.getMonth() !== mes ? "is-muted" : "", data === chaveData(new Date()) ? "is-today" : "", data === selecionada ? "is-selected" : ""].filter(Boolean).join(" ");
+    const pontos = eventos.slice(0, 4).map((evento) => `<i class="event-dot" style="background:${escapar(evento.cor || "#8B5CF6")}"></i>`).join("");
+    return `<button class="${classes}" type="button" data-calendar-day="${data}"><span class="day-number">${dia.getDate()}</span>${pontos ? `<span class="event-dots">${pontos}</span>` : ""}</button>`;
+  }).join("");
 }
 
-function diaHtml(dia, mes, ativos) {
-  const chave = chaveData(dia);
-  const eventos = ativos.filter((a) => a.data === chave);
-  return `<button class="calendar-day ${dia.getMonth() !== mes ? "is-muted" : ""} ${chave === selecionada ? "is-active" : ""} ${chave === chaveData(new Date()) ? "is-today" : ""}" type="button" data-dia="${chave}"><strong>${dia.getDate()}</strong>${eventos.length ? `<span class="day-count">${eventos.length}</span>` : ""}</button>`;
+function renderizarEventosMes() {
+  const mes = `${dataAtual.getFullYear()}-${String(dataAtual.getMonth() + 1).padStart(2, "0")}`;
+  const eventos = agendamentos.filter((evento) => evento.data?.startsWith(mes) && evento.status !== STATUS_AGENDAMENTO.cancelado).sort(compararEvento).slice(0, 8);
+  const alvo = document.querySelector("#eventosMesMini");
+  alvo.innerHTML = eventos.length ? eventos.map((evento) => {
+    const orcamento = orcamentosPorId.get(evento.orcamentoId);
+    return `<button class="mini-event-card" type="button" data-event-day="${evento.data}"><header><strong>${formatarData(evento.data)} · ${escapar(evento.horaInicio || "")}</strong><i class="event-color-chip" style="background:${escapar(evento.cor || "#8B5CF6")}"></i></header><span>${escapar(orcamento?.clienteNomeSnapshot || "Cliente")} · ${escapar(orcamento?.nome || "Orçamento")}</span></button>`;
+  }).join("") : "<p class=\"empty-inline\">Nenhuma sessão no mês.</p>";
 }
 
-function renderEventos(lista, filtradoPorDia) {
-  document.querySelector("#tituloEventos").textContent = filtradoPorDia ? `Eventos de ${formatarData(selecionada)}` : "Eventos do mês";
-  document.querySelector("#listaEventos").innerHTML = lista.length ? lista.map((a) => {
-    const o = orcamentos.get(a.orcamentoId);
-    return `<article class="note-card agenda-event-card"><strong>${formatarData(a.data)} ${escapar(a.horaInicio || "")}</strong><span>${escapar(o?.clienteNomeSnapshot || "Cliente")} · ${escapar(o?.nome || "Orçamento")} · ${escapar(a.status)}</span><div class="action-row"><button class="button button-secondary" type="button" data-edit-agenda="${a.id}">Alterar</button><button class="button button-ghost" type="button" data-cancel-agenda="${a.id}">Cancelar</button><button class="button button-secondary" type="button" data-complete-agenda="${a.id}">Concluir</button></div></article>`;
-  }).join("") : vazio("Nenhum agendamento encontrado.");
+function renderizarAprovacao() {
+  const lista = orcamentos.filter((orcamento) => orcamento.status === STATUS_ORCAMENTO.aguardandoCliente).sort((a, b) => String(b.criadoEm).localeCompare(String(a.criadoEm)));
+  document.querySelector("#listaAprovacao").innerHTML = lista.length ? lista.map(cardOrcamento).join("") : "<p class=\"empty-inline\">Nenhuma proposta aguardando aprovação.</p>";
 }
 
-function renderPipelineResumo() {
-  const status = [STATUS_ORCAMENTO.aguardandoCliente, STATUS_ORCAMENTO.aceito, STATUS_ORCAMENTO.agendado, STATUS_ORCAMENTO.concluido, STATUS_ORCAMENTO.recusado];
-  document.querySelector("#pipelineResumo").innerHTML = status.map((s) => `<article><span>${escapar(rotuloStatus(s))}</span><strong>${orcamentosLista.filter((o) => o.status === s).length}</strong></article>`).join("");
+function renderizarAprovados() {
+  const lista = orcamentos.filter((orcamento) => orcamento.status === STATUS_ORCAMENTO.aceito).sort((a, b) => String(b.aceitoEm || b.atualizadoEm).localeCompare(String(a.aceitoEm || a.atualizadoEm)));
+  document.querySelector("#listaAprovados").innerHTML = lista.length ? lista.map((orcamento) => `<article class="budget-thumb"><header><div><strong>${escapar(orcamento.nome)}</strong><span>${escapar(orcamento.clienteNomeSnapshot || "Cliente não informado")}</span></div><strong>${formatarMoeda(orcamento.valorFinalSnapshot)}</strong></header><div class="action-row"><button class="button button-primary" type="button" data-schedule-budget="${orcamento.id}"><i data-lucide="calendar-plus"></i>Agendar</button><button class="button button-ghost" type="button" data-open-budget="${orcamento.id}">Detalhes</button></div></article>`).join("") : "<p class=\"empty-inline\">Nenhum orçamento aprovado para agendar.</p>";
 }
 
-function renderParaAgendar(lista) {
-  document.querySelector("#listaParaAgendar").innerHTML = lista.length ? lista.map((o) => `<article class="note-card"><strong>${escapar(o.nome)}</strong><span>${escapar(o.clienteNomeSnapshot || "Cliente não informado")}</span><button class="button button-primary" type="button" data-schedule-budget="${o.id}">Agendar</button></article>`).join("") : vazio("Nenhum orçamento aceito aguardando agendamento.");
+function renderizarBoard() {
+  document.querySelector("#boardPipeline").innerHTML = COLUNAS.map((coluna) => {
+    const lista = orcamentos.filter((orcamento) => coluna.status.includes(orcamento.status));
+    return `<section class="board-column"><header><strong>${coluna.titulo}</strong><span>${lista.length}</span></header><div class="board-column-list">${lista.length ? lista.map((orcamento) => `<button class="board-card" type="button" data-open-budget="${orcamento.id}"><strong>${escapar(orcamento.nome)}</strong><span>${escapar(orcamento.clienteNomeSnapshot || "Cliente")}</span><span>${formatarMoeda(orcamento.valorFinalSnapshot)}</span></button>`).join("") : "<p class=\"empty-inline\">Sem itens.</p>"}</div></section>`;
+  }).join("");
 }
 
-function obterOrcamentosParaAgendar() {
-  return orcamentosLista.filter((orcamento) => {
-    if (orcamento.status !== STATUS_ORCAMENTO.aceito) return false;
-    const agendamento = agendamentosPorOrcamento.get(orcamento.id);
-    return !agendamento || agendamento.status === STATUS_AGENDAMENTO.cancelado;
-  });
+function cardOrcamento(orcamento) {
+  return `<button class="budget-thumb" type="button" data-open-budget="${orcamento.id}"><header><div><strong>${escapar(orcamento.nome)}</strong><span>${escapar(orcamento.clienteNomeSnapshot || "Cliente não informado")}</span></div><strong>${formatarMoeda(orcamento.valorFinalSnapshot)}</strong></header><span>${escapar(orcamento.tamanhoTatuagem || "Tamanho a definir")} cm · ${escapar(orcamento.localCorpo || "Local a definir")}</span></button>`;
 }
 
-function handleParaAgendarClick(evento) {
-  const botao = evento.target.closest("[data-schedule-budget]");
-  if (botao) abrirModalAgendamento({ orcamentoId: botao.dataset.scheduleBudget });
-}
-
-async function handleEventoClick(evento) {
-  const editar = evento.target.closest("[data-edit-agenda]");
-  const cancelar = evento.target.closest("[data-cancel-agenda]");
-  const concluir = evento.target.closest("[data-complete-agenda]");
-  if (editar) return abrirModalAgendamento({ agendamentoId: editar.dataset.editAgenda });
-  if (cancelar) {
-    const motivo = prompt("Motivo do cancelamento", "") || "Sem motivo informado";
-    await cancelarAgendamento(cancelar.dataset.cancelAgenda, motivo);
-    await carregar();
+async function tratarClique(evento) {
+  const fechar = evento.target.closest("[data-close-modal]");
+  if (fechar) return document.querySelector(`#${fechar.dataset.closeModal}`)?.close();
+  const dia = evento.target.closest("[data-calendar-day]");
+  if (dia) return abrirDia(dia.dataset.calendarDay);
+  const eventoMes = evento.target.closest("[data-event-day]");
+  if (eventoMes) return abrirDia(eventoMes.dataset.eventDay);
+  const abrir = evento.target.closest("[data-open-budget]");
+  if (abrir) return abrirOrcamento(abrir.dataset.openBudget);
+  const agendar = evento.target.closest("[data-schedule-budget]");
+  if (agendar) return abrirAgendamento({ orcamentoId: agendar.dataset.scheduleBudget });
+  const aprovar = evento.target.closest("[data-approve-budget]");
+  if (aprovar) { await aceitarOrcamento(aprovar.dataset.approveBudget); fecharModal("orcamentoModal"); return carregar(); }
+  const recusar = evento.target.closest("[data-reject-budget]");
+  if (recusar) { await recusarOrcamento(recusar.dataset.rejectBudget, "Reprovado na pipeline"); fecharModal("orcamentoModal"); return carregar(); }
+  const excluir = evento.target.closest("[data-delete-budget]");
+  if (excluir) {
+    if (!window.confirm("Excluir este orçamento e qualquer agendamento vinculado?")) return;
+    await excluirOrcamento(excluir.dataset.deleteBudget);
+    fecharModal("orcamentoModal");
+    return carregar();
   }
-  if (concluir) { await concluirAgendamento(concluir.dataset.completeAgenda); await carregar(); }
+  const editar = evento.target.closest("[data-edit-budget]");
+  if (editar) window.location.href = `orcamentos.html?editar=${encodeURIComponent(editar.dataset.editBudget)}`;
+  const acaoEvento = evento.target.closest("[data-event-action]");
+  if (acaoEvento) await tratarAcaoEvento(acaoEvento.dataset.eventAction, acaoEvento.dataset.eventId);
 }
 
-function abrirModalAgendamento({ orcamentoId = "", agendamentoId = "" }) {
-  const agendamento = agendamentoId ? agendamentos.find((a) => a.id === agendamentoId) : null;
-  document.querySelector("#agendaId").value = agendamento?.id || "";
-  document.querySelector("#agendaOrcamentoId").value = agendamento?.orcamentoId || orcamentoId;
-  document.querySelector("#agendaData").value = agendamento?.data || selecionada;
-  document.querySelector("#agendaHoraInicio").value = agendamento?.horaInicio || "";
-  document.querySelector("#agendaHoraFim").value = agendamento?.horaFim || "";
-  document.querySelector("#agendaObservacoes").value = agendamento?.observacoes || "";
-  document.querySelector("#agendaModalLabel").textContent = agendamento ? "Alterar agenda" : "Agendar orçamento";
-  document.querySelector("#agendaModal")?.showModal?.();
+async function abrirOrcamento(id) {
+  const orcamento = orcamentosPorId.get(id);
+  if (!orcamento) return;
+  const itens = await listarItensOrcamento(id);
+  document.querySelector("#orcamentoModalContent").innerHTML = `<header class="modal-header"><div><span>Aguardando aprovação</span><h2>${escapar(orcamento.nome)}</h2></div><button class="icon-button" data-close-modal="orcamentoModal" type="button"><i data-lucide="x"></i></button></header><div class="modal-summary-grid"><article><span>Cliente</span><strong>${escapar(orcamento.clienteNomeSnapshot || "Não informado")}</strong></article><article><span>Valor final</span><strong>${formatarMoeda(orcamento.valorFinalSnapshot)}</strong></article><article><span>Arte</span><strong>${escapar(orcamento.tamanhoTatuagem || "—")} cm · ${escapar(orcamento.localCorpo || "—")}</strong></article><article><span>Complexidade</span><strong>${escapar(orcamento.complexidade || "—")}</strong></article></div><p class="notice-soft">${escapar(orcamento.observacoesCliente || "Sem observações adicionais.")}</p><div class="event-status-list">${itens.length ? itens.map((item) => `<div class="event-status-row"><strong>${escapar(item.nomeItemSnapshot)}</strong><small>${escapar(item.categoriaSnapshot)} · ${item.quantidadeUsada} ${escapar(item.unidadeMedidaSnapshot)}</small></div>`).join("") : "<p class=\"empty-inline\">Sem itens vinculados.</p>"}</div><div class="modal-actions"><button class="button button-danger" type="button" data-delete-budget="${orcamento.id}"><i data-lucide="trash-2"></i>Excluir</button><button class="button button-ghost" type="button" data-edit-budget="${orcamento.id}"><i data-lucide="pencil"></i>Editar</button>${orcamento.status === STATUS_ORCAMENTO.aguardandoCliente ? `<button class="button button-secondary" type="button" data-reject-budget="${orcamento.id}">Reprovado</button><button class="button button-primary" type="button" data-approve-budget="${orcamento.id}">Aprovado</button>` : ""}</div>`;
+  document.querySelector("#orcamentoModal")?.showModal();
+  atualizarIcones();
 }
 
-function fecharModal() { document.querySelector("#agendaModal")?.close?.(); }
+function abrirDia(data) {
+  selecionada = data;
+  const lista = agendamentos.filter((evento) => evento.data === data && evento.status !== STATUS_AGENDAMENTO.cancelado).sort(compararEvento);
+  document.querySelector("#eventoDiaContent").innerHTML = `<header class="modal-header"><div><span>Agenda do dia</span><h2>${formatarData(data)}</h2></div><button class="icon-button" data-close-modal="eventoDiaModal" type="button"><i data-lucide="x"></i></button></header><div class="event-status-list">${lista.length ? lista.map((evento) => cardEvento(evento)).join("") : "<p class=\"empty-inline\">Nenhum agendamento neste dia.</p>"}</div>`;
+  document.querySelector("#eventoDiaModal")?.showModal();
+  renderizarCalendario();
+  atualizarIcones();
+}
 
-async function salvarAgendaModal(evento) {
-  evento.preventDefault();
-  const dados = { data: value("#agendaData"), horaInicio: value("#agendaHoraInicio"), horaFim: value("#agendaHoraFim"), observacoes: value("#agendaObservacoes") };
-  const agendamentoId = value("#agendaId");
-  if (agendamentoId) await atualizarAgendamento(agendamentoId, dados);
-  else await agendarOrcamento(value("#agendaOrcamentoId"), dados);
-  fecharModal();
+function cardEvento(evento) {
+  const orcamento = orcamentosPorId.get(evento.orcamentoId);
+  return `<article class="event-status-row"><header><div><strong>${escapar(evento.horaInicio || "Horário")} · ${escapar(orcamento?.clienteNomeSnapshot || "Cliente")}</strong><span>${escapar(orcamento?.nome || "Orçamento")}</span></div><i class="event-color-chip" style="background:${escapar(evento.cor || "#8B5CF6")}"></i></header><small>Status: ${rotuloEvento(evento.status)}</small><div class="action-row"><button class="button button-ghost" type="button" data-event-action="reagendar" data-event-id="${evento.id}">Reagendado</button><button class="button button-secondary" type="button" data-event-action="concluir" data-event-id="${evento.id}">Concluído</button><button class="button button-danger" type="button" data-event-action="cancelar" data-event-id="${evento.id}">Cancelado</button></div></article>`;
+}
+
+async function tratarAcaoEvento(acao, id) {
+  if (acao === "reagendar") {
+    fecharModal("eventoDiaModal");
+    return abrirAgendamento({ agendamentoId: id });
+  }
+  if (acao === "cancelar") await cancelarAgendamento(id, "Cancelado na agenda");
+  if (acao === "concluir") await concluirAgendamento(id);
+  fecharModal("eventoDiaModal");
   await carregar();
 }
 
-function rotuloStatus(status) {
-  return ({ aguardando_cliente: "Aguardando", aceito: "Para agendar", agendado: "Agendados", concluido: "Concluídos", recusado: "Recusados" })[status] || status;
+function abrirAgendamento({ orcamentoId = "", agendamentoId = "" }) {
+  const evento = agendamentoId ? agendamentos.find((item) => item.id === agendamentoId) : null;
+  const id = evento?.orcamentoId || orcamentoId;
+  const orcamento = orcamentosPorId.get(id);
+  definir("#agendaOrcamentoId", id);
+  definir("#agendaId", evento?.id || "");
+  definir("#agendaData", evento?.data || selecionada);
+  const inicio = evento?.horaInicio || orcamento?.horarioPreferencial || "10:00";
+  definir("#agendaHoraInicio", inicio);
+  definir("#agendaHoraFim", evento?.horaFim || somarHoras(inicio, orcamento?.duracaoSessao || 1));
+  definir("#agendaObservacoes", evento?.observacoes || "");
+  document.querySelectorAll("input[name='agendaCor']").forEach((campo) => { campo.checked = campo.value === (evento?.cor || "#8B5CF6"); });
+  document.querySelector("#agendaModalLabel").textContent = evento ? "Reagendar sessão" : "Agendar orçamento";
+  document.querySelector("#agendaModalTitle").textContent = orcamento ? `${orcamento.clienteNomeSnapshot} · ${orcamento.nome}` : "Sessão";
+  document.querySelector("#agendaModal")?.showModal();
+  atualizarIcones();
 }
 
-function value(selector) { return document.querySelector(selector)?.value || ""; }
+function calcularFim() {
+  const orcamento = orcamentosPorId.get(valor("#agendaOrcamentoId"));
+  definir("#agendaHoraFim", somarHoras(valor("#agendaHoraInicio"), orcamento?.duracaoSessao || 1));
+}
+
+async function salvarAgendamento(evento) {
+  evento.preventDefault();
+  const dados = { data: valor("#agendaData"), horaInicio: valor("#agendaHoraInicio"), horaFim: valor("#agendaHoraFim"), observacoes: valor("#agendaObservacoes"), cor: document.querySelector("input[name='agendaCor']:checked")?.value || "#8B5CF6" };
+  const id = valor("#agendaId");
+  if (id) await reagendarAgendamento(id, dados);
+  else await agendarOrcamento(valor("#agendaOrcamentoId"), dados);
+  fecharModal("agendaModal");
+  await carregar();
+}
+
+function compararEvento(a, b) { return `${a.data || ""} ${a.horaInicio || ""}`.localeCompare(`${b.data || ""} ${b.horaInicio || ""}`); }
+function somarHoras(hora, duracao) {
+  const [h, m] = String(hora || "10:00").split(":").map(Number);
+  const minutos = (Number(h) || 0) * 60 + (Number(m) || 0) + Math.round(Number(duracao || 1) * 60);
+  return `${String(Math.floor((minutos % 1440) / 60)).padStart(2, "0")}:${String(minutos % 60).padStart(2, "0")}`;
+}
+function rotuloEvento(status) { return ({ agendado: "Agendado", remarcado: "Reagendado", concluido: "Concluído", cancelado: "Cancelado" })[status] || status; }
+function fecharModal(id) { document.querySelector(`#${id}`)?.close(); }
+function valor(seletor) { return document.querySelector(seletor)?.value || ""; }
+function definir(seletor, conteudo) { const alvo = document.querySelector(seletor); if (alvo) alvo.value = conteudo; }
