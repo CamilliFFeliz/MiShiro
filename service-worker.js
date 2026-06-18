@@ -1,5 +1,5 @@
-const CACHE_NAME = "mishiro-static-v36-consolidado";
-const RUNTIME_CACHE_NAME = "mishiro-runtime-v36-consolidado";
+const CACHE_NAME = "mishiro-static-v37-estavel";
+const RUNTIME_CACHE_NAME = "mishiro-runtime-v37-estavel";
 const APP_CACHE_PREFIXES = ["calculadora-tattoo-", "mishiro-orcamentos-", "mishiro-static-", "mishiro-runtime-"];
 const CURRENT_CACHE_NAMES = [CACHE_NAME, RUNTIME_CACHE_NAME];
 const APP_SHELL_URL = "./index.html";
@@ -17,12 +17,10 @@ const APP_ASSETS = [
   "./src/services/estoque-service.js", "./src/services/orcamentos-service.js", "./src/services/agenda-service.js", "./src/services/backup-service.js",
   "./src/pages/dashboard.js", "./src/pages/orcamentos.js", "./src/pages/budget-main.js", "./src/pages/budget-events.js", "./src/pages/budget-persistence.js", "./src/pages/budget-pdf.js", "./src/pages/budget-ui.js", "./src/pages/orcamentos-v3-data.js", "./src/pages/orcamentos-v3-stock-view.js", "./src/pages/orcamentos-v3-cart-view.js", "./src/pages/orcamentos-export.js", "./src/pages/estoque.js", "./src/pages/agenda.js", "./src/pages/relatorios.js", "./src/pages/backup.js", "./src/pages/configuracoes.js"
 ];
-
 self.addEventListener("install", (event) => { event.waitUntil(cacheApplicationShell().finally(() => self.skipWaiting())); });
 self.addEventListener("activate", (event) => { event.waitUntil(deleteOldCaches().then(() => self.clients.claim())); });
 self.addEventListener("fetch", (event) => { if (event.request.method !== "GET") return; event.respondWith(handleRequest(event.request)); });
 self.addEventListener("message", (event) => { if (event.data?.type === "SKIP_WAITING") self.skipWaiting(); });
-
 async function cacheApplicationShell() { const cache = await caches.open(CACHE_NAME); await cache.addAll(APP_ASSETS); await Promise.all(EXTERNAL_ASSET_URLS.map(cacheExternalAsset)); }
 async function cacheExternalAsset(assetUrl) { try { const response = await fetch(assetUrl, { mode: "cors" }); if (response?.ok) { const cache = await caches.open(RUNTIME_CACHE_NAME); await cache.put(assetUrl, response); } } catch {} }
 async function deleteOldCaches() { const cacheNames = await caches.keys(); await Promise.all(cacheNames.filter((cacheName) => APP_CACHE_PREFIXES.some((prefix) => cacheName.startsWith(prefix))).filter((cacheName) => !CURRENT_CACHE_NAMES.includes(cacheName)).map((cacheName) => caches.delete(cacheName))); }
