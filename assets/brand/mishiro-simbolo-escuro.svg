@@ -1,7 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Símbolo MiShiro - escuro">
-  <rect width="512" height="512" rx="112" fill="#340975"/>
-  <path d="M256 38c97 0 181 58 207 142 25 82-9 174-83 225-70 48-169 48-240-1C66 353 32 260 58 178 85 95 161 42 256 38Z" fill="#FFFFFF"/>
-  <path d="M128 118c64-42 145-54 218-25 38 15 70 41 91 75" fill="none" stroke="#340975" stroke-width="29" stroke-linecap="round" opacity=".95"/>
-  <text x="121" y="335" font-size="246" font-weight="900" font-family="'Noto Serif CJK JP','Yu Mincho','Hiragino Mincho ProN',serif" fill="#340975">魅</text>
-  <path d="M145 376c72 40 154 43 229 7" fill="none" stroke="#340975" stroke-width="22" stroke-linecap="round" opacity=".95"/>
-</svg>
