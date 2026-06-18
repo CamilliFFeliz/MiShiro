@@ -5,48 +5,28 @@ import { clonarEstoqueReferencia } from "../../shared/reference-stock.js";
 export async function cadastrarItemEstoque(dados = {}) {
   const agora = obterDataIso();
   const item = montarItemEstoque(dados, { id: dados.id || criarIdentificador("item-estoque"), criadoEm: dados.criadoEm || dados.createdAt || agora });
-
   await executarTransacao([LOJAS.itensEstoque, LOJAS.movimentosEstoque, LOJAS.metadadosBackup], "readwrite", async ({ lojas }) => {
     await converterRequisicao(lojas[LOJAS.itensEstoque].put(item));
     await converterRequisicao(lojas[LOJAS.movimentosEstoque].put(criarMovimentoEstoque({ itemEstoqueId: item.id, tipo: TIPO_MOVIMENTO_ESTOQUE.estoqueInicial, quantidade: item.quantidadeAtual, quantidadeAnterior: 0, quantidadeNova: item.quantidadeAtual, motivo: "Cadastro inicial" })));
     await marcarBancoAlterado(lojas);
   });
-
   return item;
 }
 
 export async function atualizarItemEstoque(itemEstoqueId, dados = {}) {
   let itemAtualizado = null;
-
   await executarTransacao([LOJAS.itensEstoque, LOJAS.movimentosEstoque, LOJAS.metadadosBackup], "readwrite", async ({ lojas }) => {
     const itemAtual = await converterRequisicao(lojas[LOJAS.itensEstoque].get(itemEstoqueId));
     if (!itemAtual) throw new Error("Item não encontrado para edição.");
-
     const quantidadeAnterior = normalizarNumero(itemAtual.quantidadeAtual);
-    itemAtualizado = montarItemEstoque(dados, {
-      ...itemAtual,
-      id: itemAtual.id,
-      criadoEm: itemAtual.criadoEm,
-      arquivadoEm: itemAtual.arquivadoEm || null
-    });
-
+    itemAtualizado = montarItemEstoque(dados, { ...itemAtual, id: itemAtual.id, criadoEm: itemAtual.criadoEm, arquivadoEm: itemAtual.arquivadoEm || null });
     await converterRequisicao(lojas[LOJAS.itensEstoque].put(itemAtualizado));
-
     const quantidadeNova = normalizarNumero(itemAtualizado.quantidadeAtual);
     if (quantidadeNova !== quantidadeAnterior) {
-      await converterRequisicao(lojas[LOJAS.movimentosEstoque].put(criarMovimentoEstoque({
-        itemEstoqueId: itemAtual.id,
-        tipo: TIPO_MOVIMENTO_ESTOQUE.ajusteManual,
-        quantidade: quantidadeNova - quantidadeAnterior,
-        quantidadeAnterior,
-        quantidadeNova,
-        motivo: "Edição manual do item"
-      })));
+      await converterRequisicao(lojas[LOJAS.movimentosEstoque].put(criarMovimentoEstoque({ itemEstoqueId: itemAtual.id, tipo: TIPO_MOVIMENTO_ESTOQUE.ajusteManual, quantidade: quantidadeNova - quantidadeAnterior, quantidadeAnterior, quantidadeNova, motivo: "Edição manual do item" })));
     }
-
     await marcarBancoAlterado(lojas);
   });
-
   return itemAtualizado;
 }
 
@@ -55,14 +35,7 @@ export async function excluirItemEstoque(itemEstoqueId) {
     const itemAtual = await converterRequisicao(lojas[LOJAS.itensEstoque].get(itemEstoqueId));
     if (!itemAtual) throw new Error("Item não encontrado para exclusão.");
     await converterRequisicao(lojas[LOJAS.itensEstoque].delete(itemEstoqueId));
-    await converterRequisicao(lojas[LOJAS.movimentosEstoque].put(criarMovimentoEstoque({
-      itemEstoqueId,
-      tipo: TIPO_MOVIMENTO_ESTOQUE.correcao,
-      quantidade: normalizarNumero(itemAtual.quantidadeAtual) * -1,
-      quantidadeAnterior: normalizarNumero(itemAtual.quantidadeAtual),
-      quantidadeNova: 0,
-      motivo: "Item excluído do estoque"
-    })));
+    await converterRequisicao(lojas[LOJAS.movimentosEstoque].put(criarMovimentoEstoque({ itemEstoqueId, tipo: TIPO_MOVIMENTO_ESTOQUE.correcao, quantidade: normalizarNumero(itemAtual.quantidadeAtual) * -1, quantidadeAnterior: normalizarNumero(itemAtual.quantidadeAtual), quantidadeNova: 0, motivo: "Item excluído do estoque" })));
     await marcarBancoAlterado(lojas);
   });
   return true;
@@ -71,15 +44,14 @@ export async function excluirItemEstoque(itemEstoqueId) {
 export async function restaurarEstoqueReferencia({ somenteSeVazio = false } = {}) {
   const itensAtuais = await listarItensEstoque();
   if (somenteSeVazio && itensAtuais.length > 0) return itensAtuais;
-  const estoqueReferencia = clonarEstoqueReferencia();
-  for (const item of estoqueReferencia) {
-    await cadastrarItemEstoque(item);
-  }
+  const idsAtuais = new Set(itensAtuais.map((item) => item.id));
+  const estoqueReferencia = clonarEstoqueReferencia().filter((item) => !idsAtuais.has(item.id));
+  for (const item of estoqueReferencia) await cadastrarItemEstoque(item);
   return listarItensEstoque();
 }
 
 export async function garantirEstoqueInicial() {
-  return restaurarEstoqueReferencia({ somenteSeVazio: true });
+  return restaurarEstoqueReferencia({ somenteSeVazio: false });
 }
 
 export async function adicionarEntradaEstoque(itemEstoqueId, quantidade, motivo = "Entrada manual") {
@@ -93,14 +65,8 @@ export async function ajustarEstoque(itemEstoqueId, novaQuantidade, motivo = "Aj
   return alterarQuantidade(itemEstoqueId, quantidadeFinal, () => quantidadeFinal, TIPO_MOVIMENTO_ESTOQUE.ajusteManual, motivo);
 }
 
-export async function listarItensEstoque() {
-  return obterTodos(LOJAS.itensEstoque);
-}
-
-export async function obterItemEstoque(itemEstoqueId) {
-  return obterPorId(LOJAS.itensEstoque, itemEstoqueId);
-}
-
+export async function listarItensEstoque() { return obterTodos(LOJAS.itensEstoque); }
+export async function obterItemEstoque(itemEstoqueId) { return obterPorId(LOJAS.itensEstoque, itemEstoqueId); }
 export async function listarAlertasEstoqueBaixo() {
   const itens = await listarItensEstoque();
   return itens.filter((item) => !item.arquivadoEm && normalizarNumero(item.quantidadeAtual) <= normalizarNumero(item.quantidadeMinima));
@@ -152,10 +118,9 @@ async function alterarQuantidade(itemEstoqueId, quantidade, calcularNovaQuantida
 
 function montarItemEstoque(dados = {}, base = {}) {
   const agora = obterDataIso();
-  const quantidadeAtual = Math.max(normalizarNumero(dados.quantidadeAtual || dados.stockQuantity), 0);
-  const precoEmbalagem = Math.max(normalizarNumero(dados.precoEmbalagem || dados.packagePrice || dados.singleUnitPrice), 0);
-  const quantidadeEmbalagem = Math.max(normalizarNumero(dados.quantidadeEmbalagem || dados.packageQuantity), 1);
-
+  const quantidadeAtual = Math.max(normalizarNumero(dados.quantidadeAtual ?? dados.stockQuantity), 0);
+  const precoEmbalagem = Math.max(normalizarNumero(dados.precoEmbalagem ?? dados.packagePrice ?? dados.singleUnitPrice), 0);
+  const quantidadeEmbalagem = Math.max(normalizarNumero(dados.quantidadeEmbalagem ?? dados.packageQuantity), 1);
   return {
     ...base,
     id: base.id || dados.id || criarIdentificador("item-estoque"),
@@ -168,7 +133,7 @@ function montarItemEstoque(dados = {}, base = {}) {
     quantidadeEmbalagem,
     custoUnitarioSnapshot: arredondar(precoEmbalagem / quantidadeEmbalagem),
     quantidadeAtual,
-    quantidadeMinima: Math.max(normalizarNumero(dados.quantidadeMinima || dados.minimumQuantity), 0),
+    quantidadeMinima: Math.max(normalizarNumero(dados.quantidadeMinima ?? dados.minimumQuantity), 0),
     formatoCompra: dados.formatoCompra || dados.purchaseMode || "unidade",
     cor: dados.cor || dados.color || "",
     numeracao: dados.numeracao || dados.numbering || "",
@@ -189,6 +154,4 @@ async function marcarBancoAlterado(lojas) {
   await converterRequisicao(lojas[LOJAS.metadadosBackup].put({ ...atual, bancoAlteradoEm: obterDataIso(), atualizadoEm: obterDataIso() }));
 }
 
-function arredondar(valor) {
-  return Math.round((normalizarNumero(valor) + Number.EPSILON) * 100) / 100;
-}
+function arredondar(valor) { return Math.round((normalizarNumero(valor) + Number.EPSILON) * 100) / 100; }
