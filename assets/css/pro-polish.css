@@ -1,5 +1,5 @@
 /* MiShiro final polish - ajustes específicos carregados por último */
-body[data-page="orcamentos"] .page-shell { padding-bottom: 150px !important; }
+body[data-page="orcamentos"] .page-shell { padding-bottom: 170px !important; }
 body[data-page="orcamentos"] .budget-card { border-radius: 24px; }
 body[data-page="orcamentos"] .compact-budget-grid { gap: 16px; }
 body[data-page="orcamentos"] .compact-title { display:grid; gap:4px; }
@@ -12,7 +12,19 @@ body[data-page="orcamentos"] .budget-actions .button { min-height:52px; border-r
 body[data-page="orcamentos"] .horizontal-chip-row { flex-wrap:nowrap !important; overflow-x:auto; }
 body[data-page="orcamentos"] .filter-chip { flex:0 0 auto; }
 body[data-page="orcamentos"] .picker-card { min-height:auto !important; }
-body[data-page="orcamentos"] .floating-cart-button { min-height:58px; border-radius:20px; }
+body[data-page="orcamentos"] .reference-upload { display:grid; gap:12px; }
+body[data-page="orcamentos"] .upload-button { display:grid !important; grid-template-columns:44px minmax(0,1fr) !important; align-items:center; gap:12px; min-height:88px; padding:14px 16px; border:1px dashed rgba(184,155,234,.36); border-radius:20px; background:rgba(255,255,255,.05); }
+body[data-page="orcamentos"] .upload-button i { grid-row:auto !important; width:26px; height:26px; color:#e8ddff; justify-self:center; }
+body[data-page="orcamentos"] .upload-copy { display:grid; gap:4px; min-width:0; }
+body[data-page="orcamentos"] .upload-button strong { font-size:1rem; line-height:1.15; color:var(--text); white-space:normal; }
+body[data-page="orcamentos"] .upload-button small { display:block; font-size:.82rem; line-height:1.35; color:var(--text-soft); white-space:normal; }
+body[data-page="orcamentos"] .reference-preview { min-height:150px; border-radius:20px; }
+body[data-page="orcamentos"] .reference-preview img { width:100%; max-height:220px; object-fit:contain; }
+body[data-page="orcamentos"] .floating-cart-button { min-height:56px; padding:10px 14px; border-radius:20px; }
+body[data-page="orcamentos"] .floating-cart-button i { width:22px; height:22px; }
+body[data-page="orcamentos"] .floating-cart-button span { display:grid; gap:1px; }
+body[data-page="orcamentos"] .floating-cart-button strong { font-size:1rem; line-height:1.05; }
+body[data-page="orcamentos"] .floating-cart-button small { font-size:.82rem; }
 body[data-page="orcamentos"] .cart-drawer { bottom:calc(86px + env(safe-area-inset-bottom)); }
 
 body[data-page="estoque"] .stock-list-panel { border-radius: 26px; }
@@ -22,6 +34,10 @@ body[data-page="estoque"] .inventory-card.stock-compact-card { min-height:auto !
 body[data-page="estoque"] .stock-compact-stats { grid-template-columns:repeat(3,minmax(0,1fr)); }
 body[data-page="estoque"] .stock-compact-stats article { min-height:76px; }
 body[data-page="estoque"] .stock-compact-footer { margin-top:2px; }
+body[data-page="estoque"] .inventory-card-actions.dual-actions { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+body[data-page="estoque"] .inventory-card-actions.dual-actions .button { width:100%; justify-content:center; min-height:46px; border-radius:16px; }
+body[data-page="estoque"] .button-danger { border:1px solid rgba(255,109,145,.28); background:linear-gradient(135deg, rgba(117,21,55,.45), rgba(54,10,117,.35)); color:#fff; font-weight:900; }
+body[data-page="estoque"] .button-danger:hover { border-color:rgba(255,129,160,.44); background:linear-gradient(135deg, rgba(140,28,69,.55), rgba(54,10,117,.45)); }
 
 body[data-page="relatorios"] .report-panel { border-radius: 26px; }
 body[data-page="relatorios"] .report-stat-grid { display:grid; grid-template-columns: repeat(auto-fit,minmax(136px,1fr)); gap:10px; }
@@ -38,10 +54,13 @@ body[data-page="relatorios"] .report-row header { display:flex; justify-content:
   body[data-page="orcamentos"] .pro-preset-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
   body[data-page="orcamentos"] .picker-card { padding:13px; }
   body[data-page="estoque"] .stock-compact-stats { grid-template-columns:1fr; }
+  body[data-page="estoque"] .inventory-card-actions.dual-actions { grid-template-columns:1fr; }
   body[data-page="relatorios"] .report-two-columns { grid-template-columns:1fr; }
   body[data-page="relatorios"] .report-row header { display:grid; gap:4px; }
 }
 @media (max-width: 420px) {
   body[data-page="orcamentos"] .pro-preset-grid { grid-template-columns:1fr; }
+  body[data-page="orcamentos"] .upload-button { grid-template-columns:40px minmax(0,1fr) !important; padding:13px 14px; }
+  body[data-page="orcamentos"] .upload-button strong { font-size:.96rem; }
   body[data-page="relatorios"] .report-stat-grid { grid-template-columns:1fr; }
 }
