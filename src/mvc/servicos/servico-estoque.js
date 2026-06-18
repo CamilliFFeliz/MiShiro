@@ -50,6 +50,24 @@ export async function atualizarItemEstoque(itemEstoqueId, dados = {}) {
   return itemAtualizado;
 }
 
+export async function excluirItemEstoque(itemEstoqueId) {
+  await executarTransacao([LOJAS.itensEstoque, LOJAS.movimentosEstoque, LOJAS.metadadosBackup], "readwrite", async ({ lojas }) => {
+    const itemAtual = await converterRequisicao(lojas[LOJAS.itensEstoque].get(itemEstoqueId));
+    if (!itemAtual) throw new Error("Item não encontrado para exclusão.");
+    await converterRequisicao(lojas[LOJAS.itensEstoque].delete(itemEstoqueId));
+    await converterRequisicao(lojas[LOJAS.movimentosEstoque].put(criarMovimentoEstoque({
+      itemEstoqueId,
+      tipo: TIPO_MOVIMENTO_ESTOQUE.correcao,
+      quantidade: normalizarNumero(itemAtual.quantidadeAtual) * -1,
+      quantidadeAnterior: normalizarNumero(itemAtual.quantidadeAtual),
+      quantidadeNova: 0,
+      motivo: "Item excluído do estoque"
+    })));
+    await marcarBancoAlterado(lojas);
+  });
+  return true;
+}
+
 export async function restaurarEstoqueReferencia({ somenteSeVazio = false } = {}) {
   const itensAtuais = await listarItensEstoque();
   if (somenteSeVazio && itensAtuais.length > 0) return itensAtuais;
