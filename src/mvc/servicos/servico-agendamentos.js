@@ -1,6 +1,8 @@
 import { converterRequisicao, executarTransacao, obterPorId, obterPorIndice, obterTodos } from "../modelos/banco-local.js";
 import { criarIdentificador, LOJAS, obterDataIso, STATUS_AGENDAMENTO, STATUS_ORCAMENTO } from "../modelos/esquema-banco.js";
 
+const STATUS_ATIVOS = new Set([STATUS_AGENDAMENTO.agendado, STATUS_AGENDAMENTO.confirmado]);
+
 export async function listarAgendamentos() {
   return obterTodos(LOJAS.agendamentos);
 }
@@ -19,43 +21,46 @@ export async function listarAgendamentosPorPeriodo(dataInicio, dataFim) {
 }
 
 export async function agendarOrcamento(orcamentoId, dados = {}) {
+  validarDadosAgenda(dados);
   let agendamento = null;
   await executarTransacao([LOJAS.orcamentos, LOJAS.agendamentos, LOJAS.metadadosBackup], "readwrite", async ({ lojas }) => {
     const orcamento = await converterRequisicao(lojas[LOJAS.orcamentos].get(orcamentoId));
     if (!orcamento) throw new Error("Orçamento não encontrado.");
-    if (![STATUS_ORCAMENTO.aceito, STATUS_ORCAMENTO.agendado].includes(orcamento.status)) throw new Error("Apenas orçamento aprovado pode ser agendado.");
+    if (orcamento.status !== STATUS_ORCAMENTO.aceito) throw new Error("Apenas orçamentos em 'Para Agendar' podem receber uma nova data.");
 
     const agora = obterDataIso();
     const existente = await converterRequisicao(lojas[LOJAS.agendamentos].index("porOrcamento").get(orcamentoId));
+    if (existente && ![STATUS_AGENDAMENTO.remarcado].includes(existente.status)) throw new Error("Este orçamento já possui um agendamento ativo ou encerrado.");
+
     const historico = [...(existente?.historico || [])];
-    if (existente?.data) historico.push(criarHistorico("novo_agendamento", "Nova data definida após reagendamento", resumirEvento(existente)));
-    else historico.push(criarHistorico("agendado", dados.observacoes || dados.notes || ""));
+    if (existente?.data) historico.push(criarHistorico("nova_data_definida", "Nova data registrada", resumoEvento(existente), dados.responsavel));
+    else historico.push(criarHistorico("agendado", dados.observacoes || "", null, dados.responsavel));
 
     agendamento = {
       ...(existente || {}),
       id: existente?.id || criarIdentificador("agendamento"),
       orcamentoId,
       clienteId: orcamento.clienteId || null,
-      data: dados.data || existente?.data || "",
-      horaInicio: dados.horaInicio || dados.startTime || existente?.horaInicio || "",
-      horaFim: dados.horaFim || dados.endTime || existente?.horaFim || "",
-      cor: dados.cor || existente?.cor || "#8B5CF6",
+      data: dados.data,
+      horaInicio: dados.horaInicio || dados.startTime,
+      horaFim: dados.horaFim || dados.endTime,
+      cor: dados.cor || "#8B5CF6",
       status: STATUS_AGENDAMENTO.agendado,
-      observacoes: dados.observacoes ?? dados.notes ?? existente?.observacoes ?? "",
+      observacoes: dados.observacoes ?? dados.notes ?? "",
       motivoCancelamento: "",
+      motivoReagendamento: "",
       historico,
       criadoEm: existente?.criadoEm || agora,
       atualizadoEm: agora
     };
 
-    const historicoOrcamento = registrarHistoricoOrcamento(orcamento, "agendado", "Sessão agendada", resumirEvento(agendamento), agora);
     await converterRequisicao(lojas[LOJAS.agendamentos].put(agendamento));
     await converterRequisicao(lojas[LOJAS.orcamentos].put({
       ...orcamento,
       status: STATUS_ORCAMENTO.agendado,
       agendadoEm: agora,
       reagendamentoPendenteEm: null,
-      historicoAgendamentos: historicoOrcamento,
+      historicoAgendamentos: adicionarHistoricoOrcamento(orcamento, "agendado", "Sessão agendada", resumoEvento(agendamento), agora, dados.responsavel),
       atualizadoEm: agora
     }));
     await marcarBancoAlterado(lojas);
@@ -64,100 +69,96 @@ export async function agendarOrcamento(orcamentoId, dados = {}) {
 }
 
 export async function atualizarAgendamento(id, dados = {}) {
+  const atual = await obterAgendamentoPorId(id);
+  if (!atual) throw new Error("Agendamento não encontrado.");
+  if (!STATUS_ATIVOS.has(atual.status)) throw new Error("Somente agendamentos ativos podem ser alterados.");
+  validarDadosAgenda({ ...atual, ...dados });
+
   let atualizado = null;
   await executarTransacao([LOJAS.agendamentos, LOJAS.orcamentos, LOJAS.metadadosBackup], "readwrite", async ({ lojas }) => {
-    const atual = await converterRequisicao(lojas[LOJAS.agendamentos].get(id));
-    if (!atual) throw new Error("Agendamento não encontrado.");
+    const registro = await converterRequisicao(lojas[LOJAS.agendamentos].get(id));
+    const orcamento = await converterRequisicao(lojas[LOJAS.orcamentos].get(registro.orcamentoId));
     const agora = obterDataIso();
-    const novoStatus = dados.status || STATUS_AGENDAMENTO.agendado;
     atualizado = {
-      ...atual,
-      data: dados.data || atual.data,
-      horaInicio: dados.horaInicio || dados.startTime || atual.horaInicio,
-      horaFim: dados.horaFim || dados.endTime || atual.horaFim,
-      cor: dados.cor || atual.cor || "#8B5CF6",
-      observacoes: dados.observacoes ?? dados.notes ?? atual.observacoes,
-      status: novoStatus,
-      historico: [...(atual.historico || []), criarHistorico("alterado", dados.observacoes || "", resumirEvento(atual))],
+      ...registro,
+      data: dados.data || registro.data,
+      horaInicio: dados.horaInicio || dados.startTime || registro.horaInicio,
+      horaFim: dados.horaFim || dados.endTime || registro.horaFim,
+      cor: dados.cor || registro.cor || "#8B5CF6",
+      observacoes: dados.observacoes ?? dados.notes ?? registro.observacoes,
+      historico: [...(registro.historico || []), criarHistorico("dados_alterados", dados.observacoes || "", resumoEvento(registro), dados.responsavel)],
       atualizadoEm: agora
     };
     await converterRequisicao(lojas[LOJAS.agendamentos].put(atualizado));
-    const orcamento = await converterRequisicao(lojas[LOJAS.orcamentos].get(atual.orcamentoId));
-    if (orcamento) {
-      const statusOrcamento = novoStatus === STATUS_AGENDAMENTO.cancelado
-        ? STATUS_ORCAMENTO.aceito
-        : novoStatus === STATUS_AGENDAMENTO.concluido
-          ? STATUS_ORCAMENTO.concluido
-          : STATUS_ORCAMENTO.agendado;
-      await converterRequisicao(lojas[LOJAS.orcamentos].put({
-        ...orcamento,
-        status: statusOrcamento,
-        historicoAgendamentos: registrarHistoricoOrcamento(orcamento, novoStatus, "Dados do agendamento alterados", resumirEvento(atualizado), agora),
-        atualizadoEm: agora,
-        ...(statusOrcamento === STATUS_ORCAMENTO.concluido ? { concluidoEm: agora } : {})
-      }));
-    }
+    if (orcamento) await converterRequisicao(lojas[LOJAS.orcamentos].put({
+      ...orcamento,
+      historicoAgendamentos: adicionarHistoricoOrcamento(orcamento, "dados_alterados", "Dados do agendamento atualizados", resumoEvento(atualizado), agora, dados.responsavel),
+      atualizadoEm: agora
+    }));
     await marcarBancoAlterado(lojas);
   });
   return atualizado;
 }
 
-export async function solicitarReagendamento(id, motivo = "") {
+export async function solicitarReagendamento(id, motivo = "", responsavel = "Equipe do estúdio") {
   let atualizado = null;
   await executarTransacao([LOJAS.agendamentos, LOJAS.orcamentos, LOJAS.metadadosBackup], "readwrite", async ({ lojas }) => {
     const atual = await converterRequisicao(lojas[LOJAS.agendamentos].get(id));
     if (!atual) throw new Error("Agendamento não encontrado.");
+    if (!STATUS_ATIVOS.has(atual.status)) throw new Error("Apenas agendamentos ativos podem ser reagendados.");
+    const orcamento = await converterRequisicao(lojas[LOJAS.orcamentos].get(atual.orcamentoId));
     const agora = obterDataIso();
     atualizado = {
       ...atual,
       status: STATUS_AGENDAMENTO.remarcado,
       reagendadoEm: agora,
       motivoReagendamento: String(motivo || ""),
-      historico: [...(atual.historico || []), criarHistorico("reagendamento_solicitado", motivo, resumirEvento(atual))],
+      historico: [...(atual.historico || []), criarHistorico("reagendado", motivo, resumoEvento(atual), responsavel)],
       atualizadoEm: agora
     };
     await converterRequisicao(lojas[LOJAS.agendamentos].put(atualizado));
-    const orcamento = await converterRequisicao(lojas[LOJAS.orcamentos].get(atual.orcamentoId));
-    if (orcamento) {
-      await converterRequisicao(lojas[LOJAS.orcamentos].put({
-        ...orcamento,
-        status: STATUS_ORCAMENTO.aceito,
-        reagendamentoPendenteEm: agora,
-        historicoAgendamentos: registrarHistoricoOrcamento(orcamento, "reagendado", motivo || "Nova data pendente", resumirEvento(atual), agora),
-        atualizadoEm: agora
-      }));
-    }
+    if (orcamento) await converterRequisicao(lojas[LOJAS.orcamentos].put({
+      ...orcamento,
+      status: STATUS_ORCAMENTO.aceito,
+      reagendamentoPendenteEm: agora,
+      historicoAgendamentos: adicionarHistoricoOrcamento(orcamento, "reagendado", motivo || "Nova data pendente", resumoEvento(atual), agora, responsavel),
+      atualizadoEm: agora
+    }));
     await marcarBancoAlterado(lojas);
   });
   return atualizado;
 }
 
 export async function reagendarAgendamento(id, dados = {}) {
-  return atualizarAgendamento(id, { ...dados, status: STATUS_AGENDAMENTO.agendado });
+  const agendamento = await obterAgendamentoPorId(id);
+  if (!agendamento) throw new Error("Agendamento não encontrado.");
+  await solicitarReagendamento(id, dados.motivoReagendamento || "Reagendado pelo calendário", dados.responsavel);
+  return agendarOrcamento(agendamento.orcamentoId, dados);
 }
 
-export async function cancelarAgendamento(id, motivo = "") {
+export async function cancelarAgendamento(id, motivo = "", responsavel = "Equipe do estúdio") {
   let atualizado = null;
   await executarTransacao([LOJAS.agendamentos, LOJAS.orcamentos, LOJAS.metadadosBackup], "readwrite", async ({ lojas }) => {
     const atual = await converterRequisicao(lojas[LOJAS.agendamentos].get(id));
     if (!atual) throw new Error("Agendamento não encontrado.");
+    if (!STATUS_ATIVOS.has(atual.status)) throw new Error("Somente agendamentos ativos podem ser cancelados.");
+    const orcamento = await converterRequisicao(lojas[LOJAS.orcamentos].get(atual.orcamentoId));
     const agora = obterDataIso();
     atualizado = {
       ...atual,
       status: STATUS_AGENDAMENTO.cancelado,
-      motivoCancelamento: String(motivo || "Cancelado na agenda"),
+      motivoCancelamento: String(motivo || ""),
       canceladoEm: agora,
-      historico: [...(atual.historico || []), criarHistorico("cancelado", motivo, resumirEvento(atual))],
+      historico: [...(atual.historico || []), criarHistorico("cancelado", motivo, resumoEvento(atual), responsavel)],
       atualizadoEm: agora
     };
     await converterRequisicao(lojas[LOJAS.agendamentos].put(atualizado));
-    const orcamento = await converterRequisicao(lojas[LOJAS.orcamentos].get(atual.orcamentoId));
     if (orcamento) await converterRequisicao(lojas[LOJAS.orcamentos].put({
       ...orcamento,
-      status: STATUS_ORCAMENTO.aceito,
+      status: STATUS_ORCAMENTO.cancelado,
       canceladoEm: agora,
       motivoCancelamento: atualizado.motivoCancelamento,
-      historicoAgendamentos: registrarHistoricoOrcamento(orcamento, "cancelado", atualizado.motivoCancelamento, resumirEvento(atual), agora),
+      historicoAgendamentos: adicionarHistoricoOrcamento(orcamento, "cancelado", atualizado.motivoCancelamento || "Sessão cancelada", resumoEvento(atual), agora, responsavel),
       atualizadoEm: agora
     }));
     await marcarBancoAlterado(lojas);
@@ -165,26 +166,27 @@ export async function cancelarAgendamento(id, motivo = "") {
   return atualizado;
 }
 
-export async function concluirAgendamento(id) {
+export async function concluirAgendamento(id, responsavel = "Equipe do estúdio") {
   let atualizado = null;
   await executarTransacao([LOJAS.agendamentos, LOJAS.orcamentos, LOJAS.metadadosBackup], "readwrite", async ({ lojas }) => {
     const atual = await converterRequisicao(lojas[LOJAS.agendamentos].get(id));
     if (!atual) throw new Error("Agendamento não encontrado.");
+    if (!STATUS_ATIVOS.has(atual.status)) throw new Error("Somente agendamentos ativos podem ser concluídos.");
+    const orcamento = await converterRequisicao(lojas[LOJAS.orcamentos].get(atual.orcamentoId));
     const agora = obterDataIso();
     atualizado = {
       ...atual,
       status: STATUS_AGENDAMENTO.concluido,
       concluidoEm: agora,
-      historico: [...(atual.historico || []), criarHistorico("concluido", "", resumirEvento(atual))],
+      historico: [...(atual.historico || []), criarHistorico("concluido", "Sessão concluída", resumoEvento(atual), responsavel)],
       atualizadoEm: agora
     };
     await converterRequisicao(lojas[LOJAS.agendamentos].put(atualizado));
-    const orcamento = await converterRequisicao(lojas[LOJAS.orcamentos].get(atual.orcamentoId));
     if (orcamento) await converterRequisicao(lojas[LOJAS.orcamentos].put({
       ...orcamento,
       status: STATUS_ORCAMENTO.concluido,
       concluidoEm: agora,
-      historicoAgendamentos: registrarHistoricoOrcamento(orcamento, "concluido", "Sessão concluída", resumirEvento(atualizado), agora),
+      historicoAgendamentos: adicionarHistoricoOrcamento(orcamento, "concluido", "Sessão concluída", resumoEvento(atualizado), agora, responsavel),
       atualizadoEm: agora
     }));
     await marcarBancoAlterado(lojas);
@@ -192,11 +194,17 @@ export async function concluirAgendamento(id) {
   return atualizado;
 }
 
-function criarHistorico(acao, observacao = "", evento = null) {
-  return { acao, observacao: String(observacao || ""), evento, data: obterDataIso() };
+function validarDadosAgenda(dados) {
+  if (!String(dados.data || "").trim()) throw new Error("Informe a data do agendamento.");
+  if (!String(dados.horaInicio || dados.startTime || "").trim()) throw new Error("Informe a hora de início.");
+  if (!String(dados.horaFim || dados.endTime || "").trim()) throw new Error("Informe a hora final.");
 }
 
-function resumirEvento(evento) {
+function criarHistorico(acao, observacao = "", evento = null, responsavel = "Equipe do estúdio") {
+  return { acao, observacao: String(observacao || ""), evento, responsavel: responsavel || "Equipe do estúdio", data: obterDataIso() };
+}
+
+function resumoEvento(evento) {
   return {
     data: evento?.data || "",
     horaInicio: evento?.horaInicio || "",
@@ -206,8 +214,8 @@ function resumirEvento(evento) {
   };
 }
 
-function registrarHistoricoOrcamento(orcamento, acao, motivo, evento, data) {
-  return [...(orcamento.historicoAgendamentos || []), { acao, motivo: String(motivo || ""), evento, data }];
+function adicionarHistoricoOrcamento(orcamento, acao, motivo, evento, data, responsavel = "Equipe do estúdio") {
+  return [...(orcamento.historicoAgendamentos || []), { acao, motivo: String(motivo || ""), evento, responsavel: responsavel || "Equipe do estúdio", data }];
 }
 
 async function marcarBancoAlterado(lojas) {
