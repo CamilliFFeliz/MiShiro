@@ -121,6 +121,7 @@ function montarItemEstoque(dados = {}, base = {}) {
   const quantidadeAtual = Math.max(normalizarNumero(dados.quantidadeAtual ?? dados.stockQuantity), 0);
   const precoEmbalagem = Math.max(normalizarNumero(dados.precoEmbalagem ?? dados.packagePrice ?? dados.singleUnitPrice), 0);
   const quantidadeEmbalagem = Math.max(normalizarNumero(dados.quantidadeEmbalagem ?? dados.packageQuantity), 1);
+  const imagemProduto = normalizarImagemProduto(dados.imagemProduto ?? dados.imagemItem ?? dados.imagemReferencia ?? base.imagemProduto ?? null);
   return {
     ...base,
     id: base.id || dados.id || criarIdentificador("item-estoque"),
@@ -139,10 +140,18 @@ function montarItemEstoque(dados = {}, base = {}) {
     numeracao: dados.numeracao || dados.numbering || "",
     linhaTipo: dados.linhaTipo || dados.lineType || "",
     observacoes: dados.observacoes || dados.notes || "",
+    imagemProduto,
     criadoEm: base.criadoEm || dados.criadoEm || dados.createdAt || agora,
     atualizadoEm: agora,
     arquivadoEm: base.arquivadoEm || null
   };
+}
+
+function normalizarImagemProduto(imagem) {
+  if (!imagem) return null;
+  if (typeof imagem === "string") return { nome: "Imagem do item", tipo: "image/jpeg", dataUrl: imagem };
+  if (!imagem.dataUrl) return null;
+  return { nome: imagem.nome || "Imagem do item", tipo: imagem.tipo || "image/jpeg", dataUrl: imagem.dataUrl };
 }
 
 export function criarMovimentoEstoque({ itemEstoqueId, orcamentoId = null, agendamentoId = null, tipo, quantidade, quantidadeAnterior, quantidadeNova, motivo }) {
