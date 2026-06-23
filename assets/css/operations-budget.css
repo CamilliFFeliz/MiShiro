@@ -1,112 +1,134 @@
-/* MiShiro — Orçamentos limpo, mobile-first e com carrinho preservado.
-   Este arquivo concentra todo o visual da página de Orçamentos. */
+/* MiShiro — Orçamentos
+   CSS único da página. Estrutura mobile-first, sem camadas auxiliares. */
 :root {
-  --ops-surface: rgba(23, 8, 42, .82);
-  --ops-surface-soft: rgba(255, 255, 255, .045);
+  --ops-bg: #07020d;
+  --ops-card: rgba(22, 8, 39, .82);
+  --ops-card-soft: rgba(255, 255, 255, .045);
+  --ops-card-strong: rgba(54, 10, 117, .42);
   --ops-line: rgba(238, 231, 255, .13);
-  --ops-line-strong: rgba(205, 184, 255, .32);
-  --ops-text: #fff;
+  --ops-line-strong: rgba(205, 184, 255, .34);
+  --ops-text: #fbf8ff;
   --ops-muted: rgba(238, 231, 255, .68);
+  --ops-soft: rgba(238, 231, 255, .52);
   --ops-lilac: #cdb8ff;
-  --ops-violet: #8c4dff;
   --ops-purple: #360a75;
+  --ops-violet: #8c4dff;
   --ops-danger: #f17892;
+  --ops-radius-xl: 28px;
+  --ops-radius-lg: 22px;
+  --ops-radius-md: 16px;
+  --ops-shadow: 0 20px 54px rgba(0, 0, 0, .32);
 }
 
-body[data-page="orcamentos"] .workflow-page {
-  width: min(100%, 960px);
+body[data-page="orcamentos"] .page-shell {
+  width: min(100%, 980px);
+  display: grid;
   gap: 14px;
-  padding-inline: 12px !important;
-  padding-bottom: 120px !important;
+  padding: 16px 12px 120px !important;
 }
 
-body[data-page="orcamentos"] .budget-intro {
+body[data-page="orcamentos"] .budget-workflow,
+body[data-page="orcamentos"] .ops-form,
+body[data-page="orcamentos"] .ops-grid,
+body[data-page="orcamentos"] .ops-stock-list,
+body[data-page="orcamentos"] .ops-cart,
+body[data-page="orcamentos"] .ops-reference-list {
+  min-width: 0;
+}
+
+body[data-page="orcamentos"] .ops-hero,
+body[data-page="orcamentos"] .ops-card,
+body[data-page="orcamentos"] .ops-actions {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid var(--ops-line) !important;
+  background:
+    radial-gradient(circle at 92% 6%, rgba(140, 77, 255, .12), transparent 12rem),
+    linear-gradient(145deg, rgba(255,255,255,.072), rgba(255,255,255,.025)),
+    var(--ops-card) !important;
+  box-shadow: var(--ops-shadow) !important;
+  backdrop-filter: blur(16px);
+}
+
+body[data-page="orcamentos"] .ops-hero {
+  display: grid;
+  gap: 14px;
   padding: 18px !important;
-  gap: 12px;
+  border-radius: var(--ops-radius-xl) !important;
 }
 
-body[data-page="orcamentos"] .budget-intro h1 {
-  margin-top: 2px;
-  letter-spacing: -.052em;
+body[data-page="orcamentos"] .ops-hero h1 {
+  margin: 3px 0 0;
+  color: #fff;
+  line-height: .96;
+  letter-spacing: -.06em;
 }
 
-body[data-page="orcamentos"] .budget-intro p {
-  max-width: 620px;
-  margin-top: 6px;
+body[data-page="orcamentos"] .ops-hero p {
+  margin: 8px 0 0;
+  max-width: 720px;
   color: var(--ops-muted);
   line-height: 1.48;
 }
 
-.ops-form,
-.ops-grid,
-.ops-stock-list,
-.ops-cart,
-.ops-reference-list {
-  min-width: 0;
+body[data-page="orcamentos"] .ops-hero__action {
+  min-height: 44px;
+  width: 100%;
+  justify-content: center;
+  border-radius: 16px !important;
 }
 
-.ops-form,
-.ops-form--clean {
+body[data-page="orcamentos"] .ops-form {
   display: grid;
   gap: 14px;
 }
 
-.ops-section {
-  position: relative;
-  overflow: hidden;
+body[data-page="orcamentos"] .ops-card {
   display: grid;
-  gap: 14px;
+  gap: 16px;
   padding: 18px !important;
-  border: 1px solid var(--ops-line) !important;
-  border-radius: 26px !important;
-  background:
-    radial-gradient(circle at 90% 8%, rgba(140, 77, 255, .10), transparent 10rem),
-    linear-gradient(145deg, rgba(255,255,255,.068), rgba(255,255,255,.026)),
-    var(--ops-surface) !important;
-  box-shadow: 0 18px 46px rgba(0, 0, 0, .28) !important;
+  border-radius: var(--ops-radius-xl) !important;
 }
 
-.ops-section-header,
-.ops-section-header--compact {
+body[data-page="orcamentos"] .ops-card--primary {
+  background:
+    radial-gradient(circle at 8% 0%, rgba(140, 77, 255, .12), transparent 13rem),
+    linear-gradient(145deg, rgba(255,255,255,.078), rgba(255,255,255,.026)),
+    var(--ops-card) !important;
+}
+
+body[data-page="orcamentos"] .ops-card__header {
   display: grid;
   grid-template-columns: 42px minmax(0, 1fr);
   gap: 12px;
   align-items: center;
-  margin: 0;
 }
 
-.ops-section-icon,
-.ops-field-icon,
-.ops-finance-icon,
-.ops-stock-icon {
-  display: grid;
+body[data-page="orcamentos"] .ops-card__icon,
+body[data-page="orcamentos"] .ops-field-icon,
+body[data-page="orcamentos"] .ops-finance-icon,
+body[data-page="orcamentos"] .ops-stock-icon {
+  display: inline-grid;
   place-items: center;
   color: #d8c6ff;
-  border: 1px solid rgba(205, 184, 255, .20);
-  background: linear-gradient(135deg, rgba(140, 77, 255, .22), rgba(54, 10, 117, .24));
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.055);
+  border: 1px solid rgba(205, 184, 255, .22);
+  background: linear-gradient(135deg, rgba(140, 77, 255, .24), rgba(54, 10, 117, .28));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.06);
+  line-height: 0;
 }
 
-.ops-section-icon {
+body[data-page="orcamentos"] .ops-card__icon {
   width: 42px;
   height: 42px;
   border-radius: 15px;
 }
 
-.ops-section-icon svg {
+body[data-page="orcamentos"] .ops-card__icon svg {
   width: 21px;
   height: 21px;
 }
 
-.ops-section-header h2 {
-  margin: 1px 0 0;
-  color: #fff;
-  font-size: clamp(1.2rem, 5.4vw, 1.58rem);
-  line-height: 1.06;
-  letter-spacing: -.04em;
-}
-
-.ops-section-kicker {
+body[data-page="orcamentos"] .ops-card__step {
   display: block;
   color: var(--ops-lilac);
   font-size: .68rem;
@@ -115,186 +137,185 @@ body[data-page="orcamentos"] .budget-intro p {
   text-transform: uppercase;
 }
 
-.ops-section-header p {
-  margin: 6px 0 0;
-  color: var(--ops-muted);
-  line-height: 1.42;
+body[data-page="orcamentos"] .ops-card__header h2 {
+  margin: 2px 0 0;
+  color: #fff;
+  font-size: clamp(1.18rem, 5vw, 1.55rem);
+  line-height: 1.05;
+  letter-spacing: -.04em;
 }
 
-.ops-grid {
+body[data-page="orcamentos"] .ops-card__header p {
+  margin: 5px 0 0;
+  color: var(--ops-muted);
+  font-size: .9rem;
+  line-height: 1.4;
+}
+
+body[data-page="orcamentos"] .ops-grid {
   display: grid;
   grid-template-columns: 1fr;
   gap: 12px;
 }
 
-.ops-field {
+body[data-page="orcamentos"] .ops-field {
   display: grid;
   gap: 7px;
   min-width: 0;
 }
 
-.ops-field > span:not(.ops-field-icon) {
+body[data-page="orcamentos"] .ops-field > span:not(.ops-field-icon),
+body[data-page="orcamentos"] .ops-field-label {
   color: #d8c6ff;
   font-size: .78rem;
   font-weight: 950;
 }
 
-.ops-field input,
-.ops-field select,
-.ops-field textarea {
+body[data-page="orcamentos"] .ops-field input,
+body[data-page="orcamentos"] .ops-field select,
+body[data-page="orcamentos"] .ops-field textarea {
   width: 100%;
-  min-height: 52px;
+  min-height: 50px;
   padding: 12px 14px;
-  border: 1px solid rgba(238,231,255,.13);
-  border-radius: 18px;
-  background: rgba(255,255,255,.058);
+  border: 1px solid rgba(238, 231, 255, .13);
+  border-radius: var(--ops-radius-md);
+  background: rgba(255,255,255,.062);
   color: #fff;
   outline: none;
 }
 
-.ops-field textarea {
+body[data-page="orcamentos"] .ops-field select {
+  appearance: none;
+  padding-right: 42px;
+  background-image: linear-gradient(45deg, transparent 50%, rgba(238,231,255,.78) 50%), linear-gradient(135deg, rgba(238,231,255,.78) 50%, transparent 50%);
+  background-position: calc(100% - 20px) calc(50% - 3px), calc(100% - 14px) calc(50% - 3px);
+  background-size: 6px 6px, 6px 6px;
+  background-repeat: no-repeat;
+}
+
+body[data-page="orcamentos"] .ops-field select option {
+  color: #170326;
+  background: #fbf8ff;
+}
+
+body[data-page="orcamentos"] .ops-field textarea {
   min-height: 96px;
   resize: vertical;
 }
 
-.ops-field input:focus,
-.ops-field select:focus,
-.ops-field textarea:focus {
-  border-color: rgba(205,184,255,.45);
-  box-shadow: 0 0 0 4px rgba(140,77,255,.15);
+body[data-page="orcamentos"] .ops-field input:focus,
+body[data-page="orcamentos"] .ops-field select:focus,
+body[data-page="orcamentos"] .ops-field textarea:focus {
+  border-color: var(--ops-line-strong);
+  box-shadow: 0 0 0 4px rgba(140,77,255,.16);
 }
 
-.ops-field-error {
+body[data-page="orcamentos"] .ops-field-error {
   display: none;
   color: var(--ops-danger);
   font-size: .76rem;
   line-height: 1.35;
 }
 
-.ops-field.is-invalid .ops-field-error {
+body[data-page="orcamentos"] .ops-field.is-invalid .ops-field-error {
   display: block;
 }
 
-.ops-field--icon {
-  grid-template-columns: 44px minmax(0, 1fr);
-  gap: 6px 12px;
+body[data-page="orcamentos"] .ops-field--inline {
+  grid-template-columns: 42px minmax(0, 1fr);
+  gap: 6px 10px;
   align-items: center;
 }
 
-.ops-field--icon::before,
-.ops-field--icon::after {
-  content: none !important;
-  display: none !important;
-}
-
-.ops-field-icon {
-  grid-row: 1 / span 2;
-  width: 44px;
-  height: 44px;
-  border-radius: 15px;
-}
-
-.ops-field-icon svg {
-  width: 21px;
-  height: 21px;
-}
-
-.ops-field-label,
-.ops-field--icon > input,
-.ops-field--icon > select,
-.ops-field--icon > textarea {
+body[data-page="orcamentos"] .ops-field--inline > input,
+body[data-page="orcamentos"] .ops-field--inline > select {
   grid-column: 2;
 }
 
-.ops-details {
+body[data-page="orcamentos"] .ops-field-icon {
+  grid-row: 1 / span 2;
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+}
+
+body[data-page="orcamentos"] .ops-field-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+body[data-page="orcamentos"] .ops-disclosure {
   display: grid;
   gap: 12px;
 }
 
-.ops-details > summary {
-  min-height: 48px;
+body[data-page="orcamentos"] .ops-disclosure > summary {
+  min-height: 44px;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 24px;
-  align-items: center;
+  grid-template-columns: minmax(0, 1fr) 22px;
   gap: 10px;
-  padding: 10px 12px;
+  align-items: center;
+  padding: 9px 11px;
   border: 1px solid rgba(238,231,255,.12);
-  border-radius: 18px;
-  background: rgba(255,255,255,.04);
+  border-radius: var(--ops-radius-md);
+  background: rgba(255,255,255,.038);
   color: #eadfff;
+  cursor: pointer;
+  font-size: .88rem;
   font-weight: 900;
   list-style: none;
-  cursor: pointer;
 }
 
-.ops-details > summary::-webkit-details-marker {
+body[data-page="orcamentos"] .ops-disclosure > summary::-webkit-details-marker {
   display: none;
 }
 
-.ops-details > summary span {
+body[data-page="orcamentos"] .ops-disclosure > summary span {
   display: inline-flex;
   align-items: center;
-  gap: 9px;
+  gap: 8px;
   min-width: 0;
 }
 
-.ops-details > summary svg {
-  width: 19px;
-  height: 19px;
+body[data-page="orcamentos"] .ops-disclosure > summary svg {
+  width: 18px;
+  height: 18px;
   color: #d8c6ff;
 }
 
-.ops-details[open] > summary > svg:last-child {
+body[data-page="orcamentos"] .ops-disclosure[open] > summary > svg:last-child {
   transform: rotate(180deg);
 }
 
-.ops-details-grid,
-.ops-details--finance .ops-grid {
+body[data-page="orcamentos"] .ops-disclosure__content {
   margin-top: 2px;
 }
 
-.ops-info-note {
-  align-content: center;
-  min-height: 52px;
-  padding: 12px 14px;
-  border: 1px solid rgba(238,231,255,.12);
-  border-radius: 18px;
-  background: rgba(255,255,255,.04);
-}
-
-.ops-info-note p,
-.ops-help {
-  margin: 0;
-  color: var(--ops-muted);
-  line-height: 1.42;
-}
-
-.ops-reference-zone,
-.ops-reference-zone--clean {
+body[data-page="orcamentos"] .ops-reference-panel {
   display: grid;
   grid-template-columns: 1fr;
   gap: 10px;
 }
 
-.ops-upload-button,
-.ops-reference-empty {
+body[data-page="orcamentos"] .ops-upload-button,
+body[data-page="orcamentos"] .ops-reference-empty {
   display: grid;
   align-items: center;
-  border: 1px solid rgba(238,231,255,.14);
-  border-radius: 20px;
-  background: rgba(255,255,255,.04);
+  min-height: 74px;
+  border: 1px dashed rgba(238,231,255,.17);
+  border-radius: var(--ops-radius-lg);
+  background: rgba(255,255,255,.038);
   color: #fff;
 }
 
-.ops-upload-button {
-  min-height: 74px;
+body[data-page="orcamentos"] .ops-upload-button {
   grid-template-columns: 42px minmax(0, 1fr);
   gap: 4px 12px;
   padding: 13px 14px;
   cursor: pointer;
 }
 
-.ops-upload-button svg {
+body[data-page="orcamentos"] .ops-upload-button svg {
   grid-row: 1 / span 2;
   width: 22px;
   height: 22px;
@@ -302,39 +323,36 @@ body[data-page="orcamentos"] .budget-intro p {
   justify-self: center;
 }
 
-.ops-upload-button strong,
-.ops-reference-empty strong {
+body[data-page="orcamentos"] .ops-upload-button strong,
+body[data-page="orcamentos"] .ops-reference-empty strong {
   line-height: 1.18;
 }
 
-.ops-upload-button span,
-.ops-reference-empty span {
+body[data-page="orcamentos"] .ops-upload-button span,
+body[data-page="orcamentos"] .ops-reference-empty span {
   color: var(--ops-muted);
   font-size: .82rem;
-  line-height: 1.38;
+  line-height: 1.36;
 }
 
-.ops-reference-empty {
-  min-height: 112px;
+body[data-page="orcamentos"] .ops-reference-empty {
   justify-items: center;
-  gap: 6px;
   padding: 14px;
-  border-style: dashed;
   text-align: center;
 }
 
-.ops-reference-empty svg {
-  width: 34px;
-  height: 34px;
+body[data-page="orcamentos"] .ops-reference-empty svg {
+  width: 32px;
+  height: 32px;
   color: rgba(205,184,255,.58);
 }
 
-.ops-reference-list {
+body[data-page="orcamentos"] .ops-reference-list {
   display: grid;
   gap: 10px;
 }
 
-.ops-reference-card {
+body[data-page="orcamentos"] .ops-reference-card {
   display: grid;
   grid-template-columns: 68px minmax(0, 1fr);
   gap: 10px;
@@ -345,88 +363,262 @@ body[data-page="orcamentos"] .budget-intro p {
   background: rgba(255,255,255,.04);
 }
 
-.ops-reference-card img {
+body[data-page="orcamentos"] .ops-reference-card img {
   width: 68px;
   height: 68px;
   object-fit: cover;
   border-radius: 14px;
 }
 
-.ops-reference-card strong {
+body[data-page="orcamentos"] .ops-reference-card strong {
+  color: #fff;
   overflow-wrap: anywhere;
 }
 
-.ops-reference-card span {
+body[data-page="orcamentos"] .ops-reference-card span {
   display: flex;
   flex-wrap: wrap;
   gap: 7px;
   margin-top: 7px;
 }
 
-.ops-section--stock,
-.ops-section--focus {
+body[data-page="orcamentos"] .ops-card--quote {
   gap: 14px;
 }
 
-.ops-section--stock-end {
-  margin-top: 6px;
+body[data-page="orcamentos"] .ops-quote-layout {
+  display: grid;
+  gap: 12px;
+}
+
+body[data-page="orcamentos"] .ops-financial-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+}
+
+body[data-page="orcamentos"] .ops-financial-summary > div {
+  min-height: 54px;
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  padding: 9px 10px !important;
+  border: 1px solid rgba(238,231,255,.10) !important;
+  border-radius: var(--ops-radius-md);
+  background: rgba(255,255,255,.035);
+}
+
+body[data-page="orcamentos"] .ops-financial-summary div::before,
+body[data-page="orcamentos"] .ops-financial-summary div::after {
+  content: none !important;
+  display: none !important;
+}
+
+body[data-page="orcamentos"] .ops-finance-icon {
+  grid-row: 1 / span 2;
+  width: 28px;
+  height: 28px;
+  border-radius: 10px;
+}
+
+body[data-page="orcamentos"] .ops-finance-icon svg {
+  width: 15px;
+  height: 15px;
+}
+
+body[data-page="orcamentos"] .ops-financial-summary dt {
+  color: var(--ops-muted);
+  font-size: .72rem;
+  line-height: 1.1;
+}
+
+body[data-page="orcamentos"] .ops-financial-summary dd {
+  grid-column: 2;
+  margin: 0;
+  color: #fff;
+  font-size: .9rem;
+  line-height: 1.05;
+  font-weight: 950;
+}
+
+body[data-page="orcamentos"] .ops-financial-summary .is-total {
+  grid-column: 1 / -1;
+  min-height: 76px;
+  grid-template-columns: 44px minmax(0, 1fr);
+  padding: 12px !important;
+  border: 1px solid rgba(188,150,255,.34) !important;
+  border-radius: 20px;
+  background:
+    radial-gradient(circle at 88% 25%, rgba(155,108,255,.24), transparent 7rem),
+    linear-gradient(135deg, rgba(54,10,117,.42), rgba(11,3,22,.62)) !important;
+}
+
+body[data-page="orcamentos"] .ops-financial-summary .is-total .ops-finance-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 15px;
+}
+
+body[data-page="orcamentos"] .ops-financial-summary .is-total .ops-finance-icon svg {
+  width: 21px;
+  height: 21px;
+}
+
+body[data-page="orcamentos"] .ops-financial-summary .is-total dt,
+body[data-page="orcamentos"] .ops-financial-summary .is-total dd {
+  grid-column: 2;
+}
+
+body[data-page="orcamentos"] .ops-financial-summary .is-total dt {
+  color: var(--ops-lilac);
+  font-size: .68rem;
+  font-weight: 950;
+  letter-spacing: .15em;
+  text-transform: uppercase;
+}
+
+body[data-page="orcamentos"] .ops-financial-summary .is-total dd {
+  font-size: clamp(1.78rem, 8vw, 2.45rem);
+  line-height: .96;
+  letter-spacing: -.06em;
+}
+
+body[data-page="orcamentos"] .ops-pricing-panel {
+  display: grid;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid rgba(238,231,255,.10);
+  border-radius: var(--ops-radius-lg);
+  background: rgba(255,255,255,.032);
+}
+
+body[data-page="orcamentos"] .ops-pricing-panel h3 {
+  margin: 0;
+  color: #fff;
+  font-size: .98rem;
+  letter-spacing: -.025em;
+}
+
+body[data-page="orcamentos"] .ops-actions {
+  display: grid;
+  gap: 9px;
+  padding: 12px !important;
+  border-radius: var(--ops-radius-lg) !important;
+}
+
+body[data-page="orcamentos"] .ops-actions__group {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+body[data-page="orcamentos"] .ops-actions__group--secondary .ops-action-danger {
+  grid-column: 1 / -1;
+}
+
+body[data-page="orcamentos"] .ops-actions .button {
+  width: 100%;
+  min-height: 44px;
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr);
+  gap: 8px;
+  justify-content: center;
+  justify-items: center;
+  padding: 8px 10px;
+  border-radius: 15px !important;
+  font-size: .82rem;
+  text-align: center;
+}
+
+body[data-page="orcamentos"] .ops-actions .button::after {
+  content: none !important;
+}
+
+body[data-page="orcamentos"] .ops-actions .button svg {
+  width: 17px;
+  height: 17px;
+  color: #d9c8ff;
+}
+
+body[data-page="orcamentos"] .ops-actions .button span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+body[data-page="orcamentos"] .ops-action-danger {
+  min-height: 40px;
+  color: rgba(255,210,220,.92);
+  border-color: rgba(241,120,146,.22) !important;
+}
+
+body[data-page="orcamentos"] .ops-status {
+  margin: 0;
+  color: var(--ops-muted);
+  line-height: 1.42;
+}
+
+body[data-page="orcamentos"] .ops-card--stock {
   padding: 14px !important;
-  border-radius: 22px !important;
+  border-radius: var(--ops-radius-lg) !important;
   background:
     linear-gradient(145deg, rgba(255,255,255,.052), rgba(255,255,255,.022)),
     rgba(17, 5, 31, .78) !important;
   box-shadow: 0 14px 34px rgba(0,0,0,.24) !important;
 }
 
-.ops-section--stock-end .ops-section-header {
+body[data-page="orcamentos"] .ops-card--stock .ops-card__header {
   grid-template-columns: 36px minmax(0, 1fr);
   gap: 10px;
 }
 
-.ops-section--stock-end .ops-section-icon {
+body[data-page="orcamentos"] .ops-card--stock .ops-card__icon {
   width: 36px;
   height: 36px;
   border-radius: 13px;
 }
 
-.ops-section--stock-end .ops-section-icon svg {
+body[data-page="orcamentos"] .ops-card--stock .ops-card__icon svg {
   width: 18px;
   height: 18px;
 }
 
-.ops-section--stock-end h2 {
+body[data-page="orcamentos"] .ops-card--stock h2 {
   font-size: clamp(1.08rem, 4.8vw, 1.32rem);
 }
 
-.ops-section--stock-end .ops-section-header p {
+body[data-page="orcamentos"] .ops-card--stock .ops-card__header p {
   margin-top: 4px;
   font-size: .82rem;
   line-height: 1.35;
 }
 
-.ops-stock-toolbar {
+body[data-page="orcamentos"] .ops-stock-toolbar {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 92px;
   gap: 10px;
   align-items: end;
 }
 
-.ops-stock-toolbar .ops-field > span {
+body[data-page="orcamentos"] .ops-stock-toolbar .ops-field > span {
   font-size: .72rem;
 }
 
-.ops-search-field {
+body[data-page="orcamentos"] .ops-search-field {
   position: relative;
 }
 
-.ops-search-field input {
+body[data-page="orcamentos"] .ops-search-field input {
   min-height: 46px;
   padding-left: 46px;
   border-radius: 15px !important;
   font-size: .9rem;
 }
 
-.ops-search-field::after {
+body[data-page="orcamentos"] .ops-search-field::after {
   content: "";
   position: absolute;
   left: 16px;
@@ -440,7 +632,7 @@ body[data-page="orcamentos"] .budget-intro p {
   pointer-events: none;
 }
 
-#clearBudgetSearchButton {
+body[data-page="orcamentos"] #clearBudgetSearchButton {
   min-height: 46px;
   justify-content: center;
   gap: 7px;
@@ -449,7 +641,7 @@ body[data-page="orcamentos"] .budget-intro p {
   font-size: .9rem;
 }
 
-.ops-filter-row {
+body[data-page="orcamentos"] .ops-filter-row {
   display: flex;
   flex-wrap: nowrap;
   gap: 7px;
@@ -459,11 +651,11 @@ body[data-page="orcamentos"] .budget-intro p {
   scrollbar-width: none;
 }
 
-.ops-filter-row::-webkit-scrollbar {
+body[data-page="orcamentos"] .ops-filter-row::-webkit-scrollbar {
   display: none;
 }
 
-.ops-filter-chip {
+body[data-page="orcamentos"] .ops-filter-chip {
   flex: 0 0 auto;
   min-height: 36px;
   display: inline-flex;
@@ -479,31 +671,31 @@ body[data-page="orcamentos"] .budget-intro p {
   white-space: nowrap;
 }
 
-.ops-filter-chip svg {
+body[data-page="orcamentos"] .ops-filter-chip::before {
+  content: none !important;
+}
+
+body[data-page="orcamentos"] .ops-filter-chip svg {
   width: 15px;
   height: 15px;
   color: #d8c6ff;
 }
 
-.ops-filter-chip.is-active {
+body[data-page="orcamentos"] .ops-filter-chip.is-active {
   color: #fff;
   background: linear-gradient(135deg, rgba(155,108,255,.60), rgba(54,10,117,.56));
   border-color: rgba(205,184,255,.34);
   box-shadow: 0 12px 28px rgba(84,20,181,.24);
 }
 
-.ops-stock-list {
+body[data-page="orcamentos"] .ops-stock-list {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 12px;
-}
-
-.ops-stock-list--compact {
   gap: 9px;
 }
 
-.ops-stock-item--premium,
-.ops-stock-item--mini {
+body[data-page="orcamentos"] .ops-stock-item,
+body[data-page="orcamentos"] .ops-stock-item--premium,
+body[data-page="orcamentos"] .ops-stock-item--mini {
   position: relative;
   isolation: isolate;
   overflow: hidden;
@@ -519,16 +711,16 @@ body[data-page="orcamentos"] .budget-intro p {
   box-shadow: 0 10px 24px rgba(0,0,0,.20);
 }
 
-.ops-stock-card-head,
-.ops-category-badge,
-.ops-stock-price,
-.ops-stock-divider,
-.ops-qty-label,
-.ops-stock-watermark {
+body[data-page="orcamentos"] .ops-stock-card-head,
+body[data-page="orcamentos"] .ops-category-badge,
+body[data-page="orcamentos"] .ops-stock-price,
+body[data-page="orcamentos"] .ops-stock-divider,
+body[data-page="orcamentos"] .ops-qty-label,
+body[data-page="orcamentos"] .ops-stock-watermark {
   display: none !important;
 }
 
-.ops-stock-card-main {
+body[data-page="orcamentos"] .ops-stock-card-main {
   display: grid;
   grid-template-columns: 38px minmax(0, 1fr);
   gap: 9px;
@@ -536,23 +728,20 @@ body[data-page="orcamentos"] .budget-intro p {
   align-items: center;
 }
 
-.ops-stock-icon {
+body[data-page="orcamentos"] .ops-stock-icon {
   width: 38px;
   height: 38px;
   min-width: 38px;
   min-height: 38px;
-  display: inline-grid !important;
-  place-items: center !important;
-  align-self: center;
   justify-self: center;
-  line-height: 0;
+  align-self: center;
   border-radius: 13px;
   color: #fff;
   background: linear-gradient(135deg, #8c4dff, #360a75);
   box-shadow: 0 10px 22px rgba(54,10,117,.28);
 }
 
-.ops-stock-icon svg {
+body[data-page="orcamentos"] .ops-stock-icon svg {
   display: block;
   width: 18px;
   height: 18px;
@@ -560,7 +749,7 @@ body[data-page="orcamentos"] .budget-intro p {
   transform: none !important;
 }
 
-.ops-stock-card-main strong {
+body[data-page="orcamentos"] .ops-stock-card-main strong {
   display: block;
   color: #fff;
   font-size: .98rem;
@@ -569,7 +758,7 @@ body[data-page="orcamentos"] .budget-intro p {
   text-wrap: balance;
 }
 
-.ops-stock-card-main span:not(.ops-stock-icon) {
+body[data-page="orcamentos"] .ops-stock-card-main span:not(.ops-stock-icon) {
   display: block;
   margin-top: 2px;
   color: rgba(238,231,255,.66);
@@ -577,7 +766,7 @@ body[data-page="orcamentos"] .budget-intro p {
   line-height: 1.28;
 }
 
-.ops-stock-mini-meta {
+body[data-page="orcamentos"] .ops-stock-mini-meta {
   display: flex;
   justify-content: space-between;
   gap: 8px;
@@ -586,14 +775,14 @@ body[data-page="orcamentos"] .budget-intro p {
   line-height: 1.25;
 }
 
-.ops-stock-item__bottom {
+body[data-page="orcamentos"] .ops-stock-item__bottom {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 116px;
   gap: 8px;
   align-items: center;
 }
 
-.ops-stepper {
+body[data-page="orcamentos"] .ops-stepper {
   display: grid;
   grid-template-columns: 36px minmax(0, 1fr) 36px;
   border: 1px solid rgba(205,184,255,.30);
@@ -602,35 +791,35 @@ body[data-page="orcamentos"] .budget-intro p {
   background: rgba(255,255,255,.055);
 }
 
-.ops-stepper button,
-.ops-stepper input {
+body[data-page="orcamentos"] .ops-stepper button,
+body[data-page="orcamentos"] .ops-stepper input {
   min-height: 38px;
   border: 0;
   font-size: .92rem;
 }
 
-.ops-stepper button {
+body[data-page="orcamentos"] .ops-stepper button {
   background: rgba(54,10,117,.36);
   color: #fff;
   font-weight: 1000;
 }
 
-.ops-stepper button:disabled {
+body[data-page="orcamentos"] .ops-stepper button:disabled {
   opacity: .45;
 }
 
-.ops-stepper input {
+body[data-page="orcamentos"] .ops-stepper input {
   background: transparent;
   color: #fff;
   text-align: center;
   font-weight: 950;
 }
 
-.ops-stepper.is-invalid {
+body[data-page="orcamentos"] .ops-stepper.is-invalid {
   border-color: rgba(255,118,153,.70);
 }
 
-.ops-add-button {
+body[data-page="orcamentos"] .ops-add-button {
   min-height: 38px;
   justify-content: center;
   border-radius: 13px !important;
@@ -638,11 +827,11 @@ body[data-page="orcamentos"] .budget-intro p {
   font-size: .82rem;
 }
 
-.ops-stock-item__available {
+body[data-page="orcamentos"] .ops-stock-item__available {
   display: none;
 }
 
-.ops-stock-pagination {
+body[data-page="orcamentos"] .ops-stock-pagination {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -653,15 +842,16 @@ body[data-page="orcamentos"] .budget-intro p {
   font-size: .82rem;
 }
 
-.ops-stock-pagination .button {
+body[data-page="orcamentos"] .ops-stock-pagination .button {
   min-height: 42px;
   border-radius: 15px !important;
 }
 
-.ops-empty {
+body[data-page="orcamentos"] .ops-empty {
   display: grid;
   place-items: center;
-  min-height: 96px;
+  min-height: 92px;
+  margin: 0;
   padding: 14px;
   border: 1px dashed rgba(238,231,255,.17);
   border-radius: 20px;
@@ -670,384 +860,259 @@ body[data-page="orcamentos"] .budget-intro p {
   background: rgba(255,255,255,.03);
 }
 
-.ops-section--finance-clean {
-  gap: 12px;
-  padding: 14px !important;
-  border-radius: 22px !important;
-}
-
-.ops-section--finance-clean .ops-section-header {
-  grid-template-columns: 36px minmax(0, 1fr);
+body[data-page="orcamentos"] .ops-floating-cart {
+  position: fixed;
+  left: 14px;
+  right: 14px;
+  bottom: max(12px, env(safe-area-inset-bottom));
+  z-index: 95;
+  display: grid;
   gap: 10px;
+  pointer-events: none;
 }
 
-.ops-section--finance-clean .ops-section-icon {
-  width: 36px;
-  height: 36px;
-  border-radius: 13px;
-}
-
-.ops-section--finance-clean .ops-section-icon svg {
-  width: 18px;
-  height: 18px;
-}
-
-.ops-section--finance-clean h2 {
-  font-size: clamp(1.08rem, 4.9vw, 1.34rem);
-}
-
-.ops-grid--finance {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
-.ops-financial-summary {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
-  margin: 0;
-}
-
-.ops-financial-summary > div {
-  min-height: 54px;
-  display: grid;
-  grid-template-columns: 28px minmax(0, 1fr);
-  align-items: center;
-  gap: 8px;
-  padding: 9px 10px !important;
-  border: 1px solid rgba(238,231,255,.10) !important;
-  border-radius: 16px;
-  background: rgba(255,255,255,.035);
-}
-
-.ops-financial-summary div::before,
-.ops-financial-summary div::after {
-  content: none !important;
-  display: none !important;
-}
-
-.ops-finance-icon {
-  width: 28px;
-  height: 28px;
-  border-radius: 10px;
-  grid-row: 1 / span 2;
-}
-
-.ops-finance-icon svg {
-  width: 15px;
-  height: 15px;
-}
-
-.ops-financial-summary dt {
-  color: rgba(238,231,255,.72);
-  font-size: .72rem;
-  line-height: 1.1;
-}
-
-.ops-financial-summary dd {
-  grid-column: 2;
-  margin: 0;
-  color: #fff;
-  font-size: .9rem;
-  line-height: 1.05;
-  font-weight: 950;
-}
-
-.ops-financial-summary .is-total {
-  order: -1;
-  grid-column: 1 / -1;
-  min-height: 72px;
-  margin-top: 0;
-  grid-template-columns: 42px minmax(0, 1fr);
-  padding: 12px !important;
-  border: 1px solid rgba(188,150,255,.34) !important;
-  border-radius: 18px;
-  background:
-    radial-gradient(circle at 88% 25%, rgba(155,108,255,.24), transparent 7rem),
-    linear-gradient(135deg, rgba(54,10,117,.40), rgba(11,3,22,.62)) !important;
-}
-
-.ops-financial-summary .is-total .ops-finance-icon {
-  width: 42px;
-  height: 42px;
-  border-radius: 14px;
-}
-
-.ops-financial-summary .is-total .ops-finance-icon svg {
-  width: 20px;
-  height: 20px;
-}
-
-.ops-financial-summary .is-total dt,
-.ops-financial-summary .is-total dd {
-  grid-column: 2;
-}
-
-.ops-financial-summary .is-total dt {
-  color: var(--ops-lilac);
-  font-size: .68rem;
-  font-weight: 950;
-  letter-spacing: .15em;
-  text-transform: uppercase;
-}
-
-.ops-financial-summary .is-total dd {
-  font-size: clamp(1.75rem, 8vw, 2.35rem);
-  line-height: .96;
-  letter-spacing: -.06em;
-}
-
-.ops-section--finance-clean .ops-details > summary {
-  min-height: 42px;
-  padding: 8px 10px;
-  border-radius: 15px;
-  font-size: .86rem;
-}
-
-.ops-actions,
-.ops-actions--clean {
-  display: grid;
-  gap: 9px;
-  padding: 12px !important;
-  border: 1px solid var(--ops-line);
-  border-radius: 20px !important;
-  background: rgba(11,3,22,.60);
-  box-shadow: 0 18px 44px rgba(0,0,0,.24);
-}
-
-.ops-actions-grid {
-  display: grid;
-  gap: 8px;
-}
-
-.ops-actions-grid--primary,
-.ops-actions-grid--documents {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
-.ops-actions-grid--documents .ops-action-danger {
-  grid-column: 1 / -1;
-}
-
-.ops-actions .button,
-.ops-actions--clean .button {
+body[data-page="orcamentos"] .ops-floating-cart__button {
+  pointer-events: auto;
   width: 100%;
-  min-height: 44px;
+  min-height: 64px;
   display: grid;
-  grid-template-columns: 22px minmax(0, 1fr);
-  gap: 8px;
-  justify-content: center;
-  justify-items: center;
-  padding: 8px 10px;
-  border-radius: 15px !important;
-  font-size: .82rem;
-  text-align: center;
-}
-
-.ops-actions .button::after,
-.ops-actions--clean .button::after {
-  content: none !important;
-}
-
-.ops-actions .button svg,
-.ops-actions--clean .button svg {
-  width: 17px;
-  height: 17px;
-  justify-self: center;
-  color: #d9c8ff;
-}
-
-.ops-actions .button span,
-.ops-actions--clean .button span {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.ops-action-danger {
-  min-height: 40px;
-  color: rgba(255,210,220,.92);
-  border-color: rgba(241,120,146,.22) !important;
-}
-
-.ops-status {
-  margin: 0;
-  color: var(--ops-muted);
-  line-height: 1.42;
-}
-
-.ops-actions__spacer {
-  display: none;
-}
-
-.ops-floating-cart__button {
+  grid-template-columns: 44px minmax(0, 1fr) 34px;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border: 1px solid rgba(188,150,255,.36);
+  border-radius: 22px;
+  color: #fff;
+  background: linear-gradient(135deg, #751dff 0%, #4b0fb0 62%, #360a75 100%);
+  box-shadow: 0 20px 54px rgba(54,10,117,.42);
+  font-weight: 950;
   text-decoration: none;
 }
 
+body[data-page="orcamentos"] .ops-floating-cart__button::after {
+  content: "⌃";
+  justify-self: center;
+  font-size: 1rem;
+  opacity: .9;
+}
+
+body[data-page="orcamentos"] .ops-floating-cart__button > svg {
+  width: 26px;
+  height: 26px;
+  padding: 8px;
+  border-radius: 15px;
+  background: rgba(255,255,255,.10);
+  box-sizing: content-box;
+}
+
+body[data-page="orcamentos"] .ops-floating-cart__button span {
+  display: grid;
+  gap: 1px;
+  text-align: left;
+}
+
+body[data-page="orcamentos"] .ops-floating-cart__button small {
+  opacity: .82;
+  font-weight: 800;
+}
+
+body[data-page="orcamentos"] .ops-cart-drawer {
+  pointer-events: auto;
+  display: none;
+  max-height: min(72dvh, 560px);
+  overflow: auto;
+  padding: 16px;
+  border: 1px solid var(--ops-line-strong);
+  border-radius: 26px;
+  background: rgba(12, 3, 24, .98);
+  box-shadow: 0 24px 70px rgba(0,0,0,.42);
+}
+
+body[data-page="orcamentos"] .ops-floating-cart.is-open .ops-cart-drawer {
+  display: grid;
+  gap: 12px;
+}
+
+body[data-page="orcamentos"] .ops-cart-drawer__header,
+body[data-page="orcamentos"] .ops-cart-drawer__footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+body[data-page="orcamentos"] .ops-cart {
+  display: grid;
+  gap: 10px;
+}
+
+body[data-page="orcamentos"] .ops-cart-group {
+  display: grid;
+  gap: 8px;
+}
+
+body[data-page="orcamentos"] .ops-cart-group h3 {
+  margin: 0;
+  color: var(--ops-lilac);
+  font-size: .83rem;
+  text-transform: uppercase;
+  letter-spacing: .12em;
+}
+
+body[data-page="orcamentos"] .ops-cart-row {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid var(--ops-line);
+  border-radius: 20px;
+  background: rgba(255,255,255,.045);
+}
+
+body[data-page="orcamentos"] .ops-cart-row strong {
+  color: #fff;
+}
+
+body[data-page="orcamentos"] .ops-cart-row small {
+  display: block;
+  color: var(--ops-muted);
+  line-height: 1.35;
+  margin-top: 4px;
+}
+
+body[data-page="orcamentos"] .ops-cart-row__actions {
+  display: grid;
+  gap: 8px;
+}
+
+body[data-page="orcamentos"] .ops-cart-row__subtotal {
+  font-size: 1.05rem;
+}
+
 @media (min-width: 680px) {
-  body[data-page="orcamentos"] .budget-intro {
+  body[data-page="orcamentos"] .ops-hero {
     grid-template-columns: minmax(0, 1fr) auto;
     align-items: center;
   }
 
-  .ops-grid {
+  body[data-page="orcamentos"] .ops-hero__action {
+    width: auto;
+    min-width: 140px;
+  }
+
+  body[data-page="orcamentos"] .ops-grid--two {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .ops-span-2,
-  .ops-span-all {
+  body[data-page="orcamentos"] .ops-grid--four {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  body[data-page="orcamentos"] .ops-span-2 {
     grid-column: 1 / -1;
   }
 
-  .ops-reference-zone {
-    grid-template-columns: .82fr 1.18fr;
+  body[data-page="orcamentos"] .ops-reference-panel {
+    grid-template-columns: .78fr 1.22fr;
   }
 
-  .ops-stock-list {
+  body[data-page="orcamentos"] .ops-stock-list {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
-@media (min-width: 1040px) {
-  .ops-grid {
+@media (min-width: 960px) {
+  body[data-page="orcamentos"] .ops-grid--four {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 
-  .ops-span-2 {
-    grid-column: span 2;
+  body[data-page="orcamentos"] .ops-quote-layout {
+    grid-template-columns: minmax(0, 1.08fr) minmax(300px, .92fr);
+    align-items: start;
   }
 
-  .ops-span-all {
-    grid-column: 1 / -1;
-  }
-
-  .ops-grid--art,
-  .ops-grid--finance {
+  body[data-page="orcamentos"] .ops-stock-list {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
 @media (max-width: 430px) {
-  body[data-page="orcamentos"] .workflow-page {
+  body[data-page="orcamentos"] .page-shell {
     padding-inline: 10px !important;
   }
 
-  body[data-page="orcamentos"] .budget-intro {
-    padding: 16px !important;
-  }
-
-  .ops-section {
+  body[data-page="orcamentos"] .ops-hero,
+  body[data-page="orcamentos"] .ops-card {
     padding: 16px !important;
     border-radius: 24px !important;
   }
 
-  .ops-section-header {
-    grid-template-columns: 40px minmax(0, 1fr);
-    gap: 11px;
+  body[data-page="orcamentos"] .ops-card__header {
+    grid-template-columns: 38px minmax(0, 1fr);
+    gap: 10px;
   }
 
-  .ops-section-icon {
-    width: 40px;
-    height: 40px;
-    border-radius: 14px;
+  body[data-page="orcamentos"] .ops-card__icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 13px;
   }
 
-  .ops-section-icon svg {
-    width: 20px;
-    height: 20px;
-  }
-
-  .ops-field input,
-  .ops-field select,
-  .ops-field textarea,
-  .ops-search-field input,
-  #clearBudgetSearchButton {
-    min-height: 50px;
-    border-radius: 17px;
-  }
-
-  .ops-stock-toolbar {
-    grid-template-columns: 1fr 86px;
-    gap: 8px;
-  }
-
-  .ops-field--icon {
-    grid-template-columns: 40px minmax(0, 1fr);
-    gap: 6px 10px;
-  }
-
-  .ops-field-icon {
-    width: 40px;
-    height: 40px;
-    border-radius: 14px;
-  }
-
-  .ops-field-icon svg {
+  body[data-page="orcamentos"] .ops-card__icon svg {
     width: 19px;
     height: 19px;
   }
 
-  .ops-stock-item--premium,
-  .ops-stock-item--mini {
-    padding: 14px;
-    border-radius: 21px;
-    gap: 10px;
+  body[data-page="orcamentos"] .ops-field input,
+  body[data-page="orcamentos"] .ops-field select,
+  body[data-page="orcamentos"] .ops-field textarea {
+    min-height: 48px;
+    border-radius: 15px;
   }
 
-  .ops-stock-card-main {
+  body[data-page="orcamentos"] .ops-field--inline {
     grid-template-columns: 38px minmax(0, 1fr);
-    gap: 9px;
-    max-width: 100%;
   }
 
-  .ops-stock-icon {
+  body[data-page="orcamentos"] .ops-field-icon {
     width: 38px;
     height: 38px;
-    min-width: 38px;
-    min-height: 38px;
     border-radius: 13px;
   }
 
-  .ops-stock-icon svg {
+  body[data-page="orcamentos"] .ops-field-icon svg {
     width: 18px;
     height: 18px;
   }
 
-  .ops-stock-card-main strong {
-    font-size: .98rem;
+  body[data-page="orcamentos"] .ops-stock-toolbar {
+    grid-template-columns: 1fr 84px;
+    gap: 8px;
   }
 
-  .ops-stock-item__bottom {
-    grid-template-columns: 1fr;
-  }
-
-  .ops-grid--finance {
+  body[data-page="orcamentos"] .ops-stock-item__bottom {
     grid-template-columns: 1fr;
   }
 }
 
 @media (max-width: 370px) {
-  .ops-stock-toolbar {
+  body[data-page="orcamentos"] .ops-field--inline {
     grid-template-columns: 1fr;
   }
 
-  .ops-field--icon {
-    grid-template-columns: 1fr;
-  }
-
-  .ops-field-icon {
+  body[data-page="orcamentos"] .ops-field-icon {
     display: none;
   }
 
-  .ops-field-label,
-  .ops-field--icon > input,
-  .ops-field--icon > select,
-  .ops-field--icon > textarea {
+  body[data-page="orcamentos"] .ops-field--inline > input,
+  body[data-page="orcamentos"] .ops-field--inline > select {
     grid-column: 1;
   }
 
-  .ops-actions-grid--primary,
-  .ops-actions-grid--documents {
+  body[data-page="orcamentos"] .ops-actions__group {
+    grid-template-columns: 1fr;
+  }
+
+  body[data-page="orcamentos"] .ops-stock-toolbar {
     grid-template-columns: 1fr;
   }
 }
