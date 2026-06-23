@@ -5,11 +5,13 @@ import { iniciarBancoLocal } from "../models/banco-local.js";
 import { cadastrarItemEstoque, atualizarItemEstoque, excluirItemEstoque, listarItensEstoque, calcularResumoEstoque, calcularCustoUnitario, garantirEstoqueInicial, restaurarEstoqueReferencia } from "../services/estoque-service.js";
 import { BUSINESS_CATEGORIES, CATEGORY_ALL, CATEGORY_DEFINITIONS, CATEGORY_ORDER, normalizeCategory, normalizeItemPayload, UNIT_PURCHASE_CATEGORIES, PURCHASE_MODE_BOX, PURCHASE_MODE_SINGLE, getItemSpecification, getMeasureLabel } from "../shared/stock-catalog.js";
 
+const LIMITE_IMAGEM_ESTOQUE = 2 * 1024 * 1024;
 let itens = [];
 let termo = "";
 let categoriaFormulario = BUSINESS_CATEGORIES[0];
 let categoriaFiltro = CATEGORY_ALL;
 let itemEmEdicaoId = null;
+let imagemProdutoAtual = null;
 
 montarLayout({ paginaAtual: "estoque", titulo: "Estoque", subtitulo: "Banco local" });
 iniciar();
@@ -21,6 +23,7 @@ async function iniciar() {
   renderCategoriasFormulario();
   renderCamposDinamicos(criarDadosPadraoFormulario(categoriaFormulario));
   renderFiltros();
+  renderImagemProduto();
   await carregar();
   atualizarIcones();
 }
@@ -32,6 +35,8 @@ function vincularEventos() {
   document.querySelector("#restoreReferenceStockButton")?.addEventListener("click", restaurarBaseReferencia);
   document.querySelector("#clearInventorySearchButton")?.addEventListener("click", () => { termo = ""; document.querySelector("#buscaEstoque").value = ""; render(); });
   document.querySelector("#buscaEstoque")?.addEventListener("input", (evento) => { termo = evento.target.value.toLowerCase(); render(); });
+  document.querySelector("#imagemItemEstoque")?.addEventListener("change", selecionarImagemProduto);
+  document.querySelector("#removeStockImageButton")?.addEventListener("click", () => { imagemProdutoAtual = null; const input = document.querySelector("#imagemItemEstoque"); if (input) input.value = ""; renderImagemProduto(); });
   document.querySelector("#categoryChoiceGrid")?.addEventListener("click", (evento) => {
     const botao = evento.target.closest("[data-form-category]");
     if (!botao) return;
@@ -70,19 +75,25 @@ async function carregar() {
 
 function abrirModalEstoque(itemId = null) {
   document.querySelector("#formEstoque")?.reset();
+  const inputImagem = document.querySelector("#imagemItemEstoque");
+  if (inputImagem) inputImagem.value = "";
   itemEmEdicaoId = itemId;
   const item = itemId ? itens.find((registro) => registro.id === itemId) : null;
   categoriaFormulario = item ? normalizeCategory(item.categoria) : BUSINESS_CATEGORIES[0];
+  imagemProdutoAtual = normalizarImagemFormulario(item?.imagemProduto || null);
   const dados = item ? converterItemParaFormulario(item) : criarDadosPadraoFormulario(categoriaFormulario);
   atualizarCabecalhoModal(Boolean(item));
   renderCategoriasFormulario();
   renderCamposDinamicos(dados);
+  renderImagemProduto();
   atualizarIcones();
   document.querySelector("#itemModal")?.showModal?.();
 }
 
 function fecharModalEstoque() {
   itemEmEdicaoId = null;
+  imagemProdutoAtual = null;
+  renderImagemProduto();
   document.querySelector("#itemModal")?.close?.();
 }
 
@@ -93,6 +104,47 @@ function atualizarCabecalhoModal(modoEdicao) {
   if (titulo) titulo.textContent = modoEdicao ? "Editar insumo" : "Cadastrar insumo";
   if (subtitulo) subtitulo.textContent = modoEdicao ? "Atualizar item" : "Novo item";
   if (botaoSalvar) botaoSalvar.innerHTML = `<i data-lucide="save"></i>${modoEdicao ? "Salvar alterações" : "Salvar item"}`;
+}
+
+async function selecionarImagemProduto(evento) {
+  const arquivo = evento.target.files?.[0];
+  if (!arquivo) return;
+  if (!/^image\/(png|jpeg|webp)$/.test(arquivo.type)) {
+    mostrarStatus(document.querySelector("#statusEstoque"), "Use imagem PNG, JPG ou WEBP.");
+    evento.target.value = "";
+    return;
+  }
+  if (arquivo.size > LIMITE_IMAGEM_ESTOQUE) {
+    mostrarStatus(document.querySelector("#statusEstoque"), "A imagem precisa ter até 2 MB.");
+    evento.target.value = "";
+    return;
+  }
+  imagemProdutoAtual = await lerArquivoImagem(arquivo);
+  renderImagemProduto();
+}
+
+function lerArquivoImagem(arquivo) {
+  return new Promise((resolver, rejeitar) => {
+    const leitor = new FileReader();
+    leitor.onload = () => resolver({ nome: arquivo.name, tipo: arquivo.type, dataUrl: String(leitor.result || "") });
+    leitor.onerror = () => rejeitar(leitor.error);
+    leitor.readAsDataURL(arquivo);
+  });
+}
+
+function renderImagemProduto() {
+  const preview = document.querySelector("#stockImagePreview");
+  const remover = document.querySelector("#removeStockImageButton");
+  if (!preview) return;
+  if (!imagemProdutoAtual?.dataUrl) {
+    preview.classList.remove("has-image");
+    preview.innerHTML = "<span>Nenhuma imagem adicionada.</span>";
+    if (remover) remover.hidden = true;
+    return;
+  }
+  preview.classList.add("has-image");
+  preview.innerHTML = `<img src="${escapar(imagemProdutoAtual.dataUrl)}" alt="Prévia da imagem do item" /><span>${escapar(imagemProdutoAtual.nome || "Imagem do item")}</span>`;
+  if (remover) remover.hidden = false;
 }
 
 async function restaurarBaseReferencia() {
@@ -148,7 +200,7 @@ function campoVisivel(campo, dados) { return !campo.visibleWhen || dados[campo.v
 
 async function salvarItem(evento) {
   evento.preventDefault();
-  const payload = normalizeItemPayload(categoriaFormulario, lerDadosFormulario(), normalizarNumero);
+  const payload = { ...normalizeItemPayload(categoriaFormulario, lerDadosFormulario(), normalizarNumero), imagemProduto: imagemProdutoAtual };
   if (!payload.nome || payload.precoEmbalagem <= 0 || payload.quantidadeEmbalagem <= 0 || payload.quantidadeAtual < 0) {
     mostrarStatus(document.querySelector("#statusEstoque"), "Preencha os campos obrigatórios com valores válidos.");
     return;
@@ -203,5 +255,18 @@ function card(item) {
   const resumo = calcularResumoEstoque(item);
   const especificacao = getItemSpecification(item) || "Sem especificação";
   const quantidade = `${resumo.quantidadeAtual} ${item.unidadeMedida}`;
-  return `<article class="inventory-card stock-compact-card"><header class="stock-compact-head"><span class="category-pill">${escapar(item.categoria)}</span></header><div class="stock-compact-main"><div class="product-avatar">${escapar((item.nome || "?").slice(0, 1).toUpperCase())}</div><div><h3>${escapar(item.nome)}</h3><span>${escapar(especificacao)}</span></div></div><div class="stock-compact-stats"><article><span>Atual</span><strong>${escapar(quantidade)}</strong></article><article><span>Custo</span><strong>${formatarMoeda(resumo.custoUnitario)}</strong></article><article class="is-featured"><span>Total</span><strong>${formatarMoeda(resumo.valorTotal)}</strong></article></div><footer class="stock-compact-footer"><span>Embalagem: ${normalizarNumero(item.quantidadeEmbalagem)} ${escapar(item.unidadeMedida)}</span><span>Mínimo: ${resumo.quantidadeMinima}</span></footer><div class="inventory-card-actions dual-actions"><button class="button button-secondary" type="button" data-edit-stock-item="${escapar(item.id)}"><i data-lucide="pencil"></i>Editar</button><button class="button button-danger" type="button" data-delete-stock-item="${escapar(item.id)}"><i data-lucide="trash-2"></i>Excluir</button></div></article>`;
+  const imagem = obterImagemProduto(item);
+  const classeImagem = imagem ? " has-product-image" : "";
+  return `<article class="inventory-card stock-compact-card stock-mockup-card${classeImagem}">${imagem ? `<img class="stock-product-watermark" src="${escapar(imagem)}" alt="" aria-hidden="true" />` : `<span class="stock-product-watermark stock-product-watermark--fallback" aria-hidden="true"></span>`}<header class="stock-compact-head"><span class="category-pill">${escapar(item.categoria)}</span></header><div class="stock-mockup-main"><div class="product-avatar"><i data-lucide="pencil"></i></div><div><h3>${escapar(item.nome)}</h3><span>${escapar(especificacao)} · ${escapar(item.unidadeMedida || "un")}</span></div></div><div class="stock-mockup-price"><small>R$</small><strong>${formatarMoeda(resumo.custoUnitario).replace("R$", "").trim()}</strong><span>/ ${escapar(item.unidadeMedida || "un")}</span></div><div class="stock-mockup-divider"></div><section class="stock-compact-stats"><article><span>Quantidade atual</span><strong>${escapar(quantidade)}</strong></article><article><span>Custo por ${escapar(item.unidadeMedida || "un")}</span><strong>${formatarMoeda(resumo.custoUnitario)}</strong></article><article class="is-featured"><span>Valor financeiro total</span><strong>${formatarMoeda(resumo.valorTotal)}</strong></article></section><footer class="stock-compact-footer"><span>Embalagem de ${normalizarNumero(item.quantidadeEmbalagem)} ${escapar(item.unidadeMedida)}</span><span>Mínimo ${resumo.quantidadeMinima}</span></footer><div class="inventory-card-actions dual-actions"><button class="button button-secondary" type="button" data-edit-stock-item="${escapar(item.id)}"><i data-lucide="pencil"></i>Editar</button><button class="button button-danger" type="button" data-delete-stock-item="${escapar(item.id)}"><i data-lucide="trash-2"></i>Excluir</button></div></article>`;
+}
+
+function obterImagemProduto(item) {
+  return item?.imagemProduto?.dataUrl || item?.imagemItem?.dataUrl || item?.imagemReferencia?.dataUrl || "";
+}
+
+function normalizarImagemFormulario(imagem) {
+  if (!imagem) return null;
+  if (typeof imagem === "string") return { nome: "Imagem do item", tipo: "image/jpeg", dataUrl: imagem };
+  if (!imagem.dataUrl) return null;
+  return { nome: imagem.nome || "Imagem do item", tipo: imagem.tipo || "image/jpeg", dataUrl: imagem.dataUrl };
 }
