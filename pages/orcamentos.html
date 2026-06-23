@@ -10,11 +10,11 @@
   <link rel="stylesheet" href="../assets/css/tokens.css" />
   <link rel="stylesheet" href="../assets/css/layout.css" />
   <link rel="stylesheet" href="../assets/css/components.css" />
-  <link id="mishiro-clean-ui-css" rel="stylesheet" href="../assets/css/app-clean.css?v=20260623.10" />
-  <link rel="stylesheet" href="../assets/css/orcamentos.css?v=20260623.10" />
+  <link id="mishiro-clean-ui-css" rel="stylesheet" href="../assets/css/app-clean.css?v=20260623.11" />
+  <link rel="stylesheet" href="../assets/css/orcamentos.css?v=20260623.11" />
   <link rel="stylesheet" href="../assets/css/studio-workflow.css" />
-  <link rel="stylesheet" href="../assets/css/operations-budget.css?v=20260623.10" />
-  <link rel="stylesheet" href="../assets/css/orcamentos-ajustes-finais.css?v=20260623.10" />
+  <link rel="stylesheet" href="../assets/css/operations-budget.css?v=20260623.11" />
+  <link rel="stylesheet" href="../assets/css/orcamentos-ajustes-finais.css?v=20260623.11" />
   <title>MiShiro Tattoo • Orçamentos</title>
 </head>
 <body data-page="orcamentos">
@@ -78,7 +78,7 @@
           <header class="ops-section-header ops-section-header--compact"><span class="ops-section-icon"><i data-lucide="badge-dollar-sign"></i></span><div><span class="ops-section-kicker">04 • Resultado</span><h2>Resumo da cotação</h2></div></header>
           <dl class="ops-financial-summary"><div><span class="ops-finance-icon"><i data-lucide="package"></i></span><dt>Materiais</dt><dd id="totalMateriais">R$ 0,00</dd></div><div><span class="ops-finance-icon"><i data-lucide="user-round"></i></span><dt>Mão de obra</dt><dd id="totalMaoObra">R$ 0,00</dd></div><div><span class="ops-finance-icon"><i data-lucide="calculator"></i></span><dt>Subtotal</dt><dd id="subtotalOrcamento">R$ 0,00</dd></div><div><span class="ops-finance-icon"><i data-lucide="tag"></i></span><dt>Desconto</dt><dd id="valorDesconto">R$ 0,00</dd></div><div class="is-total"><span class="ops-finance-icon"><i data-lucide="badge-dollar-sign"></i></span><dt>Valor final</dt><dd id="valorFinal">R$ 0,00</dd></div></dl>
           <details class="ops-details ops-details--finance">
-            <summary><span><i data-lucide="settings-2"></i>Ajustar mão de obra, margem e desconto</span><i data-lucide="chevron-down"></i></summary>
+            <summary><span><i data-lucide="settings-2"></i>Ajustar valores</span><i data-lucide="chevron-down"></i></summary>
             <div class="ops-grid ops-grid--finance">
               <label class="ops-field"><span>Valor da hora (R$)</span><input id="valorHora" inputmode="decimal" placeholder="0,00" /></label>
               <label class="ops-field"><span>Duração prevista (horas)</span><input id="duracaoSessao" inputmode="decimal" placeholder="0" /></label>
@@ -88,7 +88,18 @@
           </details>
         </section>
 
-        <section class="ops-actions ops-actions--clean" aria-label="Ações do orçamento"><button class="button button-primary" type="submit" data-save-mode="aguardando_cliente"><i data-lucide="send"></i>Enviar para aprovação</button><button class="button button-secondary" type="submit" data-save-mode="rascunho"><i data-lucide="save"></i>Salvar rascunho</button><button class="button button-ghost" id="gerarPdfCliente" type="button"><i data-lucide="file-text"></i>PDF cliente</button><button class="button button-ghost" id="gerarPdfEstudio" type="button"><i data-lucide="file-spreadsheet"></i>PDF interno</button><button class="button button-ghost" id="limparOrcamento" type="button" aria-label="Limpar orçamento"><i data-lucide="eraser"></i>Limpar</button><p id="statusOrcamento" class="ops-status" aria-live="polite"></p></section>
+        <section class="ops-actions ops-actions--clean" aria-label="Ações do orçamento">
+          <div class="ops-actions-grid ops-actions-grid--primary">
+            <button class="button button-primary" type="submit" data-save-mode="aguardando_cliente" aria-label="Enviar orçamento para aprovação"><i data-lucide="send"></i><span>Enviar</span></button>
+            <button class="button button-secondary" type="submit" data-save-mode="rascunho" aria-label="Salvar orçamento como rascunho"><i data-lucide="save"></i><span>Rascunho</span></button>
+          </div>
+          <div class="ops-actions-grid ops-actions-grid--documents">
+            <button class="button button-ghost" id="gerarPdfCliente" type="button"><i data-lucide="file-text"></i><span>PDF cliente</span></button>
+            <button class="button button-ghost" id="gerarPdfEstudio" type="button"><i data-lucide="file-spreadsheet"></i><span>PDF interno</span></button>
+            <button class="button button-ghost ops-action-danger" id="limparOrcamento" type="button" aria-label="Limpar orçamento"><i data-lucide="eraser"></i><span>Limpar</span></button>
+          </div>
+          <p id="statusOrcamento" class="ops-status" aria-live="polite"></p>
+        </section>
 
         <section class="ops-section ops-section--stock ops-section--focus ops-section--stock-end">
           <header class="ops-section-header ops-section-header--compact"><span class="ops-section-icon"><i data-lucide="package-search"></i></span><div><span class="ops-section-kicker">05 • Estoque de apoio</span><h2>Adicionar insumos</h2><p>Busque pelo nome e adicione somente os itens que entram no cálculo interno.</p></div></header>
