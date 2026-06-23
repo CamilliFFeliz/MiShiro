@@ -32,16 +32,15 @@ function prepararIdentidadeHero() {
   const marca = document.querySelector(".page-hero__brand");
   if (!marca || marca.dataset.temaPreparado === "true") return;
   marca.dataset.temaPreparado = "true";
-  marca.replaceChildren(criarLogo("img/mishiro-logo-escuro.jpg", "MiShiro Tattoo", "brand-logo--on-dark"), criarLogo("img/mishiro-logo-claro.jpg", "MiShiro Tattoo", "brand-logo--on-light"));
+  marca.replaceChildren(criarLogo("img/mishiro-logo-claro.jpg", "MiShiro Tattoo"));
 }
 
-function criarLogo(src, alt, classe) {
+function criarLogo(src, alt) {
   const imagem = document.createElement("img");
   imagem.src = src;
   imagem.alt = alt;
-  imagem.className = classe;
   imagem.addEventListener("error", () => {
-    if (imagem.classList.contains("brand-logo--on-light")) imagem.remove();
+    imagem.src = "img/mishiro-logo-escuro.jpg";
   }, { once: true });
   return imagem;
 }
