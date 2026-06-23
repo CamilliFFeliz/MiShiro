@@ -1,4 +1,5 @@
-/* MiShiro — Orçamentos limpo, mobile-first e com carrinho preservado */
+/* MiShiro — Orçamentos limpo, mobile-first e com carrinho preservado.
+   Este arquivo concentra todo o visual da página de Orçamentos. */
 :root {
   --ops-surface: rgba(23, 8, 42, .82);
   --ops-surface-soft: rgba(255, 255, 255, .045);
@@ -268,7 +269,6 @@ body[data-page="orcamentos"] .budget-intro p {
   line-height: 1.42;
 }
 
-/* Referência visual limpa */
 .ops-reference-zone,
 .ops-reference-zone--clean {
   display: grid;
@@ -363,17 +363,56 @@ body[data-page="orcamentos"] .budget-intro p {
   margin-top: 7px;
 }
 
-/* Busca e materiais */
 .ops-section--stock,
 .ops-section--focus {
   gap: 14px;
 }
 
+.ops-section--stock-end {
+  margin-top: 6px;
+  padding: 14px !important;
+  border-radius: 22px !important;
+  background:
+    linear-gradient(145deg, rgba(255,255,255,.052), rgba(255,255,255,.022)),
+    rgba(17, 5, 31, .78) !important;
+  box-shadow: 0 14px 34px rgba(0,0,0,.24) !important;
+}
+
+.ops-section--stock-end .ops-section-header {
+  grid-template-columns: 36px minmax(0, 1fr);
+  gap: 10px;
+}
+
+.ops-section--stock-end .ops-section-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 13px;
+}
+
+.ops-section--stock-end .ops-section-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.ops-section--stock-end h2 {
+  font-size: clamp(1.08rem, 4.8vw, 1.32rem);
+}
+
+.ops-section--stock-end .ops-section-header p {
+  margin-top: 4px;
+  font-size: .82rem;
+  line-height: 1.35;
+}
+
 .ops-stock-toolbar {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 104px;
+  grid-template-columns: minmax(0, 1fr) 92px;
   gap: 10px;
   align-items: end;
+}
+
+.ops-stock-toolbar .ops-field > span {
+  font-size: .72rem;
 }
 
 .ops-search-field {
@@ -381,15 +420,17 @@ body[data-page="orcamentos"] .budget-intro p {
 }
 
 .ops-search-field input {
-  min-height: 54px;
+  min-height: 46px;
   padding-left: 46px;
+  border-radius: 15px !important;
+  font-size: .9rem;
 }
 
 .ops-search-field::after {
   content: "";
   position: absolute;
   left: 16px;
-  bottom: 18px;
+  bottom: 15px;
   width: 16px;
   height: 16px;
   border: 2px solid rgba(238,231,255,.52);
@@ -400,17 +441,18 @@ body[data-page="orcamentos"] .budget-intro p {
 }
 
 #clearBudgetSearchButton {
-  min-height: 54px;
+  min-height: 46px;
   justify-content: center;
   gap: 7px;
-  border-radius: 18px !important;
-  padding-inline: 10px;
+  border-radius: 15px !important;
+  padding-inline: 8px;
+  font-size: .9rem;
 }
 
 .ops-filter-row {
   display: flex;
   flex-wrap: nowrap;
-  gap: 8px;
+  gap: 7px;
   margin: 0 -4px;
   padding: 0 4px 4px;
   overflow-x: auto;
@@ -423,23 +465,23 @@ body[data-page="orcamentos"] .budget-intro p {
 
 .ops-filter-chip {
   flex: 0 0 auto;
-  min-height: 40px;
+  min-height: 36px;
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 12px;
+  padding: 7px 10px;
   border: 1px solid rgba(238,231,255,.13);
   border-radius: 999px;
   background: rgba(255,255,255,.04);
   color: rgba(238,231,255,.75);
-  font-size: .86rem;
+  font-size: .78rem;
   font-weight: 900;
   white-space: nowrap;
 }
 
 .ops-filter-chip svg {
-  width: 17px;
-  height: 17px;
+  width: 15px;
+  height: 15px;
   color: #d8c6ff;
 }
 
@@ -456,158 +498,120 @@ body[data-page="orcamentos"] .budget-intro p {
   gap: 12px;
 }
 
-.ops-stock-item--premium {
+.ops-stock-list--compact {
+  gap: 9px;
+}
+
+.ops-stock-item--premium,
+.ops-stock-item--mini {
   position: relative;
   isolation: isolate;
   overflow: hidden;
   display: grid;
-  gap: 11px;
+  gap: 8px;
   min-width: 0;
-  padding: 16px;
+  padding: 12px;
   border: 1px solid rgba(238,231,255,.15);
-  border-radius: 23px;
+  border-radius: 18px;
   background:
-    radial-gradient(circle at 92% 18%, rgba(155,108,255,.11), transparent 9rem),
-    linear-gradient(145deg, rgba(255,255,255,.07), rgba(255,255,255,.028)),
-    rgba(25,9,44,.82);
-  box-shadow: 0 18px 42px rgba(0,0,0,.28);
+    linear-gradient(145deg, rgba(255,255,255,.055), rgba(255,255,255,.022)),
+    rgba(20, 7, 37, .78) !important;
+  box-shadow: 0 10px 24px rgba(0,0,0,.20);
 }
 
+.ops-stock-card-head,
+.ops-category-badge,
+.ops-stock-price,
+.ops-stock-divider,
+.ops-qty-label,
 .ops-stock-watermark {
-  position: absolute;
-  z-index: -1;
-  right: -28px;
-  top: 36px;
-  width: min(34%, 150px);
-  height: 155px;
-  object-fit: contain;
-  opacity: .18;
-  transform: rotate(-18deg);
-  filter: saturate(.82) contrast(1.04) drop-shadow(0 18px 18px rgba(0,0,0,.24));
-  pointer-events: none;
-}
-
-.ops-stock-card-head {
-  display: flex;
-  align-items: center;
-}
-
-.ops-category-badge {
-  display: inline-flex;
-  align-items: center;
-  min-height: 28px;
-  width: fit-content;
-  max-width: 100%;
-  padding: 5px 10px;
-  border-radius: 999px;
-  color: #eadfff;
-  background: rgba(92,22,172,.38);
-  border: 1px solid rgba(205,184,255,.18);
-  font-size: .68rem;
-  font-weight: 950;
+  display: none !important;
 }
 
 .ops-stock-card-main {
   display: grid;
-  grid-template-columns: 48px minmax(0, 1fr);
-  gap: 12px;
+  grid-template-columns: 38px minmax(0, 1fr);
+  gap: 9px;
+  max-width: 100%;
   align-items: center;
-  max-width: calc(100% - 54px);
 }
 
 .ops-stock-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 16px;
+  width: 38px;
+  height: 38px;
+  min-width: 38px;
+  min-height: 38px;
+  display: inline-grid !important;
+  place-items: center !important;
+  align-self: center;
+  justify-self: center;
+  line-height: 0;
+  border-radius: 13px;
   color: #fff;
   background: linear-gradient(135deg, #8c4dff, #360a75);
-  box-shadow: 0 14px 30px rgba(54,10,117,.32);
+  box-shadow: 0 10px 22px rgba(54,10,117,.28);
 }
 
 .ops-stock-icon svg {
-  width: 22px;
-  height: 22px;
+  display: block;
+  width: 18px;
+  height: 18px;
+  stroke-width: 2.25;
+  transform: none !important;
 }
 
 .ops-stock-card-main strong {
   display: block;
   color: #fff;
-  font-size: clamp(1.08rem, 5.4vw, 1.38rem);
-  line-height: 1.1;
-  letter-spacing: -.036em;
+  font-size: .98rem;
+  line-height: 1.12;
+  letter-spacing: -.025em;
   text-wrap: balance;
 }
 
-.ops-stock-card-main span {
+.ops-stock-card-main span:not(.ops-stock-icon) {
   display: block;
-  margin-top: 4px;
+  margin-top: 2px;
   color: rgba(238,231,255,.66);
-  font-size: .86rem;
-  line-height: 1.38;
+  font-size: .76rem;
+  line-height: 1.28;
 }
 
-.ops-stock-price {
+.ops-stock-mini-meta {
   display: flex;
-  align-items: baseline;
-  gap: 6px;
-}
-
-.ops-stock-price small {
-  color: #fff;
-  font-size: .86rem;
-  font-weight: 950;
-}
-
-.ops-stock-price strong {
-  color: #a56cff;
-  font-size: clamp(1.58rem, 8.5vw, 2.15rem);
-  line-height: .92;
-  letter-spacing: -.058em;
-}
-
-.ops-stock-price span {
-  color: rgba(238,231,255,.70);
-  font-size: .86rem;
-  font-weight: 850;
-}
-
-.ops-stock-divider {
-  height: 1px;
-  background: repeating-linear-gradient(90deg, rgba(238,231,255,.20) 0 6px, transparent 6px 12px);
+  justify-content: space-between;
+  gap: 8px;
+  color: rgba(238,231,255,.66);
+  font-size: .76rem;
+  line-height: 1.25;
 }
 
 .ops-stock-item__bottom {
   display: grid;
-  gap: 9px;
-}
-
-.ops-qty-label {
-  color: var(--ops-lilac);
-  font-size: .68rem;
-  font-weight: 950;
-  letter-spacing: .15em;
-  text-transform: uppercase;
+  grid-template-columns: minmax(0, 1fr) 116px;
+  gap: 8px;
+  align-items: center;
 }
 
 .ops-stepper {
   display: grid;
-  grid-template-columns: 46px minmax(0, 1fr) 46px;
+  grid-template-columns: 36px minmax(0, 1fr) 36px;
   border: 1px solid rgba(205,184,255,.30);
-  border-radius: 16px;
+  border-radius: 13px;
   overflow: hidden;
   background: rgba(255,255,255,.055);
 }
 
 .ops-stepper button,
 .ops-stepper input {
-  min-height: 46px;
+  min-height: 38px;
   border: 0;
+  font-size: .92rem;
 }
 
 .ops-stepper button {
   background: rgba(54,10,117,.36);
   color: #fff;
-  font-size: 1.18rem;
   font-weight: 1000;
 }
 
@@ -619,7 +623,6 @@ body[data-page="orcamentos"] .budget-intro p {
   background: transparent;
   color: #fff;
   text-align: center;
-  font-size: 1rem;
   font-weight: 950;
 }
 
@@ -628,13 +631,31 @@ body[data-page="orcamentos"] .budget-intro p {
 }
 
 .ops-add-button {
-  min-height: 48px;
+  min-height: 38px;
   justify-content: center;
-  border-radius: 16px !important;
+  border-radius: 13px !important;
+  padding-inline: 10px;
+  font-size: .82rem;
 }
 
 .ops-stock-item__available {
   display: none;
+}
+
+.ops-stock-pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding-top: 4px;
+  color: rgba(238,231,255,.62);
+  font-size: .82rem;
+}
+
+.ops-stock-pagination .button {
+  min-height: 42px;
+  border-radius: 15px !important;
 }
 
 .ops-empty {
@@ -649,25 +670,53 @@ body[data-page="orcamentos"] .budget-intro p {
   background: rgba(255,255,255,.03);
 }
 
-/* Resumo financeiro */
+.ops-section--finance-clean {
+  gap: 12px;
+  padding: 14px !important;
+  border-radius: 22px !important;
+}
+
+.ops-section--finance-clean .ops-section-header {
+  grid-template-columns: 36px minmax(0, 1fr);
+  gap: 10px;
+}
+
+.ops-section--finance-clean .ops-section-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 13px;
+}
+
+.ops-section--finance-clean .ops-section-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.ops-section--finance-clean h2 {
+  font-size: clamp(1.08rem, 4.9vw, 1.34rem);
+}
+
 .ops-grid--finance {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .ops-financial-summary {
   display: grid;
-  gap: 0;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
   margin: 0;
 }
 
-.ops-financial-summary div {
+.ops-financial-summary > div {
   min-height: 54px;
   display: grid;
-  grid-template-columns: 40px minmax(0, 1fr) auto;
+  grid-template-columns: 28px minmax(0, 1fr);
   align-items: center;
-  gap: 10px;
-  padding: 8px 0;
-  border-bottom: 1px solid rgba(238,231,255,.10);
+  gap: 8px;
+  padding: 9px 10px !important;
+  border: 1px solid rgba(238,231,255,.10) !important;
+  border-radius: 16px;
+  background: rgba(255,255,255,.035);
 }
 
 .ops-financial-summary div::before,
@@ -677,54 +726,63 @@ body[data-page="orcamentos"] .budget-intro p {
 }
 
 .ops-finance-icon {
-  width: 36px;
-  height: 36px;
-  border-radius: 13px;
+  width: 28px;
+  height: 28px;
+  border-radius: 10px;
+  grid-row: 1 / span 2;
 }
 
 .ops-finance-icon svg {
-  width: 18px;
-  height: 18px;
+  width: 15px;
+  height: 15px;
 }
 
 .ops-financial-summary dt {
   color: rgba(238,231,255,.72);
-  font-size: .92rem;
+  font-size: .72rem;
+  line-height: 1.1;
 }
 
 .ops-financial-summary dd {
+  grid-column: 2;
   margin: 0;
   color: #fff;
-  font-size: .96rem;
+  font-size: .9rem;
+  line-height: 1.05;
   font-weight: 950;
 }
 
 .ops-financial-summary .is-total {
-  grid-template-columns: 54px minmax(0, 1fr);
-  min-height: 104px;
-  margin-top: 12px;
-  padding: 16px !important;
+  order: -1;
+  grid-column: 1 / -1;
+  min-height: 72px;
+  margin-top: 0;
+  grid-template-columns: 42px minmax(0, 1fr);
+  padding: 12px !important;
   border: 1px solid rgba(188,150,255,.34) !important;
-  border-radius: 23px;
+  border-radius: 18px;
   background:
     radial-gradient(circle at 88% 25%, rgba(155,108,255,.24), transparent 7rem),
     linear-gradient(135deg, rgba(54,10,117,.40), rgba(11,3,22,.62)) !important;
 }
 
 .ops-financial-summary .is-total .ops-finance-icon {
-  grid-row: 1 / span 2;
-  width: 50px;
-  height: 50px;
-  border-radius: 17px;
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
 }
 
 .ops-financial-summary .is-total .ops-finance-icon svg {
-  width: 24px;
-  height: 24px;
+  width: 20px;
+  height: 20px;
+}
+
+.ops-financial-summary .is-total dt,
+.ops-financial-summary .is-total dd {
+  grid-column: 2;
 }
 
 .ops-financial-summary .is-total dt {
-  grid-column: 2;
   color: var(--ops-lilac);
   font-size: .68rem;
   font-weight: 950;
@@ -733,45 +791,83 @@ body[data-page="orcamentos"] .budget-intro p {
 }
 
 .ops-financial-summary .is-total dd {
-  grid-column: 2;
-  font-size: clamp(1.86rem, 9vw, 2.8rem);
+  font-size: clamp(1.75rem, 8vw, 2.35rem);
   line-height: .96;
   letter-spacing: -.06em;
 }
 
-/* Ações mais limpas */
+.ops-section--finance-clean .ops-details > summary {
+  min-height: 42px;
+  padding: 8px 10px;
+  border-radius: 15px;
+  font-size: .86rem;
+}
+
 .ops-actions,
 .ops-actions--clean {
   display: grid;
-  gap: 10px;
-  padding: 14px;
+  gap: 9px;
+  padding: 12px !important;
   border: 1px solid var(--ops-line);
-  border-radius: 24px;
+  border-radius: 20px !important;
   background: rgba(11,3,22,.60);
   box-shadow: 0 18px 44px rgba(0,0,0,.24);
 }
 
-.ops-actions .button {
-  width: 100%;
-  min-height: 54px;
+.ops-actions-grid {
   display: grid;
-  grid-template-columns: 34px minmax(0, 1fr) auto;
-  justify-content: flex-start;
-  padding-inline: 14px 16px;
-  text-align: left;
+  gap: 8px;
 }
 
-.ops-actions .button::after {
-  content: "›";
-  justify-self: end;
-  color: #d8c6ff;
-  font-size: 1.5rem;
-  font-weight: 500;
+.ops-actions-grid--primary,
+.ops-actions-grid--documents {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-.ops-actions .button svg {
+.ops-actions-grid--documents .ops-action-danger {
+  grid-column: 1 / -1;
+}
+
+.ops-actions .button,
+.ops-actions--clean .button {
+  width: 100%;
+  min-height: 44px;
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr);
+  gap: 8px;
+  justify-content: center;
+  justify-items: center;
+  padding: 8px 10px;
+  border-radius: 15px !important;
+  font-size: .82rem;
+  text-align: center;
+}
+
+.ops-actions .button::after,
+.ops-actions--clean .button::after {
+  content: none !important;
+}
+
+.ops-actions .button svg,
+.ops-actions--clean .button svg {
+  width: 17px;
+  height: 17px;
   justify-self: center;
   color: #d9c8ff;
+}
+
+.ops-actions .button span,
+.ops-actions--clean .button span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ops-action-danger {
+  min-height: 40px;
+  color: rgba(255,210,220,.92);
+  border-color: rgba(241,120,146,.22) !important;
 }
 
 .ops-status {
@@ -784,7 +880,6 @@ body[data-page="orcamentos"] .budget-intro p {
   display: none;
 }
 
-/* Carrinho aprovado: comportamento preservado. */
 .ops-floating-cart__button {
   text-decoration: none;
 }
@@ -872,7 +967,7 @@ body[data-page="orcamentos"] .budget-intro p {
   }
 
   .ops-stock-toolbar {
-    grid-template-columns: minmax(0, 1fr) 94px;
+    grid-template-columns: 1fr 86px;
     gap: 8px;
   }
 
@@ -892,60 +987,42 @@ body[data-page="orcamentos"] .budget-intro p {
     height: 19px;
   }
 
-  .ops-stock-item--premium {
+  .ops-stock-item--premium,
+  .ops-stock-item--mini {
     padding: 14px;
     border-radius: 21px;
     gap: 10px;
   }
 
   .ops-stock-card-main {
-    grid-template-columns: 44px minmax(0, 1fr);
-    gap: 10px;
-    max-width: calc(100% - 48px);
+    grid-template-columns: 38px minmax(0, 1fr);
+    gap: 9px;
+    max-width: 100%;
   }
 
   .ops-stock-icon {
-    width: 44px;
-    height: 44px;
-    border-radius: 15px;
+    width: 38px;
+    height: 38px;
+    min-width: 38px;
+    min-height: 38px;
+    border-radius: 13px;
   }
 
   .ops-stock-icon svg {
-    width: 20px;
-    height: 20px;
+    width: 18px;
+    height: 18px;
   }
 
   .ops-stock-card-main strong {
-    font-size: clamp(1.02rem, 5.2vw, 1.24rem);
+    font-size: .98rem;
   }
 
-  .ops-stock-watermark {
-    right: -30px;
-    top: 48px;
-    width: 34%;
-    height: 138px;
-  }
-
-  .ops-stock-price strong {
-    font-size: clamp(1.46rem, 8vw, 1.95rem);
-  }
-
-  .ops-stepper {
-    grid-template-columns: 42px minmax(0, 1fr) 42px;
-  }
-
-  .ops-stepper button,
-  .ops-stepper input {
-    min-height: 42px;
+  .ops-stock-item__bottom {
+    grid-template-columns: 1fr;
   }
 
   .ops-grid--finance {
     grid-template-columns: 1fr;
-  }
-
-  .ops-financial-summary .is-total {
-    min-height: 96px;
-    padding: 14px !important;
   }
 }
 
@@ -967,5 +1044,10 @@ body[data-page="orcamentos"] .budget-intro p {
   .ops-field--icon > select,
   .ops-field--icon > textarea {
     grid-column: 1;
+  }
+
+  .ops-actions-grid--primary,
+  .ops-actions-grid--documents {
+    grid-template-columns: 1fr;
   }
 }
