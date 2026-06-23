@@ -103,7 +103,7 @@ function renderizarTudo() {
 function renderizarFiltros() {
   const alvo = $("#budgetCategoryFilters");
   if (!alvo) return;
-  alvo.innerHTML = CATEGORY_ORDER.map((categoria) => `<button type="button" class="ops-filter-chip ${categoria === estado.categoria ? "is-active" : ""}" data-category="${escapar(categoria)}">${escapar(categoria)}</button>`).join("");
+  alvo.innerHTML = CATEGORY_ORDER.map((categoria) => `<button type="button" class="ops-filter-chip ${categoria === estado.categoria ? "is-active" : ""}" data-category="${escapar(categoria)}"><i data-lucide="${iconeCategoria(categoria)}"></i>${escapar(categoria)}</button>`).join("");
 }
 
 function renderizarEstoque() {
@@ -119,8 +119,28 @@ function renderizarEstoque() {
 function cardEstoque(item) {
   const selecionada = estado.carrinho.get(item.id)?.quantidade || 0;
   const disponivel = quantidadeDisponivel(item);
+  const unidade = getMeasureSuffix(item.unidadeMedida);
+  const custo = calcularCustoUnitario(item);
+  const imagem = imagemProduto(item);
   const invalido = estado.erros.has(item.id) ? " is-invalid" : "";
-  return `<article class="ops-stock-item" data-stock-id="${escapar(item.id)}"><div class="ops-stock-item__title"><strong>${escapar(item.nome)}</strong><span class="ops-category-badge">${escapar(item.categoria)}</span></div><div class="ops-stock-item__meta"><span>${formatarMoeda(calcularCustoUnitario(item))} por ${escapar(getMeasureSuffix(item.unidadeMedida))}</span><span>${escapar(getItemSpecification(item) || "Sem especificação adicional")}</span></div><div class="ops-stock-item__bottom"><div class="ops-stock-item__available"><span>Disponível</span><strong>${disponivel} ${escapar(getMeasureSuffix(item.unidadeMedida))}</strong></div>${stepper(selecionada, disponivel, invalido)}</div></article>`;
+  const addDesabilitado = selecionada >= disponivel || disponivel <= 0 ? "disabled" : "";
+  return `<article class="ops-stock-item ops-stock-item--premium ${imagem ? "has-product-image" : ""}" data-stock-id="${escapar(item.id)}">${imagem ? `<img class="ops-stock-watermark" src="${escapar(imagem)}" alt="" aria-hidden="true" />` : ""}<header class="ops-stock-card-head"><span class="ops-category-badge">${escapar(item.categoria)}</span></header><div class="ops-stock-card-main"><span class="ops-stock-icon"><i data-lucide="${iconeCategoria(item.categoria)}"></i></span><div><strong>${escapar(item.nome)}</strong><span>${escapar(getItemSpecification(item) || "Sem especificação adicional")} · ${escapar(unidade)}</span></div></div><div class="ops-stock-price"><small>R$</small><strong>${formatarMoeda(custo).replace("R$", "").trim()}</strong><span>/ ${escapar(unidade)}</span></div><div class="ops-stock-divider"></div><div class="ops-stock-item__bottom"><span class="ops-qty-label">Qtd. usada</span>${stepper(selecionada, disponivel, invalido)}<button type="button" class="button button-primary ops-add-button" data-step="increase" ${addDesabilitado}><i data-lucide="shopping-basket"></i>Adicionar</button><small class="ops-stock-item__available">Disponível: <strong>${disponivel} ${escapar(unidade)}</strong></small></div></article>`;
+}
+
+function imagemProduto(item) {
+  return item?.imagemProduto?.dataUrl || item?.imagemItem?.dataUrl || item?.imagemReferencia?.dataUrl || "";
+}
+
+function iconeCategoria(categoria = "") {
+  const texto = String(categoria).toLowerCase();
+  if (texto.includes("agulha") || texto.includes("cartucho")) return "pen-line";
+  if (texto.includes("tinta")) return "droplet";
+  if (texto.includes("pastoso")) return "briefcase-medical";
+  if (texto.includes("biossegurança") || texto.includes("descart")) return "shield-check";
+  if (texto.includes("limpeza")) return "sparkles";
+  if (texto.includes("extensão")) return "git-branch";
+  if (texto.includes("opcional")) return "wand-sparkles";
+  return "layout-grid";
 }
 
 function renderizarCarrinho() {
