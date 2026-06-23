@@ -10,7 +10,8 @@
   <link rel="stylesheet" href="../assets/css/tokens.css" />
   <link rel="stylesheet" href="../assets/css/layout.css" />
   <link rel="stylesheet" href="../assets/css/components.css" />
-  <link rel="stylesheet" href="../assets/css/estoque.css" />
+  <link id="mishiro-clean-ui-css" rel="stylesheet" href="../assets/css/app-clean.css?v=20260623.4" />
+  <link rel="stylesheet" href="../assets/css/estoque.css?v=20260623.4" />
   <link rel="stylesheet" href="../assets/css/studio-workflow.css" />
   <title>MiShiro Tattoo • Estoque</title>
 </head>
@@ -34,6 +35,15 @@
       <div class="modal-header"><div><span>Novo item</span><h2>Cadastrar insumo</h2></div><button class="icon-button" id="closeItemModalButton" type="button" aria-label="Fechar cadastro"><i data-lucide="x"></i></button></div>
       <section class="form-step-panel"><div class="step-heading"><strong>Etapa 1</strong><span>Escolha a categoria principal, incluindo a categoria Opcional quando aplicável.</span></div><section class="category-choice-grid" id="categoryChoiceGrid"></section></section>
       <section class="form-step-panel"><div class="step-heading"><strong>Etapa 2</strong><span>Preencha a ficha do item</span></div><div class="stock-helper" id="categoryHelper"></div><div class="dynamic-fields-grid" id="dynamicFieldsGrid"></div></section>
+      <section class="form-step-panel stock-image-panel">
+        <div class="step-heading"><strong>Etapa 3</strong><span>Imagem do item para aparecer no card do estoque.</span></div>
+        <input id="imagemItemEstoque" type="file" accept="image/png,image/jpeg,image/webp" hidden />
+        <div class="stock-image-picker">
+          <label class="stock-image-drop" for="imagemItemEstoque"><i data-lucide="image-plus"></i><strong>Anexar imagem</strong><span>PNG, JPG ou WEBP até 2 MB.</span></label>
+          <div class="stock-image-preview" id="stockImagePreview"><span>Nenhuma imagem adicionada.</span></div>
+        </div>
+        <button id="removeStockImageButton" class="button button-ghost" type="button"><i data-lucide="trash-2"></i>Remover imagem</button>
+      </section>
       <section class="unit-cost-preview" id="unitCostPreview"><span>Prévia do cálculo</span><strong>R$ 0,00</strong><small>Preencha os campos para calcular o custo de uso.</small></section>
       <button class="button button-primary full-button" type="submit"><i data-lucide="save"></i>Salvar item</button><p id="statusEstoque" class="form-status" aria-live="polite"></p>
     </form>
