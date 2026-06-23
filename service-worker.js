@@ -1,4 +1,4 @@
-const CACHE_NAME = "mishiro-clean-v6-visual-referencia";
+const CACHE_NAME = "mishiro-clean-v7-inicio-agenda";
 const ASSETS = [
   "./", "./index.html", "./manifest.webmanifest", "./icons/icon.svg",
   "./pages/orcamentos.html", "./pages/estoque.html", "./pages/agenda.html", "./pages/relatorios.html", "./pages/backup.html", "./pages/configuracoes.html",
