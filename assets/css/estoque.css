@@ -1,34 +1,34 @@
-/* Estoque — card mobile refinado conforme mockup */
+/* Estoque — card mobile refinado conforme mockup, com altura compacta */
 body[data-page="estoque"] .page-shell {
   width: min(100%, 980px);
-  gap: 18px;
+  gap: 16px;
   padding-inline: 14px !important;
-  padding-bottom: 52px !important;
+  padding-bottom: 44px !important;
 }
 
 .inventory-page-header {
   display: grid;
-  gap: 18px;
+  gap: 14px;
   align-items: stretch;
-  padding: 22px !important;
+  padding: 18px !important;
 }
 
 .inventory-page-header p {
   max-width: 680px;
-  line-height: 1.58;
+  line-height: 1.5;
 }
 
 .inventory-header-actions {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 12px;
+  gap: 10px;
 }
 
 .counter-pill {
   display: inline-grid;
-  min-height: 48px;
+  min-height: 42px;
   place-items: center;
-  padding: 10px 16px;
+  padding: 8px 14px;
   border: 1px solid rgba(238, 231, 255, .14);
   border-radius: 999px;
   background: rgba(54, 10, 117, .28);
@@ -38,72 +38,73 @@ body[data-page="estoque"] .page-shell {
 
 .stock-list-panel {
   display: grid;
-  gap: 20px;
-  min-height: 240px;
-  padding: 18px !important;
+  gap: 16px;
+  min-height: 220px;
+  padding: 16px !important;
   overflow: visible;
 }
 
 .old-toolbar-grid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 14px;
+  gap: 10px;
   align-items: end;
 }
 
 .old-toolbar-grid .field input {
-  min-height: 62px;
-  padding-left: 18px;
-  font-size: 1rem;
-  border-radius: 22px;
+  min-height: 54px;
+  padding-left: 16px;
+  font-size: .98rem;
+  border-radius: 20px;
   background: rgba(255, 255, 255, .065);
 }
 
 .old-toolbar-grid .button {
-  min-height: 60px;
+  min-height: 52px;
   justify-content: center;
 }
 
 .compact-chip-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 8px;
   margin: 0;
-  padding: 0 0 4px;
+  padding: 0 0 2px;
 }
 
 .filter-chip {
   flex: 0 0 auto;
-  min-height: 48px;
+  min-height: 42px;
   display: inline-flex;
   align-items: center;
-  gap: 10px;
-  padding: 11px 16px;
+  gap: 8px;
+  padding: 9px 14px;
   border: 1px solid rgba(238, 231, 255, .14);
   border-radius: 999px;
   background: rgba(255, 255, 255, .045);
   color: rgba(238, 231, 255, .76);
   font-weight: 950;
+  font-size: .9rem;
   white-space: nowrap;
 }
 
 .filter-chip::before {
   content: "◇";
   color: #d9c8ff;
-  font-size: .9rem;
+  font-size: .82rem;
 }
 
 .filter-chip.is-active {
   color: #fff;
   background: linear-gradient(135deg, rgba(155, 108, 255, .70), rgba(54, 10, 117, .58));
   border-color: rgba(205, 184, 255, .42);
-  box-shadow: 0 14px 34px rgba(84, 20, 181, .32);
+  box-shadow: 0 12px 28px rgba(84, 20, 181, .28);
 }
 
 .inventory-grid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 18px;
+  gap: 14px;
   align-items: stretch;
 }
 
@@ -113,17 +114,17 @@ body[data-page="estoque"] .page-shell {
   isolation: isolate;
   overflow: hidden;
   display: grid;
-  gap: 16px;
+  gap: 10px;
   min-width: 0;
   width: 100%;
-  padding: 22px;
+  padding: 16px;
   border: 1px solid rgba(238, 231, 255, .16);
-  border-radius: 30px;
+  border-radius: 24px;
   background:
-    radial-gradient(circle at 86% 20%, rgba(155, 108, 255, .12), transparent 12rem),
+    radial-gradient(circle at 86% 20%, rgba(155, 108, 255, .12), transparent 10rem),
     linear-gradient(145deg, rgba(255, 255, 255, .08), rgba(255, 255, 255, .028)),
     rgba(25, 9, 44, .84);
-  box-shadow: 0 24px 58px rgba(0, 0, 0, .34);
+  box-shadow: 0 18px 42px rgba(0, 0, 0, .28);
 }
 
 .stock-mockup-card::before {
@@ -132,21 +133,21 @@ body[data-page="estoque"] .page-shell {
   inset: 0;
   z-index: -2;
   background:
-    linear-gradient(90deg, rgba(155, 108, 255, .08), transparent 48%),
-    radial-gradient(circle at 0% 10%, rgba(255,255,255,.05), transparent 12rem);
+    linear-gradient(90deg, rgba(155, 108, 255, .07), transparent 48%),
+    radial-gradient(circle at 0% 10%, rgba(255,255,255,.045), transparent 10rem);
 }
 
 .stock-product-watermark {
   position: absolute;
   z-index: -1;
-  right: -28px;
-  top: 42px;
-  width: min(44%, 210px);
-  height: 235px;
+  right: -24px;
+  top: 36px;
+  width: min(38%, 178px);
+  height: 190px;
   object-fit: contain;
-  opacity: .24;
+  opacity: .22;
   transform: rotate(-18deg);
-  filter: saturate(.82) contrast(1.04) drop-shadow(0 22px 20px rgba(0, 0, 0, .28));
+  filter: saturate(.82) contrast(1.04) drop-shadow(0 18px 18px rgba(0, 0, 0, .24));
   pointer-events: none;
 }
 
@@ -164,14 +165,14 @@ body[data-page="estoque"] .page-shell {
 .category-pill {
   display: inline-flex;
   align-items: center;
-  min-height: 34px;
+  min-height: 28px;
   max-width: 100%;
-  padding: 7px 13px;
+  padding: 5px 11px;
   border-radius: 999px;
   color: #eadfff;
   background: rgba(92, 22, 172, .42);
   border: 1px solid rgba(205, 184, 255, .20);
-  font-size: .76rem;
+  font-size: .68rem;
   font-weight: 950;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -181,28 +182,28 @@ body[data-page="estoque"] .page-shell {
 .stock-mockup-main,
 .stock-compact-main {
   display: grid;
-  grid-template-columns: 62px minmax(0, 1fr);
-  gap: 16px;
+  grid-template-columns: 48px minmax(0, 1fr);
+  gap: 12px;
   align-items: center;
-  padding-top: 6px;
-  max-width: calc(100% - 88px);
+  padding-top: 2px;
+  max-width: calc(100% - 58px);
 }
 
 .product-avatar {
-  width: 62px;
-  height: 62px;
+  width: 48px;
+  height: 48px;
   display: grid;
   place-items: center;
-  border-radius: 20px;
+  border-radius: 16px;
   color: #fff;
   background: linear-gradient(135deg, #8c4dff, #360a75);
   font-weight: 1000;
-  box-shadow: 0 18px 38px rgba(54, 10, 117, .36);
+  box-shadow: 0 14px 28px rgba(54, 10, 117, .32);
 }
 
 .product-avatar svg {
-  width: 28px;
-  height: 28px;
+  width: 22px;
+  height: 22px;
 }
 
 .stock-mockup-main h3,
@@ -210,9 +211,9 @@ body[data-page="estoque"] .page-shell {
   margin: 0;
   max-width: 100%;
   color: #fff;
-  font-size: clamp(1.38rem, 6vw, 1.72rem);
+  font-size: clamp(1.12rem, 5.1vw, 1.38rem);
   line-height: 1.12;
-  letter-spacing: -.045em;
+  letter-spacing: -.035em;
   overflow-wrap: normal;
   word-break: normal;
   text-wrap: balance;
@@ -221,55 +222,56 @@ body[data-page="estoque"] .page-shell {
 .stock-mockup-main span,
 .stock-compact-main span {
   display: block;
-  margin-top: 7px;
+  margin-top: 4px;
   color: rgba(238, 231, 255, .68);
-  font-size: .98rem;
-  line-height: 1.45;
+  font-size: .86rem;
+  line-height: 1.34;
 }
 
 .stock-mockup-price {
   display: flex;
   align-items: baseline;
-  gap: 8px;
+  gap: 6px;
   color: #fff;
-  margin-top: 2px;
+  margin-top: 0;
 }
 
 .stock-mockup-price small {
   color: #fff;
-  font-size: 1rem;
+  font-size: .9rem;
   font-weight: 950;
 }
 
 .stock-mockup-price strong {
   color: #a56cff;
-  font-size: clamp(2.15rem, 12vw, 3rem);
+  font-size: clamp(1.72rem, 9vw, 2.35rem);
   line-height: .9;
-  letter-spacing: -.07em;
+  letter-spacing: -.06em;
 }
 
 .stock-mockup-price span {
   color: rgba(238, 231, 255, .72);
   font-weight: 850;
+  font-size: .9rem;
 }
 
 .stock-mockup-divider {
   height: 1px;
-  background: repeating-linear-gradient(90deg, rgba(238,231,255,.24) 0 6px, transparent 6px 12px);
+  background: repeating-linear-gradient(90deg, rgba(238,231,255,.22) 0 6px, transparent 6px 12px);
 }
 
 .stock-compact-stats {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   border: 1px solid rgba(238, 231, 255, .14);
-  border-radius: 22px;
+  border-radius: 18px;
   overflow: hidden;
   background: rgba(255, 255, 255, .035);
 }
 
 .stock-compact-stats article {
   min-width: 0;
-  padding: 14px 8px;
+  padding: 9px 5px;
   border-right: 1px solid rgba(238, 231, 255, .11);
   background: transparent;
   text-align: center;
@@ -286,19 +288,19 @@ body[data-page="estoque"] .page-shell {
 .stock-compact-stats span {
   display: block;
   color: rgba(238, 231, 255, .55);
-  font-size: clamp(.57rem, 2.7vw, .68rem);
+  font-size: clamp(.5rem, 2.35vw, .6rem);
   font-weight: 950;
   text-transform: uppercase;
-  letter-spacing: .065em;
-  line-height: 1.3;
+  letter-spacing: .055em;
+  line-height: 1.22;
 }
 
 .stock-compact-stats strong {
   display: block;
-  margin-top: 8px;
+  margin-top: 5px;
   color: #fff;
-  font-size: clamp(.82rem, 3.4vw, 1rem);
-  line-height: 1.18;
+  font-size: clamp(.72rem, 3vw, .88rem);
+  line-height: 1.12;
   overflow-wrap: anywhere;
 }
 
@@ -306,34 +308,34 @@ body[data-page="estoque"] .page-shell {
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
-  gap: 8px;
-  padding-top: 2px;
+  gap: 6px;
+  padding-top: 0;
   color: rgba(238, 231, 255, .66);
-  font-size: .92rem;
-  line-height: 1.5;
+  font-size: .78rem;
+  line-height: 1.35;
 }
 
 .inventory-card-actions,
 .dual-actions {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 10px;
+  gap: 8px;
 }
 
 .inventory-card-actions .button {
-  min-height: 56px;
+  min-height: 46px;
   justify-content: center;
-  border-radius: 18px !important;
+  border-radius: 16px !important;
 }
 
 .secondary-actions {
   display: flex;
   justify-content: flex-end;
-  margin-top: 4px;
+  margin-top: 2px;
 }
 
 .secondary-actions .button {
-  min-height: 48px;
+  min-height: 44px;
 }
 
 /* Modal / cadastro */
@@ -344,8 +346,8 @@ body[data-page="estoque"] .page-shell {
   color: var(--text);
   background: linear-gradient(145deg, rgba(255,255,255,.075), rgba(255,255,255,.03)), var(--surface, #120421);
   border: 1px solid rgba(238, 231, 255, .14);
-  border-radius: 28px;
-  padding: 18px;
+  border-radius: 26px;
+  padding: 16px;
 }
 
 .inventory-modal::backdrop {
@@ -355,7 +357,7 @@ body[data-page="estoque"] .page-shell {
 
 .stock-form {
   display: grid;
-  gap: 16px;
+  gap: 14px;
 }
 
 .modal-header {
@@ -375,17 +377,17 @@ body[data-page="estoque"] .page-shell {
 
 .modal-header h2 {
   color: #fff;
-  font-size: clamp(1.45rem, 6vw, 2rem);
-  letter-spacing: -.055em;
+  font-size: clamp(1.35rem, 6vw, 1.86rem);
+  letter-spacing: -.05em;
   line-height: 1.12;
 }
 
 .form-step-panel {
   display: grid;
-  gap: 14px;
-  padding: 16px;
+  gap: 12px;
+  padding: 14px;
   border: 1px solid rgba(238, 231, 255, .12);
-  border-radius: 22px;
+  border-radius: 20px;
   background: rgba(255, 255, 255, .045);
 }
 
@@ -400,74 +402,74 @@ body[data-page="estoque"] .page-shell {
 }
 
 .step-heading span {
-  line-height: 1.5;
+  line-height: 1.45;
 }
 
 .category-choice-grid,
 .dynamic-fields-grid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 10px;
+  gap: 9px;
 }
 
 .category-choice {
   display: grid;
-  gap: 6px;
-  min-height: 92px;
-  padding: 14px;
+  gap: 5px;
+  min-height: 78px;
+  padding: 12px;
   border: 1px solid rgba(238, 231, 255, .12);
-  border-radius: 18px;
+  border-radius: 16px;
   background: rgba(255, 255, 255, .045);
   color: #fff;
   text-align: left;
 }
 
 .category-choice strong {
-  line-height: 1.22;
+  line-height: 1.18;
 }
 
 .category-choice span {
   color: rgba(238, 231, 255, .66);
-  font-size: .84rem;
-  line-height: 1.48;
+  font-size: .8rem;
+  line-height: 1.4;
 }
 
 .category-choice.is-selected {
   border-color: rgba(205, 184, 255, .40);
   background: rgba(54, 10, 117, .32);
-  box-shadow: 0 18px 36px rgba(54, 10, 117, .22);
+  box-shadow: 0 14px 30px rgba(54, 10, 117, .20);
 }
 
 .stock-helper {
-  padding: 12px 14px;
+  padding: 10px 12px;
   border: 1px solid rgba(238, 231, 255, .12);
-  border-radius: 16px;
+  border-radius: 15px;
   color: rgba(238, 231, 255, .70);
   background: rgba(255, 255, 255, .04);
-  line-height: 1.5;
+  line-height: 1.45;
 }
 
 .measure-input {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 88px;
+  grid-template-columns: minmax(0, 1fr) 84px;
   gap: 8px;
 }
 
 .stock-image-picker {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 12px;
+  gap: 10px;
 }
 
 .stock-image-drop,
 .stock-image-preview {
-  min-height: 138px;
+  min-height: 118px;
   display: grid;
   place-items: center;
-  gap: 8px;
-  padding: 16px;
+  gap: 7px;
+  padding: 14px;
   border: 1px dashed rgba(205, 184, 255, .32);
-  border-radius: 22px;
+  border-radius: 20px;
   background: rgba(255, 255, 255, .04);
   color: rgba(238, 231, 255, .72);
   text-align: center;
@@ -476,17 +478,17 @@ body[data-page="estoque"] .page-shell {
 
 .stock-image-drop strong {
   color: #fff;
-  font-size: 1rem;
+  font-size: .96rem;
 }
 
 .stock-image-drop span,
 .stock-image-preview span {
-  line-height: 1.45;
+  line-height: 1.4;
 }
 
 .stock-image-drop svg {
-  width: 34px;
-  height: 34px;
+  width: 30px;
+  height: 30px;
   color: #d9c8ff;
 }
 
@@ -498,10 +500,10 @@ body[data-page="estoque"] .page-shell {
 
 .stock-image-preview img {
   width: 100%;
-  height: 160px;
+  height: 130px;
   object-fit: contain;
   opacity: .92;
-  filter: drop-shadow(0 18px 22px rgba(0,0,0,.30));
+  filter: drop-shadow(0 16px 18px rgba(0,0,0,.28));
 }
 
 .stock-image-preview.has-image span {
@@ -513,16 +515,16 @@ body[data-page="estoque"] .page-shell {
 
 .unit-cost-preview {
   display: grid;
-  gap: 4px;
-  padding: 16px;
+  gap: 3px;
+  padding: 14px;
   border: 1px solid rgba(205, 184, 255, .34);
-  border-radius: 20px;
+  border-radius: 18px;
   background: rgba(54, 10, 117, .24);
 }
 
 .unit-cost-preview span {
   color: rgba(238, 231, 255, .58);
-  font-size: .72rem;
+  font-size: .7rem;
   font-weight: 950;
   text-transform: uppercase;
   letter-spacing: .08em;
@@ -530,12 +532,12 @@ body[data-page="estoque"] .page-shell {
 
 .unit-cost-preview strong {
   color: #fff;
-  font-size: clamp(1.45rem, 6vw, 2.1rem);
+  font-size: clamp(1.3rem, 5.4vw, 1.9rem);
 }
 
 .unit-cost-preview small {
   color: rgba(238, 231, 255, .70);
-  line-height: 1.45;
+  line-height: 1.4;
 }
 
 .full-button {
@@ -554,7 +556,7 @@ body[data-page="estoque"] .page-shell {
   }
 
   .old-toolbar-grid {
-    grid-template-columns: minmax(0, 1fr) 190px;
+    grid-template-columns: minmax(0, 1fr) 178px;
   }
 
   .stock-image-picker {
@@ -585,55 +587,56 @@ body[data-page="estoque"] .page-shell {
 
   .stock-list-panel,
   .inventory-page-header {
-    padding: 16px !important;
-    border-radius: 28px !important;
+    padding: 14px !important;
+    border-radius: 26px !important;
   }
 
   .stock-compact-card,
   .stock-mockup-card {
-    padding: 18px;
-    border-radius: 28px;
-    gap: 15px;
+    padding: 14px;
+    border-radius: 24px;
+    gap: 9px;
   }
 
   .stock-mockup-main,
   .stock-compact-main {
-    grid-template-columns: 54px minmax(0, 1fr);
-    gap: 13px;
-    max-width: calc(100% - 68px);
+    grid-template-columns: 44px minmax(0, 1fr);
+    gap: 10px;
+    max-width: calc(100% - 52px);
   }
 
   .product-avatar {
-    width: 54px;
-    height: 54px;
-    border-radius: 18px;
+    width: 44px;
+    height: 44px;
+    border-radius: 15px;
   }
 
   .product-avatar svg {
-    width: 25px;
-    height: 25px;
+    width: 20px;
+    height: 20px;
   }
 
   .stock-mockup-main h3,
   .stock-compact-main h3 {
-    font-size: clamp(1.25rem, 6.2vw, 1.48rem);
-    line-height: 1.13;
+    font-size: clamp(1.04rem, 5.45vw, 1.26rem);
+    line-height: 1.1;
   }
 
   .stock-product-watermark {
-    right: -34px;
-    top: 62px;
-    width: 42%;
-    height: 190px;
-    opacity: .22;
+    right: -30px;
+    top: 48px;
+    width: 36%;
+    height: 150px;
+    opacity: .20;
   }
 
   .stock-compact-stats {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+    border-radius: 16px;
   }
 
   .stock-compact-stats article {
-    padding: 12px 6px;
+    padding: 8px 4px;
     border-right: 1px solid rgba(238, 231, 255, .11);
     border-bottom: 0;
   }
