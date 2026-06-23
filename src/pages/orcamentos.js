@@ -38,6 +38,9 @@ function conectarEventos() {
   $("#listaMateriais")?.addEventListener("click", (evento) => tratarQuantidade(evento, "data-cart-id"));
   $("#stockPickerList")?.addEventListener("change", (evento) => tratarDigitacao(evento, "data-stock-id"));
   $("#listaMateriais")?.addEventListener("change", (evento) => tratarDigitacao(evento, "data-cart-id"));
+  $("#toggleCarrinho")?.addEventListener("click", alternarCarrinho);
+  $("#fecharCarrinho")?.addEventListener("click", fecharCarrinho);
+  document.addEventListener("keydown", (evento) => { if (evento.key === "Escape") fecharCarrinho(); });
   $("#formOrcamento")?.addEventListener("input", (evento) => { if (evento.target.matches("#valorHora,#duracaoSessao,#margem,#desconto")) renderizarResumo(); if (evento.target.matches("#nomeOrcamento,#clienteNome")) limparErroObrigatorio(evento.target); });
   $("#formOrcamento")?.addEventListener("submit", salvarOrcamento);
   $("#limparOrcamento")?.addEventListener("click", limparFormulario);
@@ -162,8 +165,31 @@ function totais() {
 
 function renderizarResumo() {
   const total = totais();
+  const quantidadeItens = Array.from(estado.carrinho.values()).reduce((soma, registro) => soma + registro.quantidade, 0);
   const valores = { totalMateriais: total.materiais, totalMaoObra: total.maoObra, subtotalOrcamento: total.subtotal, valorDesconto: total.descontoValor, valorFinal: total.valorFinal, cartTotalMateriais: total.materiais - total.opcionais, cartTotalOpcionais: total.opcionais, cartTotalGeral: total.materiais };
   Object.entries(valores).forEach(([id, valor]) => { const alvo = $(`#${id}`); if (alvo) alvo.textContent = formatarMoeda(valor); });
+  const contador = $("#cartFloatingCount");
+  const totalBotao = $("#cartFloatingTotal");
+  if (contador) contador.textContent = quantidadeItens === 1 ? "1 item" : `${quantidadeItens} itens`;
+  if (totalBotao) totalBotao.textContent = `${formatarMoeda(total.materiais)} em materiais`;
+}
+
+function alternarCarrinho() {
+  const carrinho = $("#carrinhoFlutuante");
+  const painel = $("#painelCarrinho");
+  const botao = $("#toggleCarrinho");
+  const aberto = !carrinho?.classList.contains("is-open");
+  carrinho?.classList.toggle("is-open", aberto);
+  if (painel) painel.hidden = !aberto;
+  botao?.setAttribute("aria-expanded", aberto ? "true" : "false");
+}
+
+function fecharCarrinho() {
+  const carrinho = $("#carrinhoFlutuante");
+  const painel = $("#painelCarrinho");
+  carrinho?.classList.remove("is-open");
+  if (painel) painel.hidden = true;
+  $("#toggleCarrinho")?.setAttribute("aria-expanded", "false");
 }
 
 async function adicionarReferencias(evento) {
@@ -281,6 +307,7 @@ function limparFormulario() {
   estado.referencias = [];
   estado.erros.clear();
   estado.orcamento = null;
+  fecharCarrinho();
   history.replaceState({}, "", location.pathname);
   const titulo = $("#pageHeading");
   if (titulo) titulo.textContent = "Novo orçamento";
