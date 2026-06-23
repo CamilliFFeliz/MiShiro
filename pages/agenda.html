@@ -10,7 +10,8 @@
   <link rel="stylesheet" href="../assets/css/tokens.css" />
   <link rel="stylesheet" href="../assets/css/layout.css" />
   <link rel="stylesheet" href="../assets/css/components.css" />
-  <link rel="stylesheet" href="../assets/css/agenda.css" />
+  <link id="mishiro-clean-ui-css" rel="stylesheet" href="../assets/css/app-clean.css?v=20260623.2" />
+  <link rel="stylesheet" href="../assets/css/agenda.css?v=20260623.2" />
   <link rel="stylesheet" href="../assets/css/studio-workflow.css" />
   <title>MiShiro Tattoo • Agenda e Pipeline</title>
 </head>
@@ -24,7 +25,7 @@
 
       <section class="agenda-workflow-grid">
         <article class="panel-card workflow-card calendar-card-workflow">
-          <div class="calendar-control"><button id="mesAnterior" class="button button-ghost" type="button"><i data-lucide="chevron-left"></i>Anterior</button><strong id="mesAtual">Mês</strong><button id="proximoMes" class="button button-ghost" type="button">Próximo<i data-lucide="chevron-right"></i></button></div>
+          <div class="calendar-control"><button id="mesAnterior" class="button button-ghost" type="button" aria-label="Mês anterior"><i data-lucide="chevron-left"></i></button><strong id="mesAtual">Mês</strong><button id="proximoMes" class="button button-ghost" type="button" aria-label="Próximo mês"><i data-lucide="chevron-right"></i></button></div>
           <div class="calendar-grid-workflow" id="semanaCalendario" aria-hidden="true"></div>
           <div id="calendario" class="calendar-grid-workflow" aria-label="Calendário mensal"></div>
         </article>
