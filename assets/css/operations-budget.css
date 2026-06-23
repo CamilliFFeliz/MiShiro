@@ -1,25 +1,42 @@
-/* MiShiro - Orçamentos operacional mobile-first
-   Mantém ajustes específicos sem competir com app-clean.css. */
+/* MiShiro — Orçamentos conforme mockup
+   Camada específica carregada depois do visual global. Mantém o carrinho sem alterar sua lógica. */
 :root {
-  --ops-surface: rgba(28, 8, 48, .82);
+  --ops-surface: rgba(25, 9, 44, .82);
+  --ops-surface-deep: rgba(10, 3, 20, .72);
   --ops-soft: rgba(255, 255, 255, .045);
   --ops-line: rgba(238, 231, 255, .14);
-  --ops-line-strong: rgba(184, 155, 234, .34);
-  --ops-text: var(--text, #f8f4ff);
-  --ops-muted: var(--text-soft, rgba(238, 231, 255, .70));
+  --ops-line-strong: rgba(205, 184, 255, .34);
+  --ops-text: #fff;
+  --ops-muted: rgba(238, 231, 255, .66);
+  --ops-lilac: #cdb8ff;
+  --ops-purple: #360a75;
+  --ops-violet: #8c4dff;
   --ops-danger: #f17892;
 }
 
 body[data-page="orcamentos"] .workflow-page {
   width: min(100%, 980px);
-  padding-bottom: 118px;
+  padding-inline: 14px !important;
+  padding-bottom: 126px !important;
+  gap: 18px;
 }
 
-body[data-page="orcamentos"] .workflow-intro p,
+body[data-page="orcamentos"] .budget-intro {
+  padding: 22px !important;
+  gap: 16px;
+}
+
+body[data-page="orcamentos"] .budget-intro h1 {
+  letter-spacing: -.055em;
+}
+
+body[data-page="orcamentos"] .budget-intro p,
 body[data-page="orcamentos"] .ops-help,
-body[data-page="orcamentos"] .ops-stock-item__meta,
+body[data-page="orcamentos"] .ops-section-header p,
+body[data-page="orcamentos"] .ops-reference-empty span,
+body[data-page="orcamentos"] .ops-stock-card-main span,
 body[data-page="orcamentos"] .ops-cart-row small {
-  line-height: 1.55;
+  line-height: 1.52;
 }
 
 .ops-form,
@@ -28,6 +45,81 @@ body[data-page="orcamentos"] .ops-cart-row small {
 .ops-cart,
 .ops-reference-list {
   min-width: 0;
+}
+
+.ops-form {
+  display: grid;
+  gap: 18px;
+}
+
+.ops-section {
+  position: relative;
+  overflow: hidden;
+  display: grid;
+  gap: 16px;
+  padding: 22px !important;
+  border: 1px solid var(--ops-line) !important;
+  border-radius: 30px !important;
+  background:
+    radial-gradient(circle at 88% 12%, rgba(140, 77, 255, .12), transparent 12rem),
+    linear-gradient(145deg, rgba(255, 255, 255, .075), rgba(255, 255, 255, .026)),
+    var(--ops-surface) !important;
+  box-shadow: 0 22px 60px rgba(0, 0, 0, .34) !important;
+}
+
+.ops-section-header {
+  margin: 0;
+}
+
+.ops-section-header h2 {
+  font-size: clamp(1.42rem, 6.2vw, 2rem);
+  line-height: 1.02;
+}
+
+.ops-section-kicker {
+  color: var(--ops-lilac);
+}
+
+.ops-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+}
+
+.ops-field {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.ops-field > span {
+  color: #d8c6ff;
+  font-size: .82rem;
+  font-weight: 950;
+}
+
+.ops-field input,
+.ops-field select,
+.ops-field textarea {
+  min-height: 58px;
+  border-radius: 20px;
+  border: 1px solid rgba(238, 231, 255, .14);
+  background: rgba(255, 255, 255, .065);
+  color: #fff;
+  padding: 14px 16px;
+  outline: none;
+}
+
+.ops-field textarea {
+  min-height: 118px;
+  resize: vertical;
+}
+
+.ops-field input:focus,
+.ops-field select:focus,
+.ops-field textarea:focus {
+  border-color: rgba(205, 184, 255, .45);
+  box-shadow: 0 0 0 4px rgba(140, 77, 255, .17);
 }
 
 .ops-field-error {
@@ -41,53 +133,726 @@ body[data-page="orcamentos"] .ops-cart-row small {
   display: block;
 }
 
-.ops-stock-item {
-  position: relative;
-  overflow: hidden;
+.ops-info-note {
+  align-content: center;
+  min-height: 58px;
+  padding: 13px 15px;
+  border: 1px solid rgba(238, 231, 255, .12);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, .04);
 }
 
-.ops-stock-item::after {
+.ops-field--icon {
+  position: relative;
+  grid-template-columns: 56px minmax(0, 1fr);
+  gap: 8px 14px;
+  align-items: center;
+}
+
+.ops-field--icon::before {
   content: "";
+  grid-row: 1 / span 2;
+  width: 50px;
+  height: 50px;
+  border-radius: 18px;
+  border: 1px solid rgba(205, 184, 255, .22);
+  background: linear-gradient(135deg, rgba(140, 77, 255, .24), rgba(54, 10, 117, .24));
+}
+
+.ops-field--icon::after {
   position: absolute;
-  right: -26px;
-  top: 12px;
-  width: 190px;
-  height: 190px;
-  opacity: .10;
-  pointer-events: none;
-  transform: rotate(-22deg);
+  left: 18px;
+  top: 45px;
+  color: #cfaeff;
+  font-size: 1.1rem;
+  font-weight: 900;
+}
+
+.ops-field--body::after { content: "⌁"; }
+.ops-field--colors::after { content: "◌"; }
+.ops-field--complexity::after { content: "≡"; }
+.ops-field--notes::after { content: "□"; }
+.ops-field--size::after { content: "↕"; }
+.ops-field--icon > span,
+.ops-field--icon > input,
+.ops-field--icon > select,
+.ops-field--icon > textarea {
+  grid-column: 2;
+}
+
+.ops-field--notes::before {
+  align-self: start;
+  margin-top: 26px;
+}
+
+/* Referências visuais */
+.ops-section--reference .ops-section-header h2 {
+  margin-top: 4px;
+}
+
+.ops-reference-zone {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+.ops-upload-button,
+.ops-reference-empty {
+  min-height: 88px;
+  display: grid;
+  align-items: center;
+  border-radius: 22px;
+  border: 1px solid rgba(238, 231, 255, .15);
+  background: rgba(255, 255, 255, .045);
+  color: #fff;
+}
+
+.ops-upload-button {
+  grid-template-columns: 44px minmax(0, 1fr);
+  gap: 6px 14px;
+  padding: 16px;
+  cursor: pointer;
+}
+
+.ops-upload-button svg {
+  grid-row: 1 / span 2;
+  color: #d8c6ff;
+  justify-self: center;
+}
+
+.ops-upload-button strong,
+.ops-reference-empty strong {
+  line-height: 1.18;
+}
+
+.ops-upload-button span,
+.ops-reference-empty span {
+  color: var(--ops-muted);
+  font-size: .88rem;
+}
+
+.ops-reference-empty {
+  justify-items: center;
+  gap: 8px;
+  padding: 18px;
+  min-height: 170px;
+  border-style: dashed;
+  text-align: center;
+}
+
+.ops-reference-empty svg {
+  width: 42px;
+  height: 42px;
+  color: rgba(205, 184, 255, .62);
+}
+
+.ops-reference-list {
+  display: grid;
+  gap: 10px;
+}
+
+.ops-reference-card {
+  display: grid;
+  grid-template-columns: 78px minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+  padding: 10px;
+  border: 1px solid var(--ops-line);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, .045);
+}
+
+.ops-reference-card img {
+  width: 78px;
+  height: 78px;
+  object-fit: cover;
+  border-radius: 16px;
+}
+
+.ops-reference-card strong {
+  overflow-wrap: anywhere;
+}
+
+.ops-reference-card span {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+/* Insumos / busca rápida */
+.ops-section--stock {
+  gap: 18px;
+}
+
+.ops-stock-toolbar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 132px;
+  gap: 12px;
+  align-items: end;
+}
+
+.ops-search-field input {
+  min-height: 62px;
+  padding-left: 54px;
   background:
-    radial-gradient(circle at 48% 28%, rgba(238,231,255,.42) 0 9px, transparent 10px),
-    linear-gradient(90deg, transparent 0 38%, rgba(238,231,255,.55) 39% 43%, transparent 44% 100%),
-    linear-gradient(135deg, transparent 0 42%, rgba(238,231,255,.52) 43% 48%, transparent 49% 100%);
-  border-radius: 50%;
-  filter: blur(.15px);
+    linear-gradient(90deg, rgba(255,255,255,.065), rgba(255,255,255,.055)),
+    rgba(255,255,255,.06);
 }
 
-.ops-stock-item > * {
+.ops-search-field {
   position: relative;
-  z-index: 1;
 }
 
-.ops-reference-card strong,
-.ops-stock-item__title strong,
-.ops-cart-row strong {
-  line-height: 1.22;
+.ops-search-field::after {
+  content: "⌕";
+  position: absolute;
+  left: 18px;
+  bottom: 16px;
+  color: rgba(238, 231, 255, .58);
+  font-size: 1.35rem;
 }
 
+#clearBudgetSearchButton {
+  min-height: 62px;
+  justify-content: center;
+  gap: 8px;
+  border-radius: 20px !important;
+}
+
+.ops-filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 0;
+  padding: 0 0 2px;
+}
+
+.ops-filter-chip {
+  min-height: 48px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 15px;
+  border-radius: 999px;
+  border: 1px solid rgba(238, 231, 255, .13);
+  background: rgba(255, 255, 255, .045);
+  color: rgba(238, 231, 255, .76);
+  font-weight: 950;
+}
+
+.ops-filter-chip svg {
+  width: 20px;
+  height: 20px;
+  color: #d9c8ff;
+}
+
+.ops-filter-chip.is-active {
+  color: #fff;
+  background: linear-gradient(135deg, rgba(155, 108, 255, .66), rgba(54, 10, 117, .58));
+  border-color: rgba(205, 184, 255, .38);
+  box-shadow: 0 14px 34px rgba(84, 20, 181, .30);
+}
+
+.ops-stock-list {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+.ops-stock-item--premium {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  display: grid;
+  gap: 15px;
+  min-width: 0;
+  padding: 22px;
+  border: 1px solid rgba(238, 231, 255, .16);
+  border-radius: 28px;
+  background:
+    radial-gradient(circle at 90% 16%, rgba(155, 108, 255, .13), transparent 11rem),
+    linear-gradient(145deg, rgba(255, 255, 255, .08), rgba(255, 255, 255, .030)),
+    rgba(25, 9, 44, .82);
+  box-shadow: 0 24px 58px rgba(0, 0, 0, .34);
+}
+
+.ops-stock-watermark {
+  position: absolute;
+  z-index: -1;
+  right: -34px;
+  top: 34px;
+  width: min(44%, 210px);
+  height: 230px;
+  object-fit: contain;
+  opacity: .22;
+  transform: rotate(-18deg);
+  filter: saturate(.82) contrast(1.04) drop-shadow(0 22px 20px rgba(0, 0, 0, .28));
+  pointer-events: none;
+}
+
+.ops-stock-card-head {
+  display: flex;
+  align-items: center;
+}
+
+.ops-category-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  width: fit-content;
+  max-width: 100%;
+  padding: 6px 12px;
+  border-radius: 999px;
+  color: #eadfff;
+  background: rgba(92, 22, 172, .42);
+  border: 1px solid rgba(205, 184, 255, .20);
+  font-size: .74rem;
+  font-weight: 950;
+}
+
+.ops-stock-card-main {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr);
+  gap: 16px;
+  align-items: center;
+  max-width: calc(100% - 84px);
+}
+
+.ops-stock-icon {
+  width: 64px;
+  height: 64px;
+  display: grid;
+  place-items: center;
+  border-radius: 22px;
+  color: #fff;
+  background: linear-gradient(135deg, #8c4dff, #360a75);
+  box-shadow: 0 18px 38px rgba(54, 10, 117, .36);
+}
+
+.ops-stock-icon svg {
+  width: 30px;
+  height: 30px;
+}
+
+.ops-stock-card-main strong {
+  display: block;
+  color: #fff;
+  font-size: clamp(1.35rem, 6vw, 1.95rem);
+  line-height: 1.08;
+  letter-spacing: -.052em;
+  text-wrap: balance;
+}
+
+.ops-stock-card-main span {
+  display: block;
+  margin-top: 6px;
+  color: rgba(238, 231, 255, .68);
+  font-size: .98rem;
+}
+
+.ops-stock-price {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.ops-stock-price small {
+  color: #fff;
+  font-weight: 950;
+}
+
+.ops-stock-price strong {
+  color: #a56cff;
+  font-size: clamp(2.15rem, 12vw, 3.15rem);
+  line-height: .9;
+  letter-spacing: -.07em;
+}
+
+.ops-stock-price span {
+  color: rgba(238, 231, 255, .72);
+  font-weight: 850;
+}
+
+.ops-stock-divider {
+  height: 1px;
+  background: repeating-linear-gradient(90deg, rgba(238,231,255,.22) 0 6px, transparent 6px 12px);
+}
+
+.ops-stock-item__bottom {
+  display: grid;
+  gap: 12px;
+}
+
+.ops-qty-label {
+  color: var(--ops-lilac);
+  font-size: .78rem;
+  font-weight: 950;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+
+.ops-stepper {
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr) 56px;
+  border: 1px solid rgba(205, 184, 255, .34);
+  border-radius: 18px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, .06);
+}
+
+.ops-stepper button {
+  min-height: 54px;
+  border: 0;
+  background: rgba(54, 10, 117, .38);
+  color: #fff;
+  font-size: 1.35rem;
+  font-weight: 1000;
+}
+
+.ops-stepper button:disabled {
+  opacity: .45;
+}
+
+.ops-stepper input {
+  min-height: 54px;
+  border: 0;
+  background: transparent;
+  color: #fff;
+  text-align: center;
+  font-size: 1.1rem;
+  font-weight: 950;
+}
+
+.ops-stepper.is-invalid {
+  border-color: rgba(255, 118, 153, .70);
+}
+
+.ops-add-button {
+  min-height: 58px;
+  justify-content: center;
+  border-radius: 18px !important;
+}
+
+.ops-stock-item__available {
+  color: var(--ops-muted);
+  text-align: center;
+}
+
+.ops-stock-item__available strong {
+  color: #fff;
+}
+
+.ops-empty {
+  display: grid;
+  place-items: center;
+  min-height: 108px;
+  padding: 16px;
+  border: 1px dashed rgba(238, 231, 255, .18);
+  border-radius: 22px;
+  color: var(--ops-muted);
+  text-align: center;
+  background: rgba(255, 255, 255, .03);
+}
+
+/* Financeiro */
+.ops-grid--finance {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.ops-financial-summary {
+  display: grid;
+  gap: 0;
+  margin: 4px 0 0;
+}
+
+.ops-financial-summary div {
+  position: relative;
+  min-height: 64px;
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  padding: 11px 0;
+  border-bottom: 1px solid rgba(238, 231, 255, .10);
+}
+
+.ops-financial-summary div::before {
+  content: "";
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  border: 1px solid rgba(188, 150, 255, .24);
+  background: linear-gradient(135deg, rgba(140, 77, 255, .22), rgba(54, 10, 117, .26));
+}
+
+.ops-financial-summary div::after {
+  position: absolute;
+  left: 15px;
+  top: 50%;
+  transform: translateY(-52%);
+  color: #cfaeff;
+  font-weight: 900;
+}
+
+.ops-financial-summary div:nth-child(1)::after { content: "□"; }
+.ops-financial-summary div:nth-child(2)::after { content: "○"; }
+.ops-financial-summary div:nth-child(3)::after { content: "▦"; }
+.ops-financial-summary div:nth-child(4)::after { content: "◇"; }
+
+.ops-financial-summary dt {
+  color: rgba(238, 231, 255, .72);
+  font-size: 1rem;
+}
+
+.ops-financial-summary dd {
+  margin: 0;
+  color: #fff;
+  font-weight: 950;
+  font-size: 1.04rem;
+}
+
+.ops-financial-summary .is-total {
+  grid-template-columns: 62px minmax(0, 1fr);
+  min-height: 126px;
+  margin-top: 16px;
+  padding: 22px !important;
+  border: 1px solid rgba(188, 150, 255, .38) !important;
+  border-radius: 26px;
+  background:
+    radial-gradient(circle at 88% 25%, rgba(155, 108, 255, .28), transparent 8rem),
+    linear-gradient(135deg, rgba(54, 10, 117, .42), rgba(11, 3, 22, .62)) !important;
+}
+
+.ops-financial-summary .is-total::before {
+  width: 58px;
+  height: 58px;
+  border-radius: 18px;
+}
+
+.ops-financial-summary .is-total::after {
+  content: "$";
+  left: 43px;
+  font-size: 1.22rem;
+}
+
+.ops-financial-summary .is-total dt {
+  grid-column: 2;
+  color: var(--ops-lilac);
+  font-size: .78rem;
+  font-weight: 950;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+
+.ops-financial-summary .is-total dd {
+  grid-column: 2;
+  font-size: clamp(2.2rem, 11vw, 3.3rem);
+  line-height: .94;
+  letter-spacing: -.065em;
+}
+
+/* Ações */
+.ops-actions {
+  display: grid;
+  gap: 12px;
+  padding: 18px;
+  border: 1px solid var(--ops-line);
+  border-radius: 28px;
+  background: rgba(11, 3, 22, .66);
+  box-shadow: 0 22px 60px rgba(0, 0, 0, .28);
+}
+
+.ops-actions .button {
+  width: 100%;
+  min-height: 62px;
+  justify-content: flex-start;
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr) auto;
+  padding-inline: 16px 18px;
+  text-align: left;
+}
+
+.ops-actions .button::after {
+  content: "›";
+  justify-self: end;
+  color: #d8c6ff;
+  font-size: 1.7rem;
+  font-weight: 500;
+}
+
+.ops-actions .button svg {
+  justify-self: center;
+  color: #d9c8ff;
+}
+
+.ops-actions__spacer {
+  display: none;
+}
+
+.ops-status {
+  margin: 0;
+  color: var(--ops-muted);
+  line-height: 1.45;
+}
+
+/* Carrinho: visual e comportamento aprovados, apenas garante ausência de sublinhado. */
 .ops-floating-cart__button {
   text-decoration: none;
 }
 
-@media (max-width: 430px) {
-  body[data-page="orcamentos"] .workflow-page {
-    padding-inline: 12px;
+@media (min-width: 680px) {
+  body[data-page="orcamentos"] .budget-intro {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
   }
 
-  .ops-stock-item::after {
-    width: 150px;
-    height: 150px;
+  .ops-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .ops-span-2,
+  .ops-span-all {
+    grid-column: 1 / -1;
+  }
+
+  .ops-reference-zone {
+    grid-template-columns: .82fr 1.18fr;
+  }
+
+  .ops-stock-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1040px) {
+  .ops-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .ops-span-2 {
+    grid-column: span 2;
+  }
+
+  .ops-span-all {
+    grid-column: 1 / -1;
+  }
+
+  .ops-grid--art,
+  .ops-grid--finance {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 430px) {
+  body[data-page="orcamentos"] .workflow-page {
+    padding-inline: 10px !important;
+  }
+
+  .ops-section {
+    padding: 18px !important;
+    border-radius: 26px !important;
+  }
+
+  .ops-stock-toolbar {
+    grid-template-columns: minmax(0, 1fr) 116px;
+    gap: 10px;
+  }
+
+  .ops-field input,
+  .ops-field select,
+  .ops-field textarea,
+  .ops-search-field input,
+  #clearBudgetSearchButton {
+    min-height: 54px;
+    border-radius: 18px;
+  }
+
+  #clearBudgetSearchButton {
+    padding-inline: 10px;
+  }
+
+  .ops-filter-chip {
+    min-height: 44px;
+    padding: 9px 13px;
+    font-size: .9rem;
+  }
+
+  .ops-stock-item--premium {
+    padding: 18px;
+    border-radius: 25px;
+    gap: 13px;
+  }
+
+  .ops-stock-card-main {
+    grid-template-columns: 54px minmax(0, 1fr);
+    max-width: calc(100% - 58px);
+    gap: 12px;
+  }
+
+  .ops-stock-icon {
+    width: 54px;
+    height: 54px;
+    border-radius: 18px;
+  }
+
+  .ops-stock-icon svg {
+    width: 25px;
+    height: 25px;
+  }
+
+  .ops-stock-card-main strong {
+    font-size: clamp(1.18rem, 6vw, 1.45rem);
+  }
+
+  .ops-stock-watermark {
     right: -34px;
-    top: 28px;
+    top: 58px;
+    width: 42%;
+    height: 174px;
+  }
+
+  .ops-stock-price strong {
+    font-size: clamp(1.9rem, 11vw, 2.55rem);
+  }
+
+  .ops-stepper {
+    grid-template-columns: 52px minmax(0, 1fr) 52px;
+  }
+
+  .ops-stepper button,
+  .ops-stepper input {
+    min-height: 50px;
+  }
+
+  .ops-grid--finance {
+    grid-template-columns: 1fr;
+  }
+
+  .ops-financial-summary .is-total {
+    min-height: 112px;
+    padding: 18px !important;
+  }
+}
+
+@media (max-width: 370px) {
+  .ops-stock-toolbar {
+    grid-template-columns: 1fr;
+  }
+
+  .ops-field--icon {
+    grid-template-columns: 1fr;
+  }
+
+  .ops-field--icon::before,
+  .ops-field--icon::after {
+    display: none;
+  }
+
+  .ops-field--icon > span,
+  .ops-field--icon > input,
+  .ops-field--icon > select,
+  .ops-field--icon > textarea {
+    grid-column: 1;
   }
 }
