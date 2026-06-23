@@ -10,38 +10,38 @@
   <link rel="stylesheet" href="../assets/css/tokens.css" />
   <link rel="stylesheet" href="../assets/css/layout.css" />
   <link rel="stylesheet" href="../assets/css/components.css" />
-  <link rel="stylesheet" href="../assets/css/orcamentos.css" />
+  <link id="mishiro-clean-ui-css" rel="stylesheet" href="../assets/css/app-clean.css?v=20260623.7" />
+  <link rel="stylesheet" href="../assets/css/orcamentos.css?v=20260623.7" />
   <link rel="stylesheet" href="../assets/css/studio-workflow.css" />
-  <link rel="stylesheet" href="../assets/css/operations-budget.css?v=20260623.3" />
-  <link id="mishiro-clean-ui-css" rel="stylesheet" href="../assets/css/app-clean.css?v=20260623.3" />
+  <link rel="stylesheet" href="../assets/css/operations-budget.css?v=20260623.7" />
   <title>MiShiro Tattoo • Orçamentos</title>
 </head>
 <body data-page="orcamentos">
   <div id="app" class="app-frame">
-    <main id="appMain" class="page-shell workflow-page" aria-labelledby="pageHeading">
-      <header class="workflow-intro">
+    <main id="appMain" class="page-shell workflow-page budget-workflow" aria-labelledby="pageHeading">
+      <header class="workflow-intro budget-intro">
         <div>
-          <span class="eyebrow">Gestão de propostas</span>
-          <h1 id="pageHeading">Novo orçamento</h1>
-          <p>Monte propostas rápidas, selecione materiais pelo estoque e mantenha o carrinho separado para não poluir a tela.</p>
+          <span class="eyebrow">Proposta do cliente</span>
+          <h1 id="pageHeading">Orçamentos</h1>
+          <p>Monte a proposta com dados do cliente, detalhes da arte, referências visuais, insumos do estoque e fechamento financeiro.</p>
         </div>
-        <a class="button button-ghost" href="agenda.html"><i data-lucide="calendar-days"></i>Agenda</a>
+        <a class="button button-ghost" href="agenda.html"><i data-lucide="calendar-days"></i>Ver agenda</a>
       </header>
 
       <form id="formOrcamento" class="ops-form" novalidate>
         <input id="orcamentoIdEdicao" type="hidden" />
 
-        <section class="ops-section">
-          <header class="ops-section-header"><div><span class="ops-section-kicker">01 • Informações gerais</span><h2>Identificação interna</h2></div></header>
-          <div class="ops-grid">
+        <section class="ops-section ops-section--identity">
+          <header class="ops-section-header"><div><span class="ops-section-kicker">01 • Identificação</span><h2>Dados da proposta</h2></div></header>
+          <div class="ops-grid ops-grid--compact">
             <label class="ops-field ops-span-2" data-field="nomeOrcamento"><span>Nome do orçamento *</span><input id="nomeOrcamento" autocomplete="off" placeholder="Ex: Fechamento de perna — Ana" /><small class="ops-field-error">Informe o nome do orçamento.</small></label>
             <label class="ops-field"><span>Status ao salvar</span><select id="statusRascunho"><option value="rascunho">Salvar como rascunho</option><option value="aguardando_cliente">Enviar para aprovação</option></select></label>
-            <div class="ops-field"><span>Resumo</span><p class="ops-help">Uma proposta parcial pode ser salva e finalizada depois.</p></div>
+            <div class="ops-field ops-info-note"><span>Fluxo</span><p class="ops-help">Rascunhos ficam salvos. Propostas enviadas aparecem no pipeline da agenda.</p></div>
           </div>
         </section>
 
-        <section class="ops-section">
-          <header class="ops-section-header"><div><span class="ops-section-kicker">02 • Cliente</span><h2>Dados de atendimento</h2></div></header>
+        <section class="ops-section ops-section--client">
+          <header class="ops-section-header"><div><span class="ops-section-kicker">02 • Cliente</span><h2>Atendimento</h2></div></header>
           <div class="ops-grid">
             <label class="ops-field ops-span-2" data-field="clienteNome"><span>Nome do cliente *</span><input id="clienteNome" autocomplete="name" placeholder="Nome completo" /><small class="ops-field-error">Informe o nome do cliente.</small></label>
             <label class="ops-field"><span>Telefone / WhatsApp</span><input id="clienteTelefone" autocomplete="tel" inputmode="tel" placeholder="(00) 00000-0000" /></label>
@@ -53,22 +53,34 @@
           </div>
         </section>
 
-        <section class="ops-section">
+        <section class="ops-section ops-section--art">
           <header class="ops-section-header"><div><span class="ops-section-kicker">03 • Arte</span><h2>Detalhes da tatuagem</h2></div></header>
-          <div class="ops-grid">
-            <label class="ops-field"><span>Tamanho (cm)</span><input id="tamanhoTatuagem" inputmode="decimal" placeholder="Opcional" /></label>
-            <label class="ops-field"><span>Local do corpo</span><input id="localCorpo" placeholder="Opcional" /></label>
-            <label class="ops-field"><span>Complexidade</span><select id="complexidade"><option value="">Não definida</option><option value="Simples">Simples</option><option value="Média">Média</option><option value="Alta">Alta</option><option value="Realismo">Realismo</option></select></label>
-            <label class="ops-field"><span>Cores / estilo</span><input id="coresTatuagem" placeholder="Opcional" /></label>
-            <label class="ops-field ops-span-all"><span>Observações da arte</span><textarea id="observacoesCliente" placeholder="Composição, área, estilo e demais detalhes."></textarea></label>
+          <div class="ops-grid ops-grid--art">
+            <label class="ops-field ops-field--icon ops-field--size"><span>Tamanho (cm)</span><input id="tamanhoTatuagem" inputmode="decimal" placeholder="Opcional" /></label>
+            <label class="ops-field ops-field--icon ops-field--body"><span>Local no corpo</span><input id="localCorpo" placeholder="Ex: antebraço" /></label>
+            <label class="ops-field ops-field--icon ops-field--complexity"><span>Complexidade</span><select id="complexidade"><option value="">Não definida</option><option value="Simples">Simples</option><option value="Média">Média</option><option value="Alta">Alta</option><option value="Realismo">Realismo</option></select></label>
+            <label class="ops-field ops-field--icon ops-field--colors"><span>Cores / estilo</span><input id="coresTatuagem" placeholder="Preto, cinza, colorida" /></label>
+            <label class="ops-field ops-field--icon ops-field--notes ops-span-all"><span>Observações da arte</span><textarea id="observacoesCliente" placeholder="Composição, área, estilo e demais detalhes."></textarea></label>
           </div>
-          <div class="ops-reference-zone"><input id="imagemReferencia" type="file" accept="image/png,image/jpeg,image/webp" multiple hidden /><label class="ops-upload-button" for="imagemReferencia" aria-label="Adicionar referências visuais"><i data-lucide="image-plus"></i></label><div class="ops-reference-empty" id="previewImagem">Adicione até seis referências visuais da arte.</div></div>
+        </section>
+
+        <section class="ops-section ops-section--reference">
+          <header class="ops-section-header"><div><span class="ops-section-kicker">Imagem de referência</span><h2>Referências visuais</h2><p>Anexe imagens para orientar a arte e manter o histórico da proposta.</p></div></header>
+          <input id="imagemReferencia" type="file" accept="image/png,image/jpeg,image/webp" multiple hidden />
+          <div class="ops-reference-zone"><label class="ops-upload-button" for="imagemReferencia" aria-label="Adicionar referências visuais"><i data-lucide="upload"></i><strong>Escolher arquivo</strong><span>PNG, JPG ou WEBP até 2 MB</span></label><div class="ops-reference-empty" id="previewImagem"><i data-lucide="image"></i><strong>Nenhuma imagem adicionada</strong><span>Adicione uma referência visual para o seu orçamento.</span></div></div>
           <div id="listaReferenciasArte" class="ops-reference-list" aria-live="polite"></div>
         </section>
 
-        <section class="ops-section">
-          <header class="ops-section-header"><div><span class="ops-section-kicker">04 • Fechamento financeiro</span><h2>Tempo, desconto e valor final</h2></div></header>
-          <div class="ops-grid">
+        <section class="ops-section ops-section--stock">
+          <header class="ops-section-header"><div><span class="ops-section-kicker">Insumos</span><h2>Busca rápida</h2><p>Encontre materiais de forma ágil para compor o custo da proposta.</p></div></header>
+          <div class="ops-stock-toolbar"><label class="ops-field ops-search-field"><span>Pesquisar</span><input id="budgetSearchInput" type="search" placeholder="RL, luva, preto, vaselina..." /></label><button id="clearBudgetSearchButton" type="button" class="button button-ghost"><i data-lucide="wand-sparkles"></i>Limpar</button></div>
+          <div id="budgetCategoryFilters" class="ops-filter-row" aria-label="Filtros de categoria"></div>
+          <div id="stockPickerList" class="ops-stock-list" aria-live="polite"></div>
+        </section>
+
+        <section class="ops-section ops-section--finance">
+          <header class="ops-section-header"><div><span class="ops-section-kicker">Resumo financeiro</span><h2>Valores do orçamento</h2></div></header>
+          <div class="ops-grid ops-grid--finance">
             <label class="ops-field"><span>Valor da hora (R$)</span><input id="valorHora" inputmode="decimal" placeholder="0,00" /></label>
             <label class="ops-field"><span>Duração prevista (horas)</span><input id="duracaoSessao" inputmode="decimal" placeholder="0" /></label>
             <label class="ops-field"><span>Margem interna (%)</span><input id="margem" inputmode="decimal" placeholder="0" /></label>
@@ -77,14 +89,7 @@
           <dl class="ops-financial-summary"><div><dt>Materiais</dt><dd id="totalMateriais">R$ 0,00</dd></div><div><dt>Mão de obra</dt><dd id="totalMaoObra">R$ 0,00</dd></div><div><dt>Subtotal</dt><dd id="subtotalOrcamento">R$ 0,00</dd></div><div><dt>Desconto</dt><dd id="valorDesconto">R$ 0,00</dd></div><div class="is-total"><dt>Valor final</dt><dd id="valorFinal">R$ 0,00</dd></div></dl>
         </section>
 
-        <section class="ops-section">
-          <header class="ops-section-header"><div><span class="ops-section-kicker">05 • Estoque e materiais</span><h2>Selecione itens para a proposta</h2></div></header>
-          <div class="ops-stock-toolbar"><label class="ops-field"><span>Pesquisar no estoque</span><input id="budgetSearchInput" type="search" placeholder="Nome, categoria ou marca" /></label><button id="clearBudgetSearchButton" type="button" class="button button-ghost"><i data-lucide="search-x"></i>Limpar</button></div>
-          <div id="budgetCategoryFilters" class="ops-filter-row" aria-label="Filtros de categoria"></div>
-          <div id="stockPickerList" class="ops-stock-list" aria-live="polite"></div>
-        </section>
-
-        <section class="ops-actions" aria-label="Ações do orçamento"><button class="button button-secondary" type="submit" data-save-mode="rascunho"><i data-lucide="save"></i>Salvar rascunho</button><button class="button button-primary" type="submit" data-save-mode="aguardando_cliente"><i data-lucide="send"></i>Enviar para aprovação</button><button class="button button-ghost" id="gerarPdfCliente" type="button"><i data-lucide="file-text"></i>PDF cliente</button><button class="button button-ghost" id="gerarPdfEstudio" type="button"><i data-lucide="file-spreadsheet"></i>PDF estúdio</button><span class="ops-actions__spacer"></span><button class="button button-ghost" id="limparOrcamento" type="button" aria-label="Limpar orçamento"><i data-lucide="eraser"></i></button><p id="statusOrcamento" class="ops-status" aria-live="polite"></p></section>
+        <section class="ops-actions" aria-label="Ações do orçamento"><button class="button button-secondary" type="submit" data-save-mode="rascunho"><i data-lucide="save"></i>Salvar rascunho</button><button class="button button-primary" type="submit" data-save-mode="aguardando_cliente"><i data-lucide="send"></i>Enviar para aprovação</button><button class="button button-ghost" id="gerarPdfCliente" type="button"><i data-lucide="file-text"></i>PDF cliente</button><button class="button button-ghost" id="gerarPdfEstudio" type="button"><i data-lucide="file-spreadsheet"></i>PDF estúdio</button><span class="ops-actions__spacer"></span><button class="button button-ghost" id="limparOrcamento" type="button" aria-label="Limpar orçamento"><i data-lucide="eraser"></i>Limpar</button><p id="statusOrcamento" class="ops-status" aria-live="polite"></p></section>
       </form>
     </main>
   </div>
