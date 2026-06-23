@@ -10,7 +10,8 @@ import { criarDocumentoMiShiro, adicionarDetalhes, adicionarLista, adicionarResu
 
 const MAX_REFERENCIAS = 6;
 const MAX_ARTE_BYTES = 2 * 1024 * 1024;
-const estado = { estoque: [], carrinho: new Map(), referencias: [], erros: new Set(), categoria: CATEGORY_ALL, termo: "", orcamento: null };
+const ESTOQUE_POR_PAGINA = 10;
+const estado = { estoque: [], carrinho: new Map(), referencias: [], erros: new Set(), categoria: CATEGORY_ALL, termo: "", itensVisiveis: ESTOQUE_POR_PAGINA, orcamento: null };
 const $ = (seletor) => document.querySelector(seletor);
 
 montarLayout({ paginaAtual: "orcamentos", titulo: "Orçamentos", subtitulo: "Proposta" });
@@ -31,9 +32,10 @@ async function iniciarPagina() {
 }
 
 function conectarEventos() {
-  $("#budgetSearchInput")?.addEventListener("input", (evento) => { estado.termo = evento.target.value.toLowerCase().trim(); renderizarEstoque(); });
-  $("#clearBudgetSearchButton")?.addEventListener("click", () => { estado.termo = ""; const campo = $("#budgetSearchInput"); if (campo) campo.value = ""; renderizarEstoque(); });
-  $("#budgetCategoryFilters")?.addEventListener("click", (evento) => { const botao = evento.target.closest("[data-category]"); if (!botao) return; estado.categoria = botao.dataset.category || CATEGORY_ALL; renderizarFiltros(); renderizarEstoque(); });
+  $("#budgetSearchInput")?.addEventListener("input", (evento) => { estado.termo = evento.target.value.toLowerCase().trim(); resetarPaginacaoEstoque(); renderizarEstoque(); });
+  $("#clearBudgetSearchButton")?.addEventListener("click", () => { estado.termo = ""; const campo = $("#budgetSearchInput"); if (campo) campo.value = ""; resetarPaginacaoEstoque(); renderizarEstoque(); });
+  $("#budgetCategoryFilters")?.addEventListener("click", (evento) => { const botao = evento.target.closest("[data-category]"); if (!botao) return; estado.categoria = botao.dataset.category || CATEGORY_ALL; resetarPaginacaoEstoque(); renderizarFiltros(); renderizarEstoque(); });
+  $("#carregarMaisInsumos")?.addEventListener("click", () => { estado.itensVisiveis += ESTOQUE_POR_PAGINA; renderizarEstoque(); });
   $("#stockPickerList")?.addEventListener("click", (evento) => tratarQuantidade(evento, "data-stock-id"));
   $("#listaMateriais")?.addEventListener("click", (evento) => tratarQuantidade(evento, "data-cart-id"));
   $("#stockPickerList")?.addEventListener("change", (evento) => tratarDigitacao(evento, "data-stock-id"));
@@ -48,6 +50,10 @@ function conectarEventos() {
   $("#listaReferenciasArte")?.addEventListener("click", tratarCliqueReferencia);
   $("#gerarPdfCliente")?.addEventListener("click", () => gerarPdf("cliente"));
   $("#gerarPdfEstudio")?.addEventListener("click", () => gerarPdf("estudio"));
+}
+
+function resetarPaginacaoEstoque() {
+  estado.itensVisiveis = ESTOQUE_POR_PAGINA;
 }
 
 function tratarQuantidade(evento, atributo) {
@@ -106,14 +112,30 @@ function renderizarFiltros() {
   alvo.innerHTML = CATEGORY_ORDER.map((categoria) => `<button type="button" class="ops-filter-chip ${categoria === estado.categoria ? "is-active" : ""}" data-category="${escapar(categoria)}"><i data-lucide="${iconeCategoria(categoria)}"></i>${escapar(categoria)}</button>`).join("");
 }
 
+function filtrarEstoque() {
+  return estado.estoque.filter((item) => {
+    const nome = String(item.nome || item.name || "").toLowerCase();
+    const atendeCategoria = estado.categoria === CATEGORY_ALL || item.categoria === estado.categoria;
+    const atendeBusca = !estado.termo || nome.includes(estado.termo);
+    return atendeCategoria && atendeBusca;
+  });
+}
+
 function renderizarEstoque() {
   const alvo = $("#stockPickerList");
   if (!alvo) return;
-  const lista = estado.estoque.filter((item) => {
-    const texto = [item.nome, item.categoria, item.marca, item.linhaTipo, item.cor, getItemSpecification(item)].join(" ").toLowerCase();
-    return (estado.categoria === CATEGORY_ALL || item.categoria === estado.categoria) && (!estado.termo || texto.includes(estado.termo));
-  });
-  alvo.innerHTML = lista.length ? lista.map(cardEstoque).join("") : '<p class="ops-empty">Nenhum item encontrado nesta busca.</p>';
+  const lista = filtrarEstoque();
+  const visiveis = lista.slice(0, estado.itensVisiveis);
+  alvo.innerHTML = visiveis.length ? visiveis.map(cardEstoque).join("") : '<p class="ops-empty">Nenhum item encontrado pelo nome pesquisado.</p>';
+  atualizarPaginacaoEstoque(lista.length, visiveis.length);
+  atualizarIcones();
+}
+
+function atualizarPaginacaoEstoque(total, exibidos) {
+  const info = $("#stockPaginationInfo");
+  const botao = $("#carregarMaisInsumos");
+  if (info) info.textContent = total ? `Exibindo ${exibidos} de ${total} itens` : "Nenhum item encontrado";
+  if (botao) botao.hidden = !total || exibidos >= total;
 }
 
 function cardEstoque(item) {
@@ -121,10 +143,9 @@ function cardEstoque(item) {
   const disponivel = quantidadeDisponivel(item);
   const unidade = getMeasureSuffix(item.unidadeMedida);
   const custo = calcularCustoUnitario(item);
-  const imagem = imagemProduto(item);
   const invalido = estado.erros.has(item.id) ? " is-invalid" : "";
   const addDesabilitado = selecionada >= disponivel || disponivel <= 0 ? "disabled" : "";
-  return `<article class="ops-stock-item ops-stock-item--premium ${imagem ? "has-product-image" : ""}" data-stock-id="${escapar(item.id)}">${imagem ? `<img class="ops-stock-watermark" src="${escapar(imagem)}" alt="" aria-hidden="true" />` : ""}<header class="ops-stock-card-head"><span class="ops-category-badge">${escapar(item.categoria)}</span></header><div class="ops-stock-card-main"><span class="ops-stock-icon"><i data-lucide="${iconeCategoria(item.categoria)}"></i></span><div><strong>${escapar(item.nome)}</strong><span>${escapar(getItemSpecification(item) || "Sem especificação adicional")} · ${escapar(unidade)}</span></div></div><div class="ops-stock-price"><small>R$</small><strong>${formatarMoeda(custo).replace("R$", "").trim()}</strong><span>/ ${escapar(unidade)}</span></div><div class="ops-stock-divider"></div><div class="ops-stock-item__bottom"><span class="ops-qty-label">Qtd. usada</span>${stepper(selecionada, disponivel, invalido)}<button type="button" class="button button-primary ops-add-button" data-step="increase" ${addDesabilitado}><i data-lucide="shopping-basket"></i>Adicionar</button><small class="ops-stock-item__available">Disponível: <strong>${disponivel} ${escapar(unidade)}</strong></small></div></article>`;
+  return `<article class="ops-stock-item ops-stock-item--premium ops-stock-item--mini" data-stock-id="${escapar(item.id)}"><div class="ops-stock-card-main"><span class="ops-stock-icon"><i data-lucide="${iconeCategoria(item.categoria)}"></i></span><div><strong>${escapar(item.nome)}</strong><span>${escapar(getItemSpecification(item) || item.categoria || "Item de estoque")} · ${escapar(unidade)}</span></div></div><div class="ops-stock-mini-meta"><span>${formatarMoeda(custo)} / ${escapar(unidade)}</span><span>${disponivel} disp.</span></div><div class="ops-stock-item__bottom">${stepper(selecionada, disponivel, invalido)}<button type="button" class="button button-primary ops-add-button" data-step="increase" ${addDesabilitado}><i data-lucide="plus"></i>Adicionar</button></div></article>`;
 }
 
 function imagemProduto(item) {
@@ -146,7 +167,7 @@ function iconeCategoria(categoria = "") {
 function renderizarCarrinho() {
   const alvo = $("#listaMateriais");
   if (!alvo) return;
-  const registros = Array.from(estado.carrinho.values()).filter((registro) => registro.quantidade > 0);
+  const registros = registrosCarrinho();
   if (!registros.length) { alvo.innerHTML = '<p class="ops-empty">O carrinho está vazio. Adicione itens do estoque quando necessário.</p>'; return; }
   const materiais = registros.filter(({ item }) => item.categoria !== CATEGORY_OPTIONAL);
   const opcionais = registros.filter(({ item }) => item.categoria === CATEGORY_OPTIONAL);
@@ -167,6 +188,10 @@ function stepper(quantidade, limite, invalido) {
   return `<div class="ops-stepper${invalido}"><button type="button" data-step="decrease" aria-label="Diminuir quantidade" ${quantidade <= 0 ? "disabled" : ""}>−</button><input data-step-input inputmode="numeric" pattern="[0-9]*" value="${quantidade}" aria-label="Quantidade selecionada" /><button type="button" data-step="increase" aria-label="Aumentar quantidade" ${quantidade >= limite ? "disabled" : ""}>+</button></div>`;
 }
 
+function registrosCarrinho() {
+  return Array.from(estado.carrinho.values()).filter((registro) => registro.quantidade > 0);
+}
+
 function totalLinha({ item, quantidade }) { return calcularCustoUnitario(item) * quantidade; }
 
 function totais() {
@@ -185,7 +210,7 @@ function totais() {
 
 function renderizarResumo() {
   const total = totais();
-  const quantidadeItens = Array.from(estado.carrinho.values()).reduce((soma, registro) => soma + registro.quantidade, 0);
+  const quantidadeItens = registrosCarrinho().reduce((soma, registro) => soma + registro.quantidade, 0);
   const valores = { totalMateriais: total.materiais, totalMaoObra: total.maoObra, subtotalOrcamento: total.subtotal, valorDesconto: total.descontoValor, valorFinal: total.valorFinal, cartTotalMateriais: total.materiais - total.opcionais, cartTotalOpcionais: total.opcionais, cartTotalGeral: total.materiais };
   Object.entries(valores).forEach(([id, valor]) => { const alvo = $(`#${id}`); if (alvo) alvo.textContent = formatarMoeda(valor); });
   const contador = $("#cartFloatingCount");
@@ -286,7 +311,7 @@ async function salvarOrcamento(evento) {
   if (!validarObrigatorios()) return;
   if (estado.erros.size) return mostrar("Corrija as quantidades dos itens antes de salvar.");
   const total = totais();
-  const itens = Array.from(estado.carrinho.values()).map(({ item, quantidade }) => criarSnapshotItemEstoque(item, quantidade));
+  const itens = registrosCarrinho().map(({ item, quantidade }) => criarSnapshotItemEstoque(item, quantidade));
   const status = evento.submitter?.dataset.saveMode || $("#statusRascunho")?.value || STATUS_ORCAMENTO.rascunho;
   const dados = montarDados(status, total);
   try {
@@ -327,6 +352,7 @@ function limparFormulario() {
   estado.referencias = [];
   estado.erros.clear();
   estado.orcamento = null;
+  resetarPaginacaoEstoque();
   fecharCarrinho();
   history.replaceState({}, "", location.pathname);
   const titulo = $("#pageHeading");
@@ -337,25 +363,69 @@ function limparFormulario() {
 async function gerarPdf(tipo) {
   try {
     const total = totais();
-    const doc = await criarDocumentoMiShiro({ titulo: tipo === "cliente" ? "Proposta de tatuagem" : "Orçamento interno", subtitulo: tipo === "cliente" ? "Resumo essencial para aprovação" : "Relatório completo do estúdio" });
+    const cliente = tipo === "cliente";
+    const doc = await criarDocumentoMiShiro({ titulo: cliente ? "Proposta de tatuagem" : "Orçamento técnico interno", subtitulo: cliente ? "Documento para aprovação do cliente" : "Custos reais, insumos e composição interna" });
     adicionarDetalhes(doc, [
       { rotulo: "Orçamento", valor: valor("#nomeOrcamento") || "Sem nome" },
       { rotulo: "Cliente", valor: valor("#clienteNome") || "Não informado" },
-      { rotulo: "Arte", valor: `${valor("#tamanhoTatuagem") || "—"} cm · ${valor("#localCorpo") || "—"}` },
+      { rotulo: "Arte", valor: descricaoArteCurta() },
       { rotulo: "Complexidade", valor: valor("#complexidade") || "Não definida" }
     ]);
-    adicionarLista(doc, "Itens selecionados", Array.from(estado.carrinho.values()).map(({ item, quantidade }) => ({ nome: item.nome, detalhe: `${quantidade} ${getMeasureSuffix(item.unidadeMedida)} · ${item.categoria}`, valor: totalLinha({ item, quantidade }) })), { mostrarValor: true });
-    const resumo = [
-      { rotulo: "Materiais", valor: total.materiais },
-      { rotulo: "Mão de obra", valor: total.maoObra },
-      { rotulo: "Subtotal", valor: total.subtotal },
-      { rotulo: "Desconto", valor: total.descontoValor }
-    ];
-    if (tipo === "estudio") resumo.splice(3, 0, { rotulo: "Margem interna", valor: total.margemValor });
-    resumo.push({ rotulo: "Valor final", valor: total.valorFinal });
-    adicionarResumoFinanceiro(doc, resumo);
-    finalizarDocumento(doc, tipo === "cliente" ? "proposta-mishiro.pdf" : "orcamento-interno-mishiro.pdf");
+    if (cliente) gerarPdfCliente(doc, total);
+    else gerarPdfInterno(doc, total);
+    finalizarDocumento(doc, cliente ? "proposta-cliente-mishiro.pdf" : "orcamento-interno-mishiro.pdf");
   } catch (erro) {
     mostrar(erro.message || "Não foi possível gerar o PDF.");
   }
+}
+
+function gerarPdfCliente(doc, total) {
+  adicionarLista(doc, "Itens da proposta", linhasCliente(total), { mostrarValor: true, vazio: "Nenhum item público informado." });
+  adicionarResumoFinanceiro(doc, [{ rotulo: "Total da proposta", valor: total.valorFinal }]);
+}
+
+function gerarPdfInterno(doc, total) {
+  adicionarLista(doc, "Insumos técnicos do orçamento", linhasInternas(), { mostrarValor: true, vazio: "Nenhum insumo técnico selecionado." });
+  adicionarResumoFinanceiro(doc, [
+    { rotulo: "Insumos e opcionais", valor: total.materiais },
+    { rotulo: "Mão de obra / estúdio", valor: total.maoObra },
+    { rotulo: "Subtotal operacional", valor: total.subtotal },
+    { rotulo: "Margem interna", valor: total.margemValor },
+    { rotulo: "Desconto", valor: total.descontoValor },
+    { rotulo: "Valor final", valor: total.valorFinal }
+  ]);
+}
+
+function linhasCliente(total) {
+  const registros = registrosCarrinho();
+  const opcionais = registros.filter(({ item }) => item.categoria === CATEGORY_OPTIONAL);
+  const valorOpcionais = opcionais.reduce((soma, registro) => soma + totalLinha(registro), 0);
+  const valorEstudio = Math.max(total.maoObra, 0);
+  const valorTatuagem = Math.max(total.valorFinal - valorOpcionais - valorEstudio, 0);
+  const linhas = [];
+  if (valorTatuagem > 0 || (!opcionais.length && !valorEstudio)) {
+    linhas.push({ nome: descricaoTatuagemCliente(), detalhe: "Arte, execução e composição da tatuagem.", valor: valorTatuagem || total.valorFinal });
+  }
+  opcionais.forEach(({ item, quantidade }) => linhas.push({ nome: item.nome || "Item opcional", detalhe: `${quantidade} ${getMeasureSuffix(item.unidadeMedida)} · ${getItemSpecification(item) || "Item adicional"}`, valor: totalLinha({ item, quantidade }) }));
+  if (valorEstudio > 0) linhas.push({ nome: "Estúdio", detalhe: "Reserva de estrutura, preparação e atendimento.", valor: valorEstudio });
+  return linhas;
+}
+
+function linhasInternas() {
+  return registrosCarrinho().map(({ item, quantidade }) => ({ nome: item.nome, detalhe: detalheTecnicoItem(item, quantidade), valor: totalLinha({ item, quantidade }) }));
+}
+
+function detalheTecnicoItem(item, quantidade) {
+  const unidade = getMeasureSuffix(item.unidadeMedida);
+  return [item.categoria, item.marca ? `Marca: ${item.marca}` : "", getItemSpecification(item), `${quantidade} ${unidade}`, `${formatarMoeda(calcularCustoUnitario(item))}/${unidade}`].filter(Boolean).join(" · ");
+}
+
+function descricaoArteCurta() {
+  return [valor("#tamanhoTatuagem") ? `${valor("#tamanhoTatuagem")} cm` : "", valor("#coresTatuagem"), valor("#localCorpo")].filter(Boolean).join(" · ") || "Arte personalizada";
+}
+
+function descricaoTatuagemCliente() {
+  const estilo = valor("#complexidade") || "Personalizada";
+  const partes = ["Tatuagem", `Estilo ${estilo}`, valor("#tamanhoTatuagem") ? `${valor("#tamanhoTatuagem")} cm` : "", valor("#coresTatuagem"), valor("#localCorpo")].filter(Boolean);
+  return partes.join(" | ");
 }
