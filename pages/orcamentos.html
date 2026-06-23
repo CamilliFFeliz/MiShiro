@@ -12,16 +12,20 @@
   <link rel="stylesheet" href="../assets/css/components.css" />
   <link rel="stylesheet" href="../assets/css/orcamentos.css" />
   <link rel="stylesheet" href="../assets/css/studio-workflow.css" />
-  <link rel="stylesheet" href="../assets/css/operations-budget.css?v=20260618.2" />
-  <link rel="stylesheet" href="../assets/css/app-clean.css?v=20260618.2" />
+  <link rel="stylesheet" href="../assets/css/operations-budget.css?v=20260618.4" />
+  <link rel="stylesheet" href="../assets/css/app-clean.css?v=20260618.4" />
   <title>MiShiro Tattoo • Orçamentos</title>
 </head>
 <body data-page="orcamentos">
   <div id="app" class="app-frame">
     <main id="appMain" class="page-shell workflow-page" aria-labelledby="pageHeading">
       <header class="workflow-intro">
-        <div><span class="eyebrow">Gestão de propostas</span><h1 id="pageHeading">Novo orçamento</h1><p>Preencha a proposta no seu ritmo. Somente o nome do orçamento e o nome do cliente são obrigatórios.</p></div>
-        <a class="button button-ghost" href="agenda.html"><i data-lucide="calendar-days"></i>Agenda e pipeline</a>
+        <div>
+          <span class="eyebrow">Gestão de propostas</span>
+          <h1 id="pageHeading">Novo orçamento</h1>
+          <p>Monte propostas rápidas, selecione materiais pelo estoque e mantenha o carrinho separado para não poluir a tela.</p>
+        </div>
+        <a class="button button-ghost" href="agenda.html"><i data-lucide="calendar-days"></i>Agenda</a>
       </header>
 
       <form id="formOrcamento" class="ops-form" novalidate>
@@ -80,16 +84,24 @@
           <div id="stockPickerList" class="ops-stock-list" aria-live="polite"></div>
         </section>
 
-        <section class="ops-section">
-          <header class="ops-section-header"><div><span class="ops-section-kicker">06 • Carrinho do orçamento</span><h2>Itens selecionados</h2></div></header>
-          <div id="listaMateriais" class="ops-cart" aria-live="polite"></div>
-          <div class="ops-cart-summary"><div class="ops-cart-total"><span>Total de materiais</span><strong id="cartTotalMateriais">R$ 0,00</strong></div><div class="ops-cart-total"><span>Total de opcionais</span><strong id="cartTotalOpcionais">R$ 0,00</strong></div><div class="ops-cart-total"><span>Total geral dos itens</span><strong id="cartTotalGeral">R$ 0,00</strong></div></div>
-        </section>
-
         <section class="ops-actions" aria-label="Ações do orçamento"><button class="button button-secondary" type="submit" data-save-mode="rascunho"><i data-lucide="save"></i>Salvar rascunho</button><button class="button button-primary" type="submit" data-save-mode="aguardando_cliente"><i data-lucide="send"></i>Enviar para aprovação</button><button class="button button-ghost" id="gerarPdfCliente" type="button"><i data-lucide="file-text"></i>PDF cliente</button><button class="button button-ghost" id="gerarPdfEstudio" type="button"><i data-lucide="file-spreadsheet"></i>PDF estúdio</button><span class="ops-actions__spacer"></span><button class="button button-ghost" id="limparOrcamento" type="button" aria-label="Limpar orçamento"><i data-lucide="eraser"></i></button><p id="statusOrcamento" class="ops-status" aria-live="polite"></p></section>
       </form>
     </main>
   </div>
+
+  <aside id="carrinhoFlutuante" class="ops-floating-cart" aria-label="Carrinho do orçamento">
+    <button id="toggleCarrinho" class="ops-floating-cart__button" type="button" aria-expanded="false" aria-controls="painelCarrinho">
+      <i data-lucide="shopping-cart"></i>
+      <span><strong id="cartFloatingCount">0 itens</strong><small id="cartFloatingTotal">R$ 0,00 em materiais</small></span>
+    </button>
+    <section id="painelCarrinho" class="ops-cart-drawer" hidden>
+      <header class="ops-cart-drawer__header"><div><span class="eyebrow">Carrinho</span><strong>Itens selecionados</strong></div><button id="fecharCarrinho" class="icon-button" type="button" aria-label="Fechar carrinho"><i data-lucide="x"></i></button></header>
+      <div id="listaMateriais" class="ops-cart" aria-live="polite"></div>
+      <footer class="ops-cart-drawer__footer"><span>Total de materiais</span><strong id="cartTotalMateriais">R$ 0,00</strong></footer>
+      <div class="ops-cart-summary" hidden><strong id="cartTotalOpcionais">R$ 0,00</strong><strong id="cartTotalGeral">R$ 0,00</strong></div>
+    </section>
+  </aside>
+
   <dialog id="referenciaModal" class="ops-modal"><div id="referenciaModalContent" class="ops-modal__body"></div></dialog>
   <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
