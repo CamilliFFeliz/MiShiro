@@ -121,7 +121,9 @@ function montarItemEstoque(dados = {}, base = {}) {
   const quantidadeAtual = Math.max(normalizarNumero(dados.quantidadeAtual ?? dados.stockQuantity), 0);
   const precoEmbalagem = Math.max(normalizarNumero(dados.precoEmbalagem ?? dados.packagePrice ?? dados.singleUnitPrice), 0);
   const quantidadeEmbalagem = Math.max(normalizarNumero(dados.quantidadeEmbalagem ?? dados.packageQuantity), 1);
-  const imagemProduto = normalizarImagemProduto(dados.imagemProduto ?? dados.imagemItem ?? dados.imagemReferencia ?? base.imagemProduto ?? null);
+  const imagemProduto = Object.prototype.hasOwnProperty.call(dados, "imagemProduto")
+    ? normalizarImagemProduto(dados.imagemProduto)
+    : normalizarImagemProduto(dados.imagemItem ?? dados.imagemReferencia ?? base.imagemProduto ?? null);
   return {
     ...base,
     id: base.id || dados.id || criarIdentificador("item-estoque"),
