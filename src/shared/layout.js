@@ -43,7 +43,7 @@ function criarSidebar(base, atual) {
 }
 
 function carregarDesignGlobal() {
-  carregarCssFinal("mishiro-clean-ui-css", "assets/css/app-clean.css?v=20260623.1");
+  carregarCssFinal("mishiro-clean-ui-css", "assets/css/app-clean.css?v=20260623.3");
 }
 
 function carregarCssFinal(id, caminho) {
