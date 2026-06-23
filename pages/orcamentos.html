@@ -10,10 +10,11 @@
   <link rel="stylesheet" href="../assets/css/tokens.css" />
   <link rel="stylesheet" href="../assets/css/layout.css" />
   <link rel="stylesheet" href="../assets/css/components.css" />
-  <link id="mishiro-clean-ui-css" rel="stylesheet" href="../assets/css/app-clean.css?v=20260623.9" />
-  <link rel="stylesheet" href="../assets/css/orcamentos.css?v=20260623.9" />
+  <link id="mishiro-clean-ui-css" rel="stylesheet" href="../assets/css/app-clean.css?v=20260623.10" />
+  <link rel="stylesheet" href="../assets/css/orcamentos.css?v=20260623.10" />
   <link rel="stylesheet" href="../assets/css/studio-workflow.css" />
-  <link rel="stylesheet" href="../assets/css/operations-budget.css?v=20260623.9" />
+  <link rel="stylesheet" href="../assets/css/operations-budget.css?v=20260623.10" />
+  <link rel="stylesheet" href="../assets/css/orcamentos-ajustes-finais.css?v=20260623.10" />
   <title>MiShiro Tattoo • Orçamentos</title>
 </head>
 <body data-page="orcamentos">
@@ -23,28 +24,27 @@
         <div>
           <span class="eyebrow">Proposta do cliente</span>
           <h1 id="pageHeading">Orçamentos</h1>
-          <p>Preencha o essencial, adicione materiais e finalize a proposta com menos etapas visíveis.</p>
+          <p>Preencha a proposta, confira o valor e use o estoque de apoio no final da página apenas quando precisar adicionar insumos.</p>
         </div>
         <a class="button button-ghost" href="agenda.html"><i data-lucide="calendar-days"></i>Agenda</a>
       </header>
 
       <form id="formOrcamento" class="ops-form ops-form--clean" novalidate>
         <input id="orcamentoIdEdicao" type="hidden" />
+        <input id="statusRascunho" type="hidden" value="rascunho" />
 
         <section class="ops-section ops-section--essential">
           <header class="ops-section-header ops-section-header--compact"><span class="ops-section-icon"><i data-lucide="file-pen-line"></i></span><div><span class="ops-section-kicker">01 • Essencial</span><h2>Cliente e proposta</h2></div></header>
           <div class="ops-grid ops-grid--essential">
-            <label class="ops-field ops-span-2" data-field="nomeOrcamento"><span>Nome do orçamento *</span><input id="nomeOrcamento" autocomplete="off" placeholder="Ex: Fechamento de perna — Ana" /><small class="ops-field-error">Informe o nome do orçamento.</small></label>
+            <label class="ops-field ops-span-2" data-field="nomeOrcamento"><span>Nome do orçamento *</span><input id="nomeOrcamento" autocomplete="off" placeholder="Ex: Floral no antebraço — Ana" /><small class="ops-field-error">Informe o nome do orçamento.</small></label>
             <label class="ops-field ops-span-2" data-field="clienteNome"><span>Nome do cliente *</span><input id="clienteNome" autocomplete="name" placeholder="Nome completo" /><small class="ops-field-error">Informe o nome do cliente.</small></label>
             <label class="ops-field"><span>WhatsApp</span><input id="clienteTelefone" autocomplete="tel" inputmode="tel" placeholder="(00) 00000-0000" /></label>
-            <label class="ops-field"><span>Status ao salvar</span><select id="statusRascunho"><option value="rascunho">Salvar como rascunho</option><option value="aguardando_cliente">Enviar para aprovação</option></select></label>
+            <label class="ops-field"><span>E-mail</span><input id="clienteEmail" autocomplete="email" type="email" placeholder="cliente@email.com" /></label>
           </div>
 
           <details class="ops-details">
-            <summary><span><i data-lucide="user-round-plus"></i>Dados complementares do cliente</span><i data-lucide="chevron-down"></i></summary>
+            <summary><span><i data-lucide="user-round-plus"></i>Dados opcionais do atendimento</span><i data-lucide="chevron-down"></i></summary>
             <div class="ops-grid ops-details-grid">
-              <label class="ops-field"><span>E-mail</span><input id="clienteEmail" autocomplete="email" type="email" placeholder="cliente@email.com" /></label>
-              <label class="ops-field"><span>Idade</span><input id="clienteIdade" inputmode="numeric" placeholder="Opcional" /></label>
               <label class="ops-field"><span>Horário preferencial</span><input id="horarioPreferencial" type="time" /></label>
               <label class="ops-field"><span>Alergias ou sensibilidades</span><input id="clienteAlergias" placeholder="Opcional" /></label>
               <label class="ops-field ops-span-all"><span>Observações do cliente</span><textarea id="clienteObservacoes" placeholder="Cuidados, pausas, preferências ou informações relevantes."></textarea></label>
@@ -58,7 +58,7 @@
             <label class="ops-field ops-field--icon ops-field--body"><span class="ops-field-icon"><i data-lucide="map-pin"></i></span><span class="ops-field-label">Local no corpo</span><input id="localCorpo" placeholder="Ex: antebraço" /></label>
             <label class="ops-field ops-field--icon ops-field--size"><span class="ops-field-icon"><i data-lucide="ruler"></i></span><span class="ops-field-label">Tamanho</span><input id="tamanhoTatuagem" inputmode="decimal" placeholder="cm" /></label>
             <label class="ops-field ops-field--icon ops-field--complexity"><span class="ops-field-icon"><i data-lucide="sliders-horizontal"></i></span><span class="ops-field-label">Complexidade</span><select id="complexidade"><option value="">Não definida</option><option value="Simples">Simples</option><option value="Média">Média</option><option value="Alta">Alta</option><option value="Realismo">Realismo</option></select></label>
-            <label class="ops-field ops-field--icon ops-field--colors"><span class="ops-field-icon"><i data-lucide="palette"></i></span><span class="ops-field-label">Cores / estilo</span><input id="coresTatuagem" placeholder="Preto, cinza, colorida" /></label>
+            <label class="ops-field ops-field--icon ops-field--colors"><span class="ops-field-icon"><i data-lucide="palette"></i></span><span class="ops-field-label">Cores / estilo</span><input id="coresTatuagem" placeholder="Preta, cinza, colorida" /></label>
           </div>
 
           <details class="ops-details">
@@ -74,15 +74,8 @@
           <div id="listaReferenciasArte" class="ops-reference-list" aria-live="polite"></div>
         </section>
 
-        <section class="ops-section ops-section--stock ops-section--focus">
-          <header class="ops-section-header ops-section-header--compact"><span class="ops-section-icon"><i data-lucide="package-search"></i></span><div><span class="ops-section-kicker">04 • Materiais</span><h2>Insumos do orçamento</h2></div></header>
-          <div class="ops-stock-toolbar"><label class="ops-field ops-search-field"><span>Buscar insumo</span><input id="budgetSearchInput" type="search" placeholder="RL, luva, preto, vaselina..." /></label><button id="clearBudgetSearchButton" type="button" class="button button-ghost"><i data-lucide="sparkles"></i>Limpar</button></div>
-          <div id="budgetCategoryFilters" class="ops-filter-row" aria-label="Filtros de categoria"></div>
-          <div id="stockPickerList" class="ops-stock-list" aria-live="polite"></div>
-        </section>
-
         <section class="ops-section ops-section--finance ops-section--finance-clean">
-          <header class="ops-section-header ops-section-header--compact"><span class="ops-section-icon"><i data-lucide="badge-dollar-sign"></i></span><div><span class="ops-section-kicker">05 • Fechamento</span><h2>Resumo financeiro</h2></div></header>
+          <header class="ops-section-header ops-section-header--compact"><span class="ops-section-icon"><i data-lucide="badge-dollar-sign"></i></span><div><span class="ops-section-kicker">04 • Resultado</span><h2>Resumo da cotação</h2></div></header>
           <dl class="ops-financial-summary"><div><span class="ops-finance-icon"><i data-lucide="package"></i></span><dt>Materiais</dt><dd id="totalMateriais">R$ 0,00</dd></div><div><span class="ops-finance-icon"><i data-lucide="user-round"></i></span><dt>Mão de obra</dt><dd id="totalMaoObra">R$ 0,00</dd></div><div><span class="ops-finance-icon"><i data-lucide="calculator"></i></span><dt>Subtotal</dt><dd id="subtotalOrcamento">R$ 0,00</dd></div><div><span class="ops-finance-icon"><i data-lucide="tag"></i></span><dt>Desconto</dt><dd id="valorDesconto">R$ 0,00</dd></div><div class="is-total"><span class="ops-finance-icon"><i data-lucide="badge-dollar-sign"></i></span><dt>Valor final</dt><dd id="valorFinal">R$ 0,00</dd></div></dl>
           <details class="ops-details ops-details--finance">
             <summary><span><i data-lucide="settings-2"></i>Ajustar mão de obra, margem e desconto</span><i data-lucide="chevron-down"></i></summary>
@@ -95,7 +88,15 @@
           </details>
         </section>
 
-        <section class="ops-actions ops-actions--clean" aria-label="Ações do orçamento"><button class="button button-primary" type="submit" data-save-mode="aguardando_cliente"><i data-lucide="send"></i>Enviar para aprovação</button><button class="button button-secondary" type="submit" data-save-mode="rascunho"><i data-lucide="save"></i>Salvar rascunho</button><button class="button button-ghost" id="gerarPdfCliente" type="button"><i data-lucide="file-text"></i>PDF cliente</button><button class="button button-ghost" id="gerarPdfEstudio" type="button"><i data-lucide="file-spreadsheet"></i>PDF estúdio</button><button class="button button-ghost" id="limparOrcamento" type="button" aria-label="Limpar orçamento"><i data-lucide="eraser"></i>Limpar</button><p id="statusOrcamento" class="ops-status" aria-live="polite"></p></section>
+        <section class="ops-actions ops-actions--clean" aria-label="Ações do orçamento"><button class="button button-primary" type="submit" data-save-mode="aguardando_cliente"><i data-lucide="send"></i>Enviar para aprovação</button><button class="button button-secondary" type="submit" data-save-mode="rascunho"><i data-lucide="save"></i>Salvar rascunho</button><button class="button button-ghost" id="gerarPdfCliente" type="button"><i data-lucide="file-text"></i>PDF cliente</button><button class="button button-ghost" id="gerarPdfEstudio" type="button"><i data-lucide="file-spreadsheet"></i>PDF interno</button><button class="button button-ghost" id="limparOrcamento" type="button" aria-label="Limpar orçamento"><i data-lucide="eraser"></i>Limpar</button><p id="statusOrcamento" class="ops-status" aria-live="polite"></p></section>
+
+        <section class="ops-section ops-section--stock ops-section--focus ops-section--stock-end">
+          <header class="ops-section-header ops-section-header--compact"><span class="ops-section-icon"><i data-lucide="package-search"></i></span><div><span class="ops-section-kicker">05 • Estoque de apoio</span><h2>Adicionar insumos</h2><p>Busque pelo nome e adicione somente os itens que entram no cálculo interno.</p></div></header>
+          <div class="ops-stock-toolbar"><label class="ops-field ops-search-field"><span>Pesquisar pelo nome</span><input id="budgetSearchInput" type="search" placeholder="Digite o nome do item..." /></label><button id="clearBudgetSearchButton" type="button" class="button button-ghost"><i data-lucide="sparkles"></i>Limpar</button></div>
+          <div id="budgetCategoryFilters" class="ops-filter-row" aria-label="Filtros de categoria"></div>
+          <div id="stockPickerList" class="ops-stock-list ops-stock-list--compact" aria-live="polite"></div>
+          <div class="ops-stock-pagination"><span id="stockPaginationInfo">Exibindo 0 itens</span><button id="carregarMaisInsumos" class="button button-secondary" type="button" hidden><i data-lucide="list-plus"></i>Carregar mais</button></div>
+        </section>
       </form>
     </main>
   </div>
