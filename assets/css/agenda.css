@@ -1,1 +1,448 @@
-body[data-page="agenda"]{overflow-x:clip}body[data-page="agenda"]::after{display:none}body[data-page="agenda"] .workflow-page{min-width:0;gap:18px}body[data-page="agenda"] .agenda-workflow-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(290px,.72fr);gap:18px;align-items:start}body[data-page="agenda"] .pipeline-layout{display:grid;grid-template-columns:repeat(2,minmax(0,1fr);gap:18px;align-items:start}body[data-page="agenda"] .workflow-card{min-width:0;overflow:visible}body[data-page="agenda"] #boardPipeline.board-workflow{display:flex!important;max-width:100%;min-width:0!important;overflow-x:auto;overflow-y:visible;gap:12px;padding:0 0 10px;scroll-snap-type:x proximity;overscroll-behavior-x:contain}body[data-page="agenda"] #boardPipeline .board-column{flex:0 0 min(250px,82vw);min-width:0;scroll-snap-align:start}dialog.workflow-modal:not([open]){display:none!important;visibility:hidden}body[data-page="agenda"] .calendar-card-workflow,body[data-page="agenda"] .calendar-grid-workflow,body[data-page="agenda"] .calendar-day-workflow{min-width:0}.schedule-colors{display:flex;flex-wrap:wrap;gap:10px}.schedule-colors label{position:relative;display:grid;width:38px;height:38px;place-items:center;border:3px solid transparent;border-radius:50%;cursor:pointer;pointer-events:auto}.schedule-colors label.is-selected{border-color:var(--studio-text);box-shadow:0 0 0 3px rgba(139,92,246,.35)}.schedule-colors label:focus-within,.schedule-colors label:focus-visible{outline:3px solid rgba(139,92,246,.58);outline-offset:3px}.schedule-colors input{position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0;cursor:pointer}@media(max-width:900px){body[data-page="agenda"] .agenda-workflow-grid,body[data-page="agenda"] .pipeline-layout{grid-template-columns:1fr}}@media(max-width:620px){body[data-page="agenda"] .workflow-intro{padding:10px 0}body[data-page="agenda"] .calendar-card-workflow{padding:12px}body[data-page="agenda"] .calendar-grid-workflow{gap:4px}body[data-page="agenda"] .calendar-day-workflow{min-height:48px;padding:5px}}
+/* Agenda — layout revisado, mobile-first e sem grids quebrados */
+body[data-page="agenda"] {
+  overflow-x: clip;
+}
+
+body[data-page="agenda"]::after {
+  display: none;
+}
+
+body[data-page="agenda"] .workflow-page {
+  min-width: 0;
+  gap: 18px;
+}
+
+body[data-page="agenda"] .workflow-intro {
+  display: grid;
+  gap: 14px;
+  padding: 22px !important;
+}
+
+body[data-page="agenda"] .workflow-intro .button {
+  width: 100%;
+  justify-content: center;
+}
+
+.agenda-workflow-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  align-items: start;
+}
+
+.pipeline-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  align-items: start;
+}
+
+body[data-page="agenda"] .workflow-card {
+  min-width: 0;
+  overflow: hidden;
+  padding: 18px !important;
+}
+
+.calendar-card-workflow {
+  display: grid;
+  gap: 14px;
+}
+
+.calendar-control {
+  display: grid;
+  grid-template-columns: 46px minmax(0, 1fr) 46px;
+  gap: 10px;
+  align-items: center;
+}
+
+.calendar-control .button {
+  min-width: 0;
+  min-height: 46px;
+  padding-inline: 0;
+  justify-content: center;
+}
+
+.calendar-control .button span,
+.calendar-control .button:not(:has(svg)) {
+  font-size: 0;
+}
+
+.calendar-control strong {
+  min-width: 0;
+  text-align: center;
+  color: #fff;
+  font-size: 1.1rem;
+  letter-spacing: -.035em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.calendar-grid-workflow {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 5px;
+  min-width: 0;
+}
+
+.calendar-week-label {
+  min-width: 0;
+  text-align: center;
+  color: var(--mi-muted, rgba(238, 231, 255, .56));
+  font-size: .68rem;
+  font-weight: 950;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+.calendar-day-workflow {
+  position: relative;
+  display: grid;
+  place-items: center;
+  gap: 3px;
+  min-width: 0;
+  min-height: 48px;
+  padding: 5px 3px;
+  border: 1px solid rgba(238, 231, 255, .10);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, .04);
+  color: #fff;
+}
+
+.calendar-day-workflow.is-muted {
+  opacity: .38;
+}
+
+.calendar-day-workflow.is-today {
+  border-color: rgba(205, 184, 255, .42);
+}
+
+.calendar-day-workflow.is-selected {
+  background: linear-gradient(135deg, rgba(140, 77, 255, .46), rgba(54, 10, 117, .46));
+  border-color: rgba(205, 184, 255, .50);
+  box-shadow: 0 12px 26px rgba(54, 10, 117, .24);
+}
+
+.day-number {
+  font-weight: 900;
+  font-size: .92rem;
+}
+
+.event-dots {
+  display: flex;
+  justify-content: center;
+  gap: 2px;
+  min-height: 5px;
+}
+
+.event-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 999px;
+}
+
+.month-events-list,
+.approval-list,
+.approved-list {
+  display: grid;
+  gap: 10px;
+}
+
+.mini-event-card,
+.budget-thumb,
+.board-card,
+.event-status-row {
+  width: 100%;
+  min-width: 0;
+  text-align: left;
+  border: 1px solid rgba(238, 231, 255, .12);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, .045);
+  color: #fff;
+}
+
+.mini-event-card,
+.budget-thumb,
+.event-status-row {
+  display: grid;
+  gap: 9px;
+  padding: 14px;
+}
+
+.mini-event-card header,
+.budget-thumb header,
+.event-status-row header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+  min-width: 0;
+}
+
+.mini-event-card strong,
+.budget-thumb strong,
+.board-card strong,
+.event-status-row strong {
+  color: #fff;
+  line-height: 1.16;
+  overflow-wrap: anywhere;
+}
+
+.mini-event-card span,
+.budget-thumb span,
+.board-card span,
+.event-status-row span,
+.event-status-row small {
+  color: var(--mi-soft, rgba(238, 231, 255, .76));
+  line-height: 1.35;
+}
+
+.event-color-chip {
+  flex: 0 0 auto;
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, .06);
+}
+
+.budget-thumb .action-row,
+.event-status-row .action-row,
+.modal-actions {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
+.budget-thumb .action-row .button,
+.event-status-row .action-row .button,
+.modal-actions .button {
+  width: 100%;
+  justify-content: center;
+}
+
+#boardPipeline.board-workflow {
+  display: flex !important;
+  max-width: 100%;
+  min-width: 0 !important;
+  overflow-x: auto;
+  overflow-y: visible;
+  gap: 12px;
+  padding: 0 0 10px;
+  scroll-snap-type: x proximity;
+  overscroll-behavior-x: contain;
+}
+
+#boardPipeline.board-workflow::-webkit-scrollbar {
+  height: 8px;
+}
+
+#boardPipeline.board-workflow::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(188, 150, 255, .22);
+}
+
+.board-column {
+  flex: 0 0 min(264px, 84vw);
+  min-width: 0;
+  scroll-snap-align: start;
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid rgba(238, 231, 255, .11);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, .035);
+}
+
+.board-column > header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+.board-column > header strong {
+  color: #fff;
+}
+
+.board-column > header span {
+  display: grid;
+  place-items: center;
+  min-width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  color: #fff;
+  background: rgba(140, 77, 255, .32);
+  border: 1px solid rgba(188, 150, 255, .22);
+}
+
+.board-column-list {
+  display: grid;
+  gap: 8px;
+}
+
+.board-card {
+  display: grid;
+  gap: 5px;
+  padding: 12px;
+}
+
+.empty-inline {
+  margin: 0;
+  padding: 14px;
+  border: 1px dashed rgba(238, 231, 255, .18);
+  border-radius: 18px;
+  color: var(--mi-muted, rgba(238, 231, 255, .56));
+  text-align: center;
+  background: rgba(255, 255, 255, .03);
+}
+
+.workflow-modal:not([open]) {
+  display: none !important;
+  visibility: hidden;
+}
+
+.workflow-modal {
+  width: min(94vw, 760px);
+  max-height: 88dvh;
+  padding: 0;
+  overflow: hidden;
+}
+
+.workflow-modal-content {
+  max-height: 88dvh;
+  overflow: auto;
+  padding: 18px;
+  display: grid;
+  gap: 14px;
+}
+
+.modal-summary-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+.modal-summary-grid article {
+  padding: 12px;
+  border: 1px solid rgba(238, 231, 255, .11);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, .04);
+}
+
+.modal-summary-grid span {
+  display: block;
+  color: var(--mi-muted, rgba(238, 231, 255, .56));
+  font-size: .76rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+
+.modal-summary-grid strong {
+  display: block;
+  margin-top: 5px;
+  color: #fff;
+  overflow-wrap: anywhere;
+}
+
+.notice-soft {
+  margin: 0;
+  padding: 12px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, .04);
+  color: var(--mi-soft, rgba(238, 231, 255, .76));
+}
+
+.event-status-list {
+  display: grid;
+  gap: 10px;
+}
+
+.schedule-colors {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.schedule-colors label {
+  position: relative;
+  display: grid;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  border: 3px solid transparent;
+  border-radius: 50%;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.schedule-colors label.is-selected {
+  border-color: #fff;
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, .35);
+}
+
+.schedule-colors label:focus-within,
+.schedule-colors label:focus-visible {
+  outline: 3px solid rgba(139, 92, 246, .58);
+  outline-offset: 3px;
+}
+
+.schedule-colors input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+@media (min-width: 640px) {
+  body[data-page="agenda"] .workflow-intro {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+  }
+
+  body[data-page="agenda"] .workflow-intro .button {
+    width: auto;
+  }
+
+  .modal-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .budget-thumb .action-row,
+  .event-status-row .action-row,
+  .modal-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 900px) {
+  .agenda-workflow-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(300px, .72fr);
+  }
+
+  .pipeline-layout {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 430px) {
+  body[data-page="agenda"] .workflow-card {
+    padding: 16px !important;
+  }
+
+  .calendar-control {
+    grid-template-columns: 42px minmax(0, 1fr) 42px;
+  }
+
+  .calendar-day-workflow {
+    min-height: 44px;
+    border-radius: 12px;
+  }
+
+  .day-number {
+    font-size: .85rem;
+  }
+}
