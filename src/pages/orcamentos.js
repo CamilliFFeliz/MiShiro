@@ -6,7 +6,7 @@ import { escapar, mostrarStatus, atualizarIcones } from "../shared/ui.js";
 import { CATEGORY_ALL, CATEGORY_ORDER, CATEGORY_OPTIONAL, getItemSpecification, getMeasureSuffix } from "../shared/stock-catalog.js";
 import { garantirEstoqueInicial, listarItensEstoque, calcularCustoUnitario, criarSnapshotItemEstoque } from "../services/estoque-service.js";
 import { criarOrcamento, atualizarOrcamento, obterOrcamento, listarItensOrcamento } from "../services/orcamentos-service.js";
-import { criarDocumentoMiShiro, adicionarDetalhes, adicionarLista, adicionarResumoFinanceiro, finalizarDocumento } from "../shared/pdf-theme.js";
+import { criarDocumentoMiShiro, adicionarTitulo, adicionarDetalhes, adicionarLista, adicionarResumoFinanceiro, finalizarDocumento } from "../shared/pdf-theme.js";
 
 const MAX_REFERENCIAS = 6;
 const MAX_ARTE_BYTES = 2 * 1024 * 1024;
@@ -146,10 +146,6 @@ function cardEstoque(item) {
   const invalido = estado.erros.has(item.id) ? " is-invalid" : "";
   const addDesabilitado = selecionada >= disponivel || disponivel <= 0 ? "disabled" : "";
   return `<article class="ops-stock-item ops-stock-item--premium ops-stock-item--mini" data-stock-id="${escapar(item.id)}"><div class="ops-stock-card-main"><span class="ops-stock-icon"><i data-lucide="${iconeCategoria(item.categoria)}"></i></span><div><strong>${escapar(item.nome)}</strong><span>${escapar(getItemSpecification(item) || item.categoria || "Item de estoque")} · ${escapar(unidade)}</span></div></div><div class="ops-stock-mini-meta"><span>${formatarMoeda(custo)} / ${escapar(unidade)}</span><span>${disponivel} disp.</span></div><div class="ops-stock-item__bottom">${stepper(selecionada, disponivel, invalido)}<button type="button" class="button button-primary ops-add-button" data-step="increase" ${addDesabilitado}><i data-lucide="plus"></i>Adicionar</button></div></article>`;
-}
-
-function imagemProduto(item) {
-  return item?.imagemProduto?.dataUrl || item?.imagemItem?.dataUrl || item?.imagemReferencia?.dataUrl || "";
 }
 
 function iconeCategoria(categoria = "") {
@@ -364,7 +360,7 @@ async function gerarPdf(tipo) {
   try {
     const total = totais();
     const cliente = tipo === "cliente";
-    const doc = await criarDocumentoMiShiro({ titulo: cliente ? "Proposta de tatuagem" : "Orçamento técnico interno", subtitulo: cliente ? "Documento para aprovação do cliente" : "Custos reais, insumos e composição interna" });
+    const doc = await criarDocumentoMiShiro({ titulo: cliente ? "Proposta de tatuagem" : "Orçamento técnico interno", subtitulo: cliente ? "Resumo comercial para aprovação" : "Composição técnica e custos do estúdio" });
     adicionarDetalhes(doc, [
       { rotulo: "Orçamento", valor: valor("#nomeOrcamento") || "Sem nome" },
       { rotulo: "Cliente", valor: valor("#clienteNome") || "Não informado" },
@@ -380,11 +376,18 @@ async function gerarPdf(tipo) {
 }
 
 function gerarPdfCliente(doc, total) {
+  adicionarTitulo(doc, "Resumo para o cliente", "Documento simplificado: apresenta apenas os itens comerciais da proposta e o valor final aprovado para atendimento.");
   adicionarLista(doc, "Itens da proposta", linhasCliente(total), { mostrarValor: true, vazio: "Nenhum item público informado." });
+  adicionarLista(doc, "Inclui", [
+    { nome: "Orientação de cuidados", detalhe: "Instruções iniciais para o pós-atendimento." },
+    { nome: "Preparação do atendimento", detalhe: "Organização do espaço, materiais e execução conforme proposta." },
+    { nome: "Validade da proposta", detalhe: "Valores sujeitos a alteração caso tamanho, local, estilo ou complexidade sejam modificados." }
+  ], { mostrarValor: false });
   adicionarResumoFinanceiro(doc, [{ rotulo: "Total da proposta", valor: total.valorFinal }]);
 }
 
 function gerarPdfInterno(doc, total) {
+  adicionarTitulo(doc, "Uso interno do estúdio", "Este documento detalha os custos técnicos e não deve ser enviado ao cliente como proposta comercial.");
   adicionarLista(doc, "Insumos técnicos do orçamento", linhasInternas(), { mostrarValor: true, vazio: "Nenhum insumo técnico selecionado." });
   adicionarResumoFinanceiro(doc, [
     { rotulo: "Insumos e opcionais", valor: total.materiais },
@@ -404,15 +407,25 @@ function linhasCliente(total) {
   const valorTatuagem = Math.max(total.valorFinal - valorOpcionais - valorEstudio, 0);
   const linhas = [];
   if (valorTatuagem > 0 || (!opcionais.length && !valorEstudio)) {
-    linhas.push({ nome: descricaoTatuagemCliente(), detalhe: "Arte, execução e composição da tatuagem.", valor: valorTatuagem || total.valorFinal });
+    linhas.push({ nome: descricaoTatuagemCliente(), detalhe: "Arte personalizada, aplicação e acabamento final.", valor: valorTatuagem || total.valorFinal });
   }
-  opcionais.forEach(({ item, quantidade }) => linhas.push({ nome: item.nome || "Item opcional", detalhe: `${quantidade} ${getMeasureSuffix(item.unidadeMedida)} · ${getItemSpecification(item) || "Item adicional"}`, valor: totalLinha({ item, quantidade }) }));
+  opcionais.forEach(({ item, quantidade }) => linhas.push({ nome: nomePublicoOpcional(item), detalhe: detalhePublicoOpcional(item, quantidade), valor: totalLinha({ item, quantidade }) }));
   if (valorEstudio > 0) linhas.push({ nome: "Estúdio", detalhe: "Reserva de estrutura, preparação e atendimento.", valor: valorEstudio });
   return linhas;
 }
 
 function linhasInternas() {
   return registrosCarrinho().map(({ item, quantidade }) => ({ nome: item.nome, detalhe: detalheTecnicoItem(item, quantidade), valor: totalLinha({ item, quantidade }) }));
+}
+
+function nomePublicoOpcional(item) {
+  const nome = String(item?.nome || "Item adicional");
+  return nome.toLowerCase().includes("kit") ? nome : nome;
+}
+
+function detalhePublicoOpcional(item, quantidade) {
+  const especificacao = getItemSpecification(item);
+  return [quantidade > 1 ? `${quantidade} unidades` : "Item adicional", especificacao].filter(Boolean).join(" · ");
 }
 
 function detalheTecnicoItem(item, quantidade) {
